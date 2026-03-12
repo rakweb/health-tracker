@@ -1328,68 +1328,104 @@ document.getElementById('btnSaveOptions').addEventListener('click', async (e) =>
     }
   };
 
-  /* ==================== Events ==================== */
-  document.getElementById('btnAdd').addEventListener('click', () => UI.openEntry(null));
-  document.getElementById('btnFields').addEventListener('click', () => UI.openFields());
-  document.getElementById('btnThresholds').addEventListener('click', () => UI.openThresholds());
-  document.getElementById('btnOptions').addEventListener('click', () => UI.openOptions());
-  document.getElementById('btnSaveFields').addEventListener('click', Actions.saveFields);
-  document.getElementById('btnSaveThresholds').addEventListener('click', Actions.saveThresholds);
-  document.getElementById('btnSaveOptions').addEventListener('click', Actions.saveOptions);
+<script>
+// ...everything above unchanged...
 
-  document.getElementById('btnSaveEntry').addEventListener('click', async () => {
-    await Actions.saveEntryFromForm(); await Actions.refreshAll();
-  });
-  document.getElementById('btnDeleteEntry').addEventListener('click', async () => {
-    if (State.editId != null && confirm('Delete this entry?')) {
-      await Actions.deleteEntry(State.editId); UI.closeEntry(); await Actions.refreshAll();
-    }
-  });
+/* ==================== Events ==================== */
 
-  document.getElementById('btnRefresh').addEventListener('click', () => {
-    UI.buildTable(); UI.refreshKPIs(); UI.refreshChart();
-  });
-  document.getElementById('btnSaveCSV').addEventListener('click', Actions.exportCSV);
-  document.getElementById('btnSavePDF').addEventListener('click', Actions.exportPDF);
+// Open/close actions
+document.getElementById('btnAdd').addEventListener('click', () => UI.openEntry(null));
+document.getElementById('btnFields').addEventListener('click', () => UI.openFields());
+document.getElementById('btnThresholds').addEventListener('click', () => UI.openThresholds());
+document.getElementById('btnOptions').addEventListener('click', () => UI.openOptions());
 
-  document.getElementById('btnAddMed').addEventListener('click', () => {
-    const name = document.getElementById('med_name').value.trim();
-    const dose = document.getElementById('med_dose').value.trim();
-    const units = document.getElementById('med_units').value.trim();
-    if (!name) return;
-    State.medsBuffer.push({ name, dose, units });
-    document.getElementById('med_name').value = ''; document.getElementById('med_dose').value = ''; document.getElementById('med_units').value = '';
-    UI.renderMedsBuffer();
-  });
+// ✅ Save buttons: stop propagation so backdrop doesn’t close the modal first
+document.getElementById('btnSaveFields').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  await Actions.saveFields();
+});
 
-  document.getElementById('chartMetrics').addEventListener('change', () => UI.refreshChart());
-  document.getElementById('axisMode').addEventListener('change', () => UI.refreshChart());
-  document.getElementById('filterStart').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
-  document.getElementById('filterEnd').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
+document.getElementById('btnSaveThresholds').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  await Actions.saveThresholds();
+});
 
-  document.getElementById('toggleChart').addEventListener('change', async (e) => {
-    State.ui.chartEnabled = (e.target.value === 'on');
-    document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-    if (!State.ui.chartEnabled && UI.chart) { UI.chart.destroy(); UI.chart = null; }
-    await DB.putConfig('ui', State.ui);
-    UI.refreshChart();
-  });
+document.getElementById('btnSaveOptions').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  await Actions.saveOptions();
+});
 
-  for (const id of ['entryModal','fieldsModal','thModal','optModal']) {
-    document.getElementById(id).addEventListener('click', (ev) => {
-      if (ev.target.classList.contains('modal-backdrop')) ev.target.classList.remove('show');
-    });
+document.getElementById('btnSaveEntry').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  await Actions.saveEntryFromForm();
+  await Actions.refreshAll();
+});
+
+document.getElementById('btnDeleteEntry').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  if (State.editId != null && confirm('Delete this entry?')) {
+    await Actions.deleteEntry(State.editId);
+    UI.closeEntry();
+    await Actions.refreshAll();
   }
+});
 
-  // ✅ SAFE INIT: guard against early errors so we don't crash the page
-  (async () => {
-    try {
-      await Actions.init();
-    } catch (err) {
-      console.error('Init failed:', err);
-      // Optionally, show a user-friendly inline notice here.
+// Non-modal buttons
+document.getElementById('btnRefresh').addEventListener('click', () => {
+  UI.buildTable();
+  UI.refreshKPIs();
+  UI.refreshChart();
+});
+document.getElementById('btnSaveCSV').addEventListener('click', Actions.exportCSV);
+document.getElementById('btnSavePDF').addEventListener('click', Actions.exportPDF);
+
+// Inline meds adder in Entry modal
+document.getElementById('btnAddMed').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const name = document.getElementById('med_name').value.trim();
+  const dose = document.getElementById('med_dose').value.trim();
+  const units = document.getElementById('med_units').value.trim();
+  if (!name) return;
+  State.medsBuffer.push({ name, dose, units });
+  document.getElementById('med_name').value = '';
+  document.getElementById('med_dose').value = '';
+  document.getElementById('med_units').value = '';
+  UI.renderMedsBuffer();
+});
+
+// Filters & chart controls
+document.getElementById('chartMetrics').addEventListener('change', () => UI.refreshChart());
+document.getElementById('axisMode').addEventListener('change', () => UI.refreshChart());
+document.getElementById('filterStart').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
+document.getElementById('filterEnd').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
+
+document.getElementById('toggleChart').addEventListener('change', async (e) => {
+  State.ui.chartEnabled = (e.target.value === 'on');
+  document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
+  if (!State.ui.chartEnabled && UI.chart) { UI.chart.destroy(); UI.chart = null; }
+  await DB.putConfig('ui', State.ui);
+  UI.refreshChart();
+});
+
+// ✅ Backdrop click: only close when the click is on the backdrop itself
+for (const id of ['entryModal','fieldsModal','thModal','optModal']) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', (ev) => {
+    if (ev.target === ev.currentTarget) {
+      ev.currentTarget.classList.remove('show');
     }
-  })();
-  </script>
+  });
+}
+
+// ✅ SAFE INIT: guard so we see real errors if something else breaks
+(async () => {
+  try {
+    await Actions.init();
+  } catch (err) {
+    console.error('Init failed:', err);
+  }
+})();
+</script>
 </body>
 </html>
+
