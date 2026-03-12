@@ -7,28 +7,15 @@
   <meta name="theme-color" content="#0b1220" />
 
   <!-- Inline SVG favicon -->
-  <link
-    rel="icon"
-    type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
-  />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 
-  <!-- PWA manifest (ensure this file exists at /manifest.webmanifest) -->
+  <!-- PWA manifest -->
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <!-- Libraries (deferred so they load before inline script at end) -->
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
-  ></script>
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"
-  ></script>
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
-  ></script>
+  <!-- Libraries -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
     :root {
@@ -64,23 +51,10 @@
       border-bottom: 1px solid var(--ring);
     }
 
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 12px 16px;
-    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
 
-    h1 {
-      margin: 8px 0 6px;
-      font-size: 20px;
-      letter-spacing: 0.2px;
-      font-weight: 700;
-    }
-
-    .sub {
-      color: var(--muted);
-      font-size: 13px;
-    }
+    h1 { margin: 8px 0 6px; font-size: 20px; letter-spacing: 0.2px; font-weight: 700; }
+    .sub { color: var(--muted); font-size: 13px; }
 
     .headbar {
       display: flex;
@@ -96,10 +70,7 @@
       gap: 12px;
       margin: 12px 0;
     }
-
-    @media (max-width: 1050px) {
-      .grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 1050px) { .grid { grid-template-columns: 1fr; } }
 
     .card {
       background: linear-gradient(180deg, rgba(26,38,64,0.4) 0%, rgba(9,15,29,0.6) 100%);
@@ -109,30 +80,12 @@
       box-shadow: 0 4px 25px rgba(0,0,0,0.4);
     }
 
-    .card h2 {
-      font-size: 15px;
-      margin: 0 0 10px;
-      letter-spacing: .3px;
-      color: #d6e6ff;
-    }
+    .card h2 { font-size: 15px; margin: 0 0 10px; letter-spacing: .3px; color: #d6e6ff; }
 
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .row > * { flex: 1 1 160px; min-width: 160px; }
 
-    .row > * {
-      flex: 1 1 160px;
-      min-width: 160px;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 8px 0 4px;
-    }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
 
     input, select, textarea {
       width: 100%;
@@ -150,10 +103,7 @@
       box-shadow: 0 0 0 3px rgba(75,163,255,0.12);
     }
 
-    textarea {
-      min-height: 72px;
-      resize: vertical;
-    }
+    textarea { min-height: 72px; resize: vertical; }
 
     .btn {
       background: var(--btn);
@@ -164,22 +114,14 @@
       font-size: 14px;
       cursor: pointer;
     }
-
     .btn:hover { background: var(--btn-hover); }
 
     .btn.warn   { background: #453312; border-color: #997a2a; }
     .btn.ok     { background: #113c2d; border-color: #2f8f73; }
     .btn.danger { background: #3a1216; border-color: #8e2b37; }
 
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(4,1fr);
-      gap: 8px;
-    }
-
-    @media (max-width: 768px) {
-      .kpis { grid-template-columns: repeat(2,1fr); }
-    }
+    .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+    @media (max-width: 768px) { .kpis { grid-template-columns: repeat(2,1fr); } }
 
     .kpi {
       background: linear-gradient(180deg,#0b1326 0,#0a1325 100%);
@@ -194,36 +136,67 @@
     .kpi .label { font-size: 12px; color: var(--muted); }
     .kpi .value { font-size: 18px; font-weight: 700; letter-spacing: .2px; }
     .kpi .trend { font-size: 12px; }
+
     .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-    .chip { background: var(--chip); border: 1px solid var(--ring); color: var(--text); border-radius: 999px; padding: 6px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
-    .chip.ok { border-color: #1e6b54; background: rgba(38,203,161,.08); }
-    .chip.warn { border-color: #9c7a2a; background: rgba(255,204,102,.08); }
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--ring);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip.ok     { border-color: #1e6b54; background: rgba(38,203,161,.08); }
+    .chip.warn   { border-color: #9c7a2a; background: rgba(255,204,102,.08); }
     .chip.danger { border-color: #9a2e3a; background: rgba(255,92,92,.08); }
 
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .toolbar .spacer { flex: 1; }
     .section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+
     table { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid var(--ring); border-radius: 10px; overflow: hidden; }
     th, td { border-bottom: 1px solid #1b2742; padding: 8px; text-align: left; }
     thead { background: #0a1426; }
     tbody tr:hover { background: #0d162a; }
     .actions button { margin-right: 6px; }
 
-    /* Modals */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(3,6,14,.6); display: none; align-items: center; justify-content: center; z-index: 40; }
-    .modal-backdrop.show { display: flex; } /* ensure visible when toggled */
-    .modal { background: var(--card); border: 1px solid var(--ring); border-radius: 14px; padding: 12px; width: min(860px, 96vw); max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(3,6,14,.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: 14px;
+      padding: 12px;
+      width: min(860px, 96vw);
+      max-height: 88vh;
+      overflow: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    }
+
     .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 6px; }
+
     .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     @media (max-width:560px) { .field-grid { grid-template-columns: repeat(2, 1fr); } }
 
-    /* Update toast */
     .toast {
       position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: #0b1220; color: #e6eefc; border: 1px solid #2a3a58; border-radius: 12px;
-      padding: 10px 12px; display: none; gap: 8px; align-items: center; z-index: 50;
-      box-shadow: 0 8px 30px rgba(0,0,0,.5);
+      background: #0b1220; color: #e6eefc;
+      border: 1px solid #2a3a58; border-radius: 12px;
+      padding: 10px 12px;
+      display: none; gap: 8px; align-items: center;
+      z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,.5);
     }
     .toast.show { display: flex; }
 
@@ -231,6 +204,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <div class="wrap headbar">
       <div>
@@ -249,7 +223,6 @@
   </header>
 
   <main class="wrap">
-    <!-- Toolbar -->
     <div class="toolbar card">
       <div class="row" style="flex:1">
         <div><label>Date</label><input type="date" id="filterStart"></div>
@@ -284,7 +257,6 @@
       <button class="btn warn" id="btnOptions" type="button">Options</button>
     </div>
 
-    <!-- KPIs -->
     <div class="kpis">
       <div class="kpi"><div class="label">Latest Glucose (mg/dL)</div><div class="value" id="kpiGlucose">—</div><div class="trend" id="kpiGlucoseTrend"></div></div>
       <div class="kpi"><div class="label">BP (Sys/Dia)</div><div class="value" id="kpiBP">—</div><div class="trend" id="kpiBPTrend"></div></div>
@@ -292,13 +264,11 @@
       <div class="kpi"><div class="label">SpO₂ / HR</div><div class="value"><span id="kpiSpO2">—</span> <span class="small">/</span> <span id="kpiHR">—</span></div><div class="trend" id="kpiVitalsTrend"></div></div>
     </div>
 
-    <!-- Risk alerts -->
     <div class="card">
       <div class="section-title"><h2>Risk Alerts</h2></div>
       <div class="chips" id="riskChips"></div>
     </div>
 
-    <!-- Chart + Table -->
     <div class="grid">
       <div class="card" id="chartCard">
         <div class="section-title"><h2>Metrics Chart</h2></div>
@@ -319,7 +289,6 @@
     </div>
   </main>
 
-  <!-- Update toast -->
   <div id="updateToast" class="toast">
     <span>New version available.</span>
     <button id="btnReloadNow" class="btn ok" type="button">Reload now</button>
@@ -404,7 +373,7 @@
   <div class="modal-backdrop" id="thModal">
     <div class="modal">
       <div class="modal-header">
-        <h2>Per‑Metric Thresholds &amp; Bands</h2>
+        <h2>Per‑Metric Thresholds & Bands</h2>
         <button class="btn" type="button" onclick="UI.closeThresholds()">Close</button>
       </div>
       <div id="thEditor"></div>
@@ -453,136 +422,117 @@
   <script>
   'use strict';
 
-  /*** Build metadata (optional placeholders; may be overwritten by version.json) ***/
+  // ─────────────────────────────────────────────
+  // Build metadata
   const BUILD = { appVersion: '1.0.0', buildNumber: 'dev', commit: '-', timestamp: '-' };
 
-  /*** A2HS / Install (fixes banner warning by calling prompt() on click) ***/
+  // ─────────────────────────────────────────────
+  // Install / A2HS
   let deferredPrompt = null;
   const installBtn = document.getElementById('btnInstall');
   const installHint = document.getElementById('installHint');
 
-  window.addEventListener('beforeinstallprompt', (e) => {
+  window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    if (installBtn) installBtn.style.display = 'inline-block';
-    if (installHint) installHint.textContent = 'Click Install to add to your device.';
+    installBtn?.style.removeProperty('display');
+    installHint.textContent = 'Click Install to add to your device.';
   });
 
-  if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-      try {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (installHint) {
-          installHint.textContent = (outcome === 'accepted') ? 'Installing…' : 'Install dismissed.';
-          setTimeout(() => installHint.textContent = '', 2500);
-        }
-      } catch (err) {
-        console.warn('Install failed', err);
-        if (installHint) { installHint.textContent = 'Install failed.'; setTimeout(() => installHint.textContent = '', 2500); }
-      } finally {
-        deferredPrompt = null;
-        if (installBtn) installBtn.style.display = 'none';
-      }
-    });
-  }
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    installHint.textContent = outcome === 'accepted' ? 'Installing…' : 'Install dismissed.';
+    setTimeout(() => installHint.textContent = '', 2500);
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
 
   window.addEventListener('appinstalled', () => {
-    if (installBtn) installBtn.style.display = 'none';
-    if (installHint) { installHint.textContent = 'Installed!'; setTimeout(() => installHint.textContent = '', 2500); }
+    installBtn.style.display = 'none';
+    installHint.textContent = 'Installed!';
+    setTimeout(() => installHint.textContent = '', 2500);
   });
 
-  /* ==================== SW Register, Update flow, Version labels ==================== */
+  // ─────────────────────────────────────────────
+  // Service Worker + version
   let swReg = null;
-  const appVersionSpan = document.getElementById('appVersion');
-  const buildNumberSpan = document.getElementById('buildNumber');
-  const swVersionSpan = document.getElementById('swVersion');
 
-  // Fill initial placeholders
-  appVersionSpan.textContent = BUILD.appVersion;
-  buildNumberSpan.textContent = BUILD.buildNumber;
+  document.getElementById('appVersion').textContent = BUILD.appVersion;
+  document.getElementById('buildNumber').textContent = BUILD.buildNumber;
 
-  // Try to fetch version.json (created by Actions)
   fetch('./version.json', { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null)
     .then(v => {
       if (v) {
         BUILD.appVersion = v.version || BUILD.appVersion;
         BUILD.buildNumber = v.build || BUILD.buildNumber;
-        BUILD.commit = v.commit?.slice(0,7) || BUILD.commit;
-        BUILD.timestamp = v.timestamp || BUILD.timestamp;
-        appVersionSpan.textContent = BUILD.appVersion;
-        buildNumberSpan.textContent = BUILD.buildNumber;
+        document.getElementById('appVersion').textContent = BUILD.appVersion;
+        document.getElementById('buildNumber').textContent = BUILD.buildNumber;
       }
     })
-    .catch(()=>{});
+    .catch(() => {});
 
-  // SW register + update flow (works with the SW we prepared earlier)
   const checkBtn = document.getElementById('btnCheckUpdates');
   const toast = document.getElementById('updateToast');
-  const btnReloadNow = document.getElementById('btnReloadNow');
-  const btnDismissToast = document.getElementById('btnDismissToast');
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const reg = await navigator.serviceWorker.register('./sw.js');
-        swReg = reg;
-
-        // Ask SW for its version label
+        swReg = await navigator.serviceWorker.register('./sw.js');
         const ask = () => navigator.serviceWorker.controller?.postMessage({type:'GET_VERSION'});
-        navigator.serviceWorker.addEventListener('message', (evt)=>{
-          if (evt.data?.type === 'VERSION' && evt.data?.cache) swVersionSpan.textContent = evt.data.cache;
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'VERSION' && e.data?.cache) {
+            document.getElementById('swVersion').textContent = e.data.cache;
+          }
         });
-        if (reg.active) ask(); else navigator.serviceWorker.ready.then(ask);
+        if (swReg.active) ask(); else navigator.serviceWorker.ready.then(ask);
 
-        reg.addEventListener('updatefound', () => {
-          const sw = reg.installing;
+        swReg.addEventListener('updatefound', () => {
+          const sw = swReg.installing;
           sw?.addEventListener('statechange', () => {
             if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateToast(reg);
+              toast.classList.add('show');
             }
           });
         });
       } catch (e) {
         console.error('SW registration failed', e);
       }
-      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
     });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
   }
 
-  function showUpdateToast(reg){
-    toast.classList.add('show');
-    btnReloadNow.onclick = () => { reg.waiting?.postMessage({type:'SKIP_WAITING'}); };
-    btnDismissToast.onclick = () => toast.classList.remove('show');
+  document.getElementById('btnReloadNow')?.addEventListener('click', () => {
+    swReg?.waiting?.postMessage({type:'SKIP_WAITING'});
+  });
+
+  document.getElementById('btnDismissToast')?.addEventListener('click', () => {
+    toast.classList.remove('show');
+  });
+
+  checkBtn?.addEventListener('click', async () => {
+    installHint.textContent = 'Checking…';
+    try {
+      await swReg?.update();
+      if (swReg?.waiting) toast.classList.add('show');
+      else installHint.textContent = 'No updates found.';
+    } catch {
+      installHint.textContent = 'Update check failed.';
+    }
+    setTimeout(() => installHint.textContent = '', 2200);
+  });
+
+  // ─────────────────────────────────────────────
+  // Chart.js annotation plugin
+  if (window.Chart && window['chartjs-plugin-annotation']) {
+    Chart.register(window['chartjs-plugin-annotation']);
   }
 
-  if (checkBtn) {
-    checkBtn.addEventListener('click', async () => {
-      try {
-        installHint.textContent = 'Checking…';
-        if (swReg?.update) await swReg.update();
-        if (swReg?.waiting) showUpdateToast(swReg);
-        else installHint.textContent = 'No updates found.';
-      } catch (e) {
-        console.warn('Update check failed', e);
-        installHint.textContent = 'Update check failed.';
-      } finally {
-        setTimeout(() => installHint.textContent = '', 2000);
-      }
-    });
-  }
-
-  /* ==================== Chart.js Annotation safe register ==================== */
-  (function(){
-    try{
-      const ann = (window && (window['chartjs-plugin-annotation'] || window.ChartAnnotation || window.chartjsPluginAnnotation));
-      if (window.Chart && ann && typeof Chart.register === 'function') Chart.register(ann);
-    }catch(e){ console.warn('Annotation plugin not registered:', e); }
-  })();
-
-  /* ==================== Data Model & Defaults ==================== */
+  // ─────────────────────────────────────────────
+  // Data model
   const METRICS = [
     { key:'glucose',     label:'Glucose (mg/dL)',   unit:'mg/dL', type:'number'},
     { key:'bodyBattery', label:'Body Battery',      unit:'',      type:'number'},
@@ -604,6 +554,7 @@
     { key:'comments',    label:'Comments',          unit:'',      type:'text'},
     { key:'meds',        label:'Medicines',         unit:'',      type:'list'},
   ];
+
   const CORE_FIELDS = ['date','time', ...METRICS.map(m=>m.key)];
   const DEFAULT_FIELDS_VISIBLE = [
     'date','time','glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn','sleep','steps','pain','emotions','comments'
@@ -628,80 +579,78 @@
   };
   const OPTIONS = { autosave:'on', csvSelectedOnly:'yes', pdfIncludeChart:'yes' };
 
-  /* ==================== IndexedDB ==================== */
+  // ─────────────────────────────────────────────
+  // IndexedDB
   const DB = {
-    db:null,
-    open(){
-      return new Promise((resolve,reject)=>{
-        if(!('indexedDB' in window)){ console.warn('IndexedDB not supported'); resolve(); return; }
+    db: null,
+    open() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) { resolve(); return; }
         const req = indexedDB.open('health-tracker-db', 1);
-        req.onupgradeneeded = (e)=>{
+        req.onupgradeneeded = e => {
           const db = e.target.result;
-          if(!db.objectStoreNames.contains('entries')){
+          if (!db.objectStoreNames.contains('entries')) {
             const s = db.createObjectStore('entries', {keyPath:'id', autoIncrement:true});
-            s.createIndex('by_date','date');
+            s.createIndex('by_date', 'date');
           }
-          if(!db.objectStoreNames.contains('config')){
+          if (!db.objectStoreNames.contains('config')) {
             db.createObjectStore('config', {keyPath:'key'});
           }
         };
-        req.onsuccess = ()=>{ DB.db = req.result; resolve(); };
-        req.onerror   = ()=> reject(req.error);
+        req.onsuccess = () => { DB.db = req.result; resolve(); };
+        req.onerror = () => reject(req.error);
       });
     },
-    putEntry(entry){
-      return new Promise((resolve, reject)=>{
-        if(!DB.db){ resolve(); return; }
-        const tx = DB.db.transaction('entries','readwrite');
+    putEntry(entry) {
+      return new Promise((resolve, reject) => {
+        if (!DB.db) return resolve();
+        const tx = DB.db.transaction('entries', 'readwrite');
         const store = tx.objectStore('entries');
-        const hasId = entry && entry.id != null;
-        const req = hasId ? store.put(entry) : store.add(entry);
-        req.onsuccess = ()=> resolve();
-        req.onerror   = ()=> reject(req.error);
+        const req = entry.id != null ? store.put(entry) : store.add(entry);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
       });
     },
-    deleteEntry(id){
-      return new Promise((resolve,reject)=>{
-        if(!DB.db){ resolve(); return; }
-        const tx = DB.db.transaction('entries','readwrite');
+    deleteEntry(id) {
+      return new Promise((resolve, reject) => {
+        if (!DB.db) return resolve();
+        const tx = DB.db.transaction('entries', 'readwrite');
         tx.objectStore('entries').delete(id);
-        tx.oncomplete = ()=> resolve();
-        // ✅ FIXED: correct error handler assignment
-        tx.onerror    = ()=> reject(tx.error);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
       });
     },
-    getAllEntries(){
-      return new Promise((resolve,reject)=>{
-        if(!DB.db){ resolve([]); return; }
-        const tx = DB.db.transaction('entries','readonly');
+    getAllEntries() {
+      return new Promise((resolve, reject) => {
+        if (!DB.db) return resolve([]);
+        const tx = DB.db.transaction('entries', 'readonly');
         const req = tx.objectStore('entries').getAll();
-        req.onsuccess = ()=> resolve(req.result||[]);
-        req.onerror   = ()=> reject(req.error);
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
       });
     },
-    putConfig(key,value){
-      return new Promise((resolve,reject)=>{
-        if(!DB.db){ resolve(); return; }
-        const tx = DB.db.transaction('config','readwrite');
-        tx.objectStore('config').put({key,value});
-        tx.oncomplete = ()=> resolve();
-        tx.onerror    = ()=> reject(tx.error);
+    putConfig(key, value) {
+      return new Promise((resolve, reject) => {
+        if (!DB.db) return resolve();
+        const tx = DB.db.transaction('config', 'readwrite');
+        tx.objectStore('config').put({key, value});
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
       });
     },
-    getConfig(key){
-      return new Promise((resolve,reject)=>{
-        if(!DB.db){ resolve(null); return; }
-        const tx = DB.db.transaction('config','readonly');
+    getConfig(key) {
+      return new Promise((resolve, reject) => {
+        if (!DB.db) return resolve(null);
+        const tx = DB.db.transaction('config', 'readonly');
         const req = tx.objectStore('config').get(key);
-        req.onsuccess = ()=> resolve(req.result ? req.result.value : null);
-        req.onerror   = ()=> reject(req.error);
+        req.onsuccess = () => resolve(req.result?.value ?? null);
+        req.onerror = () => reject(req.error);
       });
     }
   };
-  // Expose for global access & debugging
-  window.DB = DB;
 
-  /* ==================== State & Utils ==================== */
+  // ─────────────────────────────────────────────
+  // State & Utils
   const State = {
     entries: [],
     fieldsVisible: new Set(DEFAULT_FIELDS_VISIBLE),
@@ -713,240 +662,315 @@
   };
 
   const U = {
-    toISODate(d){ return d?.toISOString?.().slice(0,10); },
-    parseDateTime(dateStr,timeStr){ if(!dateStr) return null; const t = timeStr&&timeStr.length?timeStr:'00:00'; return new Date(`${dateStr}T${t}`); },
-    fmt(n,dp=0){ if(n==null||isNaN(n)) return '—'; return Number(n).toFixed(dp); },
-    bmi(lbs,inches){ if(!lbs||!inches) return null; return 703*(lbs/(inches*inches)); },
-    whtr(waistIn,heightIn){ if(!waistIn||!heightIn) return null; return waistIn/heightIn; },
-    csvEscape(v){ if(v==null) return ''; const s=typeof v==='string'?v:JSON.stringify(v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; },
-    dateInRange(dateStr,startStr,endStr){ if(!dateStr) return false; const d=new Date(dateStr); if(startStr&&d<new Date(startStr)) return false; if(endStr&&d>new Date(endStr)) return false; return true; }
+    toISODate(d) { return d?.toISOString?.().slice(0,10); },
+    parseDateTime(dateStr, timeStr) {
+      if (!dateStr) return null;
+      const t = timeStr?.length ? timeStr : '00:00';
+      return new Date(`${dateStr}T${t}`);
+    },
+    fmt(n, dp=0) { return (n==null || isNaN(n)) ? '—' : Number(n).toFixed(dp); },
+    bmi(lbs, inches) { return (!lbs || !inches) ? null : 703 * (lbs / (inches * inches)); },
+    whtr(waistIn, heightIn) { return (!waistIn || !heightIn) ? null : waistIn / heightIn; },
+    csvEscape(v) {
+      if (v == null) return '';
+      const s = typeof v === 'string' ? v : JSON.stringify(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    },
+    dateInRange(dateStr, startStr, endStr) {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (startStr && d < new Date(startStr)) return false;
+      if (endStr && d > new Date(endStr)) return false;
+      return true;
+    }
   };
 
-  /* ==================== UI ==================== */
+  // ─────────────────────────────────────────────
+  // UI
   const UI = {
-    initChartMetricSelector(){
-      const sel=document.getElementById('chartMetrics'); sel.innerHTML='';
-      METRICS.forEach(m=>{
-        if(m.type==='number'||m.key==='pain'){
-          const opt=document.createElement('option'); opt.value=m.key; opt.textContent=m.label;
-          if(['glucose','sys','dia','spo2','hr','weightLbs'].includes(m.key)) opt.selected=true;
+    chart: null,
+
+    initChartMetricSelector() {
+      const sel = document.getElementById('chartMetrics');
+      sel.innerHTML = '';
+      METRICS.forEach(m => {
+        if (m.type === 'number' || m.key === 'pain') {
+          const opt = document.createElement('option');
+          opt.value = m.key;
+          opt.textContent = m.label;
+          if (['glucose','sys','dia','spo2','hr','weightLbs'].includes(m.key)) opt.selected = true;
           sel.appendChild(opt);
         }
       });
     },
-    buildTable(){
-      const head=document.getElementById('tableHead'); head.innerHTML='';
-      const tr=document.createElement('tr');
-      const vis=['date','time',...METRICS.map(m=>m.key)].filter(k=>State.fieldsVisible.has(k));
-      vis.forEach(k=>{
-        const m=METRICS.find(x=>x.key===k);
-        const th=document.createElement('th'); th.textContent=m?m.label:(k==='date'?'Date':'Time'); tr.appendChild(th);
+
+    buildTable() {
+      const head = document.getElementById('tableHead'); head.innerHTML = '';
+      const tr = document.createElement('tr');
+      const vis = ['date','time', ...METRICS.map(m=>m.key)].filter(k => State.fieldsVisible.has(k));
+      vis.forEach(k => {
+        const m = METRICS.find(x => x.key === k);
+        const th = document.createElement('th');
+        th.textContent = m ? m.label : (k === 'date' ? 'Date' : 'Time');
+        tr.appendChild(th);
       });
-      const thA=document.createElement('th'); thA.textContent='Actions'; tr.appendChild(thA);
+      const thA = document.createElement('th'); thA.textContent = 'Actions'; tr.appendChild(thA);
       head.appendChild(tr);
 
-      const body=document.getElementById('tableBody'); body.innerHTML='';
-      const start=document.getElementById('filterStart').value;
-      const end  =document.getElementById('filterEnd').value;
-      const rows=State.entries
-        .filter(en=>U.dateInRange(en.date,start,end))
-        .sort((a,b)=>((U.parseDateTime(b.date,b.time)?.getTime()||0)-(U.parseDateTime(a.date,a.time)?.getTime()||0)));
+      const body = document.getElementById('tableBody'); body.innerHTML = '';
+      const start = document.getElementById('filterStart').value;
+      const end = document.getElementById('filterEnd').value;
 
-      for(const en of rows){
-        const tr=document.createElement('tr');
-        for(const k of vis){
-          const td=document.createElement('td');
-          let val=en[k];
-          if(k==='meds' && Array.isArray(val)) val = val.map(m=>`${m.name} ${m.dose}${m.units?(' '+m.units):''}`).join('; ');
-          td.textContent=(val==null?'':val);
+      const rows = State.entries
+        .filter(en => U.dateInRange(en.date, start, end))
+        .sort((a,b) => (U.parseDateTime(b.date,b.time)?.getTime()||0) - (U.parseDateTime(a.date,a.time)?.getTime()||0));
+
+      rows.forEach(en => {
+        const tr = document.createElement('tr');
+        vis.forEach(k => {
+          const td = document.createElement('td');
+          let val = en[k];
+          if (k === 'meds' && Array.isArray(val)) {
+            val = val.map(m => `${m.name} ${m.dose}${m.units ? ' '+m.units : ''}`).join('; ');
+          }
+          td.textContent = val ?? '';
           tr.appendChild(td);
-        }
-        const tdA=document.createElement('td'); tdA.className='actions';
-        const bE=document.createElement('button'); bE.className='btn'; bE.textContent='Edit'; bE.type='button'; bE.onclick=()=>UI.openEntry(en.id);
-        const bD=document.createElement('button'); bD.className='btn danger'; bD.textContent='Delete'; bD.type='button';
-        bD.onclick=async()=>{ await Actions.deleteEntry(en.id); await Actions.refreshAll(); };
-        tdA.appendChild(bE); tdA.appendChild(bD);
+        });
+        const tdA = document.createElement('td'); tdA.className = 'actions';
+        const bE = document.createElement('button'); bE.className = 'btn'; bE.textContent = 'Edit';
+        bE.onclick = () => UI.openEntry(en.id);
+        const bD = document.createElement('button'); bD.className = 'btn danger'; bD.textContent = 'Delete';
+        bD.onclick = async () => { await Actions.deleteEntry(en.id); await Actions.refreshAll(); };
+        tdA.append(bE, bD);
         tr.appendChild(tdA);
         body.appendChild(tr);
-      }
-    },
-    refreshKPIs(){
-      const sorted=[...State.entries].sort((a,b)=>((U.parseDateTime(b.date,b.time)?.getTime()||0)-(U.parseDateTime(a.date,a.time)?.getTime()||0)));
-      const latest=sorted[0], prev=sorted[1];
-      const set=(id,val)=>document.getElementById(id).textContent=val;
-      if(latest){
-        set('kpiGlucose',U.fmt(latest.glucose));
-        set('kpiBP',(latest.sys!=null&&latest.dia!=null)?`${latest.sys}/${latest.dia}`:'—');
-        const bmi=U.bmi(latest.weightLbs,latest.heightIn); set('kpiBMI',bmi?U.fmt(bmi,1):'—');
-        const whtr=U.whtr(latest.waistIn,latest.heightIn); set('kpiWHtR',whtr?U.fmt(whtr,2):'—');
-        set('kpiSpO2',U.fmt(latest.spo2)); set('kpiHR',U.fmt(latest.hr));
-      } else { set('kpiGlucose','—'); set('kpiBP','—'); set('kpiBMI','—'); set('kpiWHtR','—'); set('kpiSpO2','—'); set('kpiHR','—'); }
-      const trend=(cur,pre)=> (cur!=null&&pre!=null) ? (cur>pre?'↑':'↓') : '';
-      document.getElementById('kpiGlucoseTrend').textContent = latest&&prev?trend(latest.glucose,prev.glucose):'';
-      document.getElementById('kpiBPTrend').textContent      = latest&&prev?trend((latest.sys||0)+(latest.dia||0),(prev.sys||0)+(prev.dia||0)):'';
-      document.getElementById('kpiBMITrend').textContent     = latest&&prev?trend(U.bmi(latest.weightLbs,latest.heightIn)||0,U.bmi(prev.weightLbs,prev.heightIn)||0):'';
-      document.getElementById('kpiVitalsTrend').textContent  = latest&&prev?trend(latest.hr,prev.hr):'';
-      UI.refreshRiskChips(latest);
-    },
-    refreshRiskChips(latest){
-      const wrap=document.getElementById('riskChips'); wrap.innerHTML='';
-      if(!latest){ wrap.innerHTML='<span class="small">No data yet.</span>'; return; }
-      const chip=(txt,level)=>{ const d=document.createElement('div'); d.className=`chip ${level}`;
-        const icon=level==='danger'?'⚠️':(level==='warn'?'🟨':'🟢'); d.textContent=`${icon} ${txt}`; wrap.appendChild(d); };
-      const T=State.thresholds;
-      const assess=(key,val,label)=>{
-        if(val==null) return; const th=T[key]; if(!th) return;
-        if(val<th.warnLow || val>th.warnHigh) chip(`${label}: ${U.fmt(val)} (Critical)`,'danger');
-        else if(val<th.bandLow || val>th.bandHigh) chip(`${label}: ${U.fmt(val)} (Watch)`,'warn');
-        else chip(`${label}: ${U.fmt(val)} (OK)`,'ok');
-      };
-      assess('glucose',latest.glucose,'Glucose'); assess('sys',latest.sys,'Systolic'); assess('dia',latest.dia,'Diastolic');
-      assess('spo2',latest.spo2,'SpO₂'); assess('tempF',latest.tempF,'Temp'); assess('hr',latest.hr,'HR'); assess('resp',latest.resp,'Resp');
-      assess('stress',latest.stress,'Stress'); assess('bodyBattery',latest.bodyBattery,'Body Battery'); assess('lungFluidCc',latest.lungFluidCc,'Lung Fluid');
-      assess('sleep',latest.sleep,'Sleep'); assess('steps',latest.steps,'Steps'); assess('pain',latest.pain,'Pain');
-      const bmi=U.bmi(latest.weightLbs,latest.heightIn); if(bmi!=null) assess('bmi',bmi,'BMI');
-      const whtr=U.whtr(latest.waistIn,latest.heightIn); if(whtr!=null) assess('whtr',whtr,'WHtR');
+      });
     },
 
-    chart:null,
-    refreshChart(){
-      // Respect chart toggle
-      if (State.ui.chartEnabled === false) {
+    refreshKPIs() {
+      const sorted = [...State.entries].sort((a,b) => (U.parseDateTime(b.date,b.time)?.getTime()||0) - (U.parseDateTime(a.date,a.time)?.getTime()||0));
+      const latest = sorted[0], prev = sorted[1];
+
+      const set = (id, val) => document.getElementById(id).textContent = val;
+
+      if (latest) {
+        set('kpiGlucose', U.fmt(latest.glucose));
+        set('kpiBP', (latest.sys != null && latest.dia != null) ? `${latest.sys}/${latest.dia}` : '—');
+        const bmi = U.bmi(latest.weightLbs, latest.heightIn); set('kpiBMI', bmi ? U.fmt(bmi,1) : '—');
+        const whtr = U.whtr(latest.waistIn, latest.heightIn); set('kpiWHtR', whtr ? U.fmt(whtr,2) : '—');
+        set('kpiSpO2', U.fmt(latest.spo2));
+        set('kpiHR', U.fmt(latest.hr));
+      } else {
+        ['kpiGlucose','kpiBP','kpiBMI','kpiWHtR','kpiSpO2','kpiHR'].forEach(id => set(id, '—'));
+      }
+
+      const trend = (cur, pre) => (cur != null && pre != null) ? (cur > pre ? '↑' : '↓') : '';
+      document.getElementById('kpiGlucoseTrend').textContent = latest && prev ? trend(latest.glucose, prev.glucose) : '';
+      document.getElementById('kpiBPTrend').textContent      = latest && prev ? trend((latest.sys||0)+(latest.dia||0), (prev.sys||0)+(prev.dia||0)) : '';
+      document.getElementById('kpiBMITrend').textContent     = latest && prev ? trend(U.bmi(latest.weightLbs,latest.heightIn)||0, U.bmi(prev.weightLbs,prev.heightIn)||0) : '';
+      document.getElementById('kpiVitalsTrend').textContent  = latest && prev ? trend(latest.hr, prev.hr) : '';
+
+      UI.refreshRiskChips(latest);
+    },
+
+    refreshRiskChips(latest) {
+      const wrap = document.getElementById('riskChips'); wrap.innerHTML = '';
+      if (!latest) {
+        wrap.innerHTML = '<span class="small">No data yet.</span>';
+        return;
+      }
+      const chip = (txt, level) => {
+        const d = document.createElement('div');
+        d.className = `chip ${level}`;
+        const icon = level==='danger' ? '⚠️' : (level==='warn' ? '🟨' : '🟢');
+        d.textContent = `${icon} ${txt}`;
+        wrap.appendChild(d);
+      };
+      const T = State.thresholds;
+      const assess = (key, val, label) => {
+        if (val == null) return;
+        const th = T[key]; if (!th) return;
+        if (val < th.warnLow || val > th.warnHigh) chip(`${label}: ${U.fmt(val)} (Critical)`, 'danger');
+        else if (val < th.bandLow || val > th.bandHigh) chip(`${label}: ${U.fmt(val)} (Watch)`, 'warn');
+        else chip(`${label}: ${U.fmt(val)} (OK)`, 'ok');
+      };
+      assess('glucose', latest.glucose, 'Glucose');
+      assess('sys', latest.sys, 'Systolic');
+      assess('dia', latest.dia, 'Diastolic');
+      assess('spo2', latest.spo2, 'SpO₂');
+      assess('tempF', latest.tempF, 'Temp');
+      assess('hr', latest.hr, 'HR');
+      assess('resp', latest.resp, 'Resp');
+      assess('stress', latest.stress, 'Stress');
+      assess('bodyBattery', latest.bodyBattery, 'Body Battery');
+      assess('lungFluidCc', latest.lungFluidCc, 'Lung Fluid');
+      assess('sleep', latest.sleep, 'Sleep');
+      assess('steps', latest.steps, 'Steps');
+      assess('pain', latest.pain, 'Pain');
+      const bmi = U.bmi(latest.weightLbs, latest.heightIn); if (bmi != null) assess('bmi', bmi, 'BMI');
+      const whtr = U.whtr(latest.waistIn, latest.heightIn); if (whtr != null) assess('whtr', whtr, 'WHtR');
+    },
+
+    refreshChart() {
+      if (!State.ui.chartEnabled) {
         if (UI.chart) { UI.chart.destroy(); UI.chart = null; }
         return;
       }
-      if(!window.Chart) return;
+      if (!window.Chart) return;
 
-      const metricKeys=Array.from(document.getElementById('chartMetrics').selectedOptions).map(o=>o.value);
-      if (!metricKeys.length) { if (UI.chart) { UI.chart.destroy(); UI.chart = null; } return; }
+      const metricKeys = Array.from(document.getElementById('chartMetrics').selectedOptions).map(o => o.value);
+      if (!metricKeys.length) {
+        if (UI.chart) { UI.chart.destroy(); UI.chart = null; }
+        return;
+      }
 
-      const canvas=document.getElementById('metricsChart');
-      const start=document.getElementById('filterStart').value;
-      const end  =document.getElementById('filterEnd').value;
-      const axisMode=document.getElementById('axisMode').value;
+      const canvas = document.getElementById('metricsChart');
+      const start = document.getElementById('filterStart').value;
+      const end = document.getElementById('filterEnd').value;
+      const axisMode = document.getElementById('axisMode').value;
 
-      const rows=State.entries
-        .filter(e=>U.dateInRange(e.date,start,end))
-        .sort((a,b)=>((U.parseDateTime(a.date,a.time)?.getTime()||0)-(U.parseDateTime(b.date,b.time)?.getTime()||0)));
+      const rows = State.entries
+        .filter(e => U.dateInRange(e.date, start, end))
+        .sort((a,b) => (U.parseDateTime(a.date,a.time)?.getTime()||0) - (U.parseDateTime(b.date,b.time)?.getTime()||0));
 
-      const labels=rows.map(r=>{
-        const d=U.parseDateTime(r.date,r.time); return d?(d.toLocaleDateString()+' '+(r.time||'')):(r.date||'');
+      const labels = rows.map(r => {
+        const d = U.parseDateTime(r.date, r.time);
+        return d ? (d.toLocaleDateString() + ' ' + (r.time||'')) : (r.date||'');
       });
 
-      const palette=['#60a5fa','#34d399','#f472b6','#f59e0b','#a78bfa','#38bdf8','#f87171','#22d3ee','#e879f9','#fde047','#fb7185','#93c5fd','#86efac','#c084fc','#fda4af'];
+      const palette = ['#60a5fa','#34d399','#f472b6','#f59e0b','#a78bfa','#38bdf8','#f87171','#22d3ee','#e879f9','#fde047','#fb7185','#93c5fd','#86efac','#c084fc','#fda4af'];
 
-      const yAxes={};
-      const datasets=metricKeys.map((k,idx)=>{
-        const m=METRICS.find(x=>x.key===k);
-        const data=rows.map(r=>r[k] ?? null);
-        const color=palette[idx%palette.length];
-        const yAxisID=axisMode==='perMetric'?`y_${k}`:'y';
-        if(!yAxes[yAxisID]){
-          yAxes[yAxisID]={type:'linear',display:true,position:(Object.keys(yAxes).length%2?'right':'left'),
-            grid:{drawOnChartArea:(axisMode==='single')},title:{display:true,text:(axisMode==='single'?'Value':(m?.label||k))}};
+      const yAxes = {};
+      const datasets = metricKeys.map((k, idx) => {
+        const m = METRICS.find(x => x.key === k);
+        const data = rows.map(r => r[k] ?? null);
+        const color = palette[idx % palette.length];
+        const yAxisID = axisMode === 'perMetric' ? `y_${k}` : 'y';
+        if (!yAxes[yAxisID]) {
+          yAxes[yAxisID] = {
+            type: 'linear',
+            display: true,
+            position: Object.keys(yAxes).length % 2 ? 'right' : 'left',
+            grid: { drawOnChartArea: axisMode === 'single' },
+            title: { display: true, text: axisMode === 'single' ? 'Value' : (m?.label || k) }
+          };
         }
-        return {label:(m?.label||k),data,borderColor:color,backgroundColor:color+'66',tension:.25,spanGaps:true,yAxisID};
+        return { label: m?.label || k, data, borderColor: color, backgroundColor: color+'66', tension: .25, spanGaps: true, yAxisID };
       });
 
-      // Annotations if plugin present
-      const annotations={};
-      const hasAnn = !!(window.Chart?.registry?.plugins?.get?.('annotation') || window['chartjs-plugin-annotation']);
-      if (hasAnn) {
-        const addLine=(id,y,color,label)=>{
-          if(y==null||isNaN(y)) return;
-          annotations[id]={type:'line',yMin:y,yMax:y,borderColor:color,borderWidth:1,
-            label:{display:true,content:label,position:'start',color:'#cfe8ff',backgroundColor:'#0b1220cc'}};
+      const annotations = {};
+      if (window['chartjs-plugin-annotation']) {
+        const addLine = (id, y, color, label) => {
+          if (y == null || isNaN(y)) return;
+          annotations[id] = { type: 'line', yMin: y, yMax: y, borderColor: color, borderWidth: 1,
+            label: { display: true, content: label, position: 'start', color: '#cfe8ff', backgroundColor: '#0b1220cc' }};
         };
-        const addBand=(id,y1,y2,color)=>{
-          if([y1,y2].some(v=>v==null||isNaN(v))) return;
-          annotations[id]={type:'box',yMin:y1,yMax:y2,backgroundColor:color,borderWidth:0};
+        const addBand = (id, y1, y2, color) => {
+          if ([y1,y2].some(v => v==null || isNaN(v))) return;
+          annotations[id] = { type: 'box', yMin: y1, yMax: y2, backgroundColor: color, borderWidth: 0 };
         };
-        metricKeys.forEach(k=>{
-          const th=State.thresholds[k]; if(!th) return;
-          const yAxisID=axisMode==='perMetric'?`y_${k}`:'y';
-          const base=`${yAxisID}_${k}`;
-          addBand(`${base}_band`,th.bandLow,th.bandHigh,'rgba(39,215,155,0.08)');
-          addLine(`${base}_warnLow`,th.warnLow,'#ffcc66','Warn Low');
-          addLine(`${base}_warnHigh`,th.warnHigh,'#ffcc66','Warn High');
+        metricKeys.forEach(k => {
+          const th = State.thresholds[k]; if (!th) return;
+          const yAxisID = axisMode === 'perMetric' ? `y_${k}` : 'y';
+          const base = `${yAxisID}_${k}`;
+          addBand(`${base}_band`, th.bandLow, th.bandHigh, 'rgba(39,215,155,0.08)');
+          addLine(`${base}_warnLow`, th.warnLow, '#ffcc66', 'Warn Low');
+          addLine(`${base}_warnHigh`, th.warnHigh, '#ffcc66', 'Warn High');
         });
       }
 
-      const config={
-        type:'line',
-        data:{labels,datasets},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{legend:{labels:{color:'#dbeafe'}}, annotation:{annotations}},
+      const config = {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#dbeafe' } }, annotation: { annotations } },
           animation: { duration: 300 },
-          scales:Object.assign({x:{ticks:{color:'#9fb2d6'},grid:{color:'#13213d'}}, y:{ticks:{color:'#9fb2d6'},grid:{color:'#13213d'}}}, yAxes)
+          scales: Object.assign({
+            x: { ticks: { color: '#9fb2d6' }, grid: { color: '#13213d' } },
+            y: { ticks: { color: '#9fb2d6' }, grid: { color: '#13213d' } }
+          }, yAxes)
         }
       };
-      if(UI.chart){ UI.chart.destroy(); }
-      UI.chart=new Chart(canvas.getContext('2d'),config);
+
+      if (UI.chart) UI.chart.destroy();
+      UI.chart = new Chart(canvas.getContext('2d'), config);
     },
 
-    // Modals
-    openEntry(id=null){
+    openEntry(id = null) {
       State.editId = id;
       document.getElementById('entryModal').classList.add('show');
       document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
       document.getElementById('entryModalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
       State.medsBuffer = [];
 
-      if(id){
-        const en=State.entries.find(x=>x.id===id); if(!en) return;
-        const map=(idk,v)=>{ const el=document.getElementById(idk); if(el) el.value=(v??''); };
-        document.getElementById('f_date').value=en.date||'';
-        document.getElementById('f_time').value=en.time||'';
-        map('f_glucose',en.glucose); map('f_bodyBattery',en.bodyBattery); map('f_stress',en.stress);
-        map('f_weightLbs',en.weightLbs); map('f_heightIn',en.heightIn); map('f_waistIn',en.waistIn);
-        map('f_tempF',en.tempF); map('f_lungFluidCc',en.lungFluidCc); map('f_sys',en.sys); map('f_dia',en.dia);
-        map('f_spo2',en.spo2); map('f_hr',en.hr); map('f_resp',en.resp); map('f_sleep',en.sleep); map('f_steps',en.steps);
-        map('f_pain',en.pain??0); document.getElementById('painVal').textContent=en.pain??0;
-        document.getElementById('f_emotions').value=en.emotions||''; document.getElementById('f_comments').value=en.comments||'';
-        State.medsBuffer = Array.isArray(en.meds)? JSON.parse(JSON.stringify(en.meds)) : [];
+      if (id) {
+        const en = State.entries.find(x => x.id === id);
+        if (!en) return;
+        document.getElementById('f_date').value = en.date || '';
+        document.getElementById('f_time').value = en.time || '';
+        ['glucose','bodyBattery','stress','weightLbs','heightIn','waistIn','tempF','lungFluidCc','sys','dia','spo2','hr','resp','sleep','steps','pain']
+          .forEach(k => document.getElementById(`f_${k}`).value = en[k] ?? '');
+        document.getElementById('painVal').textContent = en.pain ?? 0;
+        document.getElementById('f_pain').value = en.pain ?? 0;
+        document.getElementById('f_emotions').value = en.emotions || '';
+        document.getElementById('f_comments').value = en.comments || '';
+        State.medsBuffer = Array.isArray(en.meds) ? JSON.parse(JSON.stringify(en.meds)) : [];
       } else {
-        document.getElementById('f_date').value=U.toISODate(new Date());
-        document.getElementById('f_time').value=new Date().toTimeString().slice(0,5);
-        ['glucose','bodyBattery','stress','weightLbs','heightIn','waistIn','tempF','lungFluidCc','sys','dia','spo2','hr','resp','sleep','steps'].forEach(k=>{
-          const el=document.getElementById('f_'+k); if(el) el.value='';
-        });
-        document.getElementById('f_pain').value=0; document.getElementById('painVal').textContent='0';
-        document.getElementById('f_emotions').value=''; document.getElementById('f_comments').value='';
+        const now = new Date();
+        document.getElementById('f_date').value = U.toISODate(now);
+        document.getElementById('f_time').value = now.toTimeString().slice(0,5);
+        ['glucose','bodyBattery','stress','weightLbs','heightIn','waistIn','tempF','lungFluidCc','sys','dia','spo2','hr','resp','sleep','steps']
+          .forEach(k => document.getElementById(`f_${k}`).value = '');
+        document.getElementById('f_pain').value = 0;
+        document.getElementById('painVal').textContent = '0';
+        document.getElementById('f_emotions').value = '';
+        document.getElementById('f_comments').value = '';
       }
       UI.renderMedsBuffer();
     },
-    closeEntry(){ document.getElementById('entryModal').classList.remove('show'); },
 
-    openFields(){
+    closeEntry() { document.getElementById('entryModal').classList.remove('show'); },
+
+    openFields() {
       document.getElementById('fieldsModal').classList.add('show');
-      const grid=document.getElementById('fieldsGrid'); grid.innerHTML='';
-      const all=['date','time',...METRICS.map(m=>m.key)];
-      for(const k of all){
-        const m=METRICS.find(x=>x.key===k);
-        const lab=m?m.label:(k==='date'?'Date':'Time');
-        const id='fld_'+k;
-        const wrap=document.createElement('div');
-        const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=State.fieldsVisible.has(k);
-        cb.onchange=()=>{ if(cb.checked) State.fieldsVisible.add(k); else State.fieldsVisible.delete(k); };
-        const lb=document.createElement('label'); lb.htmlFor=id; lb.textContent=lab;
-        wrap.appendChild(cb); wrap.appendChild(lb); grid.appendChild(wrap);
-      }
+      const grid = document.getElementById('fieldsGrid'); grid.innerHTML = '';
+      const all = ['date','time', ...METRICS.map(m=>m.key)];
+      all.forEach(k => {
+        const m = METRICS.find(x => x.key === k);
+        const lab = m ? m.label : (k==='date'?'Date':'Time');
+        const id = 'fld_' + k;
+        const wrap = document.createElement('div');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.id = id; cb.checked = State.fieldsVisible.has(k);
+        cb.onchange = () => {
+          if (cb.checked) State.fieldsVisible.add(k);
+          else State.fieldsVisible.delete(k);
+        };
+        const lb = document.createElement('label');
+        lb.htmlFor = id; lb.textContent = lab;
+        wrap.append(cb, lb);
+        grid.appendChild(wrap);
+      });
     },
-    closeFields(){ document.getElementById('fieldsModal').classList.remove('show'); },
 
-    openThresholds(){
+    closeFields() { document.getElementById('fieldsModal').classList.remove('show'); },
+
+    openThresholds() {
       document.getElementById('thModal').classList.add('show');
-      const host=document.getElementById('thEditor'); host.innerHTML='';
-      function card(title, html){
-        const d=document.createElement('div'); d.className='card'; d.style.marginBottom='10px';
-        d.innerHTML=`<h2>${title}</h2>${html}`; host.appendChild(d);
+      const host = document.getElementById('thEditor'); host.innerHTML = '';
+      function card(title, html) {
+        const d = document.createElement('div');
+        d.className = 'card'; d.style.marginBottom = '10px';
+        d.innerHTML = `<h2>${title}</h2>${html}`;
+        host.appendChild(d);
       }
-      const keys=['glucose','sys','dia','spo2','hr','tempF','stress','bodyBattery','lungFluidCc','resp','sleep','steps','pain','bmi','whtr'];
-      keys.forEach(k=>{
-        const th=State.thresholds[k]||{warnLow:'',bandLow:'',bandHigh:'',warnHigh:''};
-        const title=(METRICS.find(m=>m.key===k)?.label)||k.toUpperCase();
-        card(title,`
+      const keys = ['glucose','sys','dia','spo2','hr','tempF','stress','bodyBattery','lungFluidCc','resp','sleep','steps','pain','bmi','whtr'];
+      keys.forEach(k => {
+        const th = State.thresholds[k] || {warnLow:'',bandLow:'',bandHigh:'',warnHigh:''};
+        const title = METRICS.find(m=>m.key===k)?.label || k.toUpperCase();
+        card(title, `
           <div class="row">
             <div><label>Warn Low</label><input type="number" id="t_${k}_warnLow" value="${th.warnLow}"></div>
             <div><label>Band Low</label><input type="number" id="t_${k}_bandLow" value="${th.bandLow}"></div>
@@ -956,480 +980,14 @@
         `);
       });
     },
-    closeThresholds(){ document.getElementById('thModal').classList.remove('show'); },
 
-    openOptions(){
+    closeThresholds() { document.getElementById('thModal').classList.remove('show'); },
+
+    openOptions() {
       document.getElementById('optModal').classList.add('show');
-      document.getElementById('optAutosave').value=State.options.autosave;
-      document.getElementById('optCsvSelected').value=State.options.csvSelectedOnly;
-      document.getElementById('optPdfChart').value=State.options.pdfIncludeChart;
-    },
-    closeOptions(){ document.getElementById('optModal').classList.remove('show'); },
-
-    renderMedsBuffer(){
-      const host=document.getElementById('medList'); host.innerHTML='';
-      State.medsBuffer.forEach((m,idx)=>{
-        const chip=document.createElement('div'); chip.className='chip';
-        chip.textContent=`${m.name} ${m.dose}${m.units?(' '+m.units):''}`;
-        const btn=document.createElement('button'); btn.className='btn danger'; btn.style.padding='2px 6px'; btn.style.marginLeft='6px'; btn.textContent='x'; btn.type='button';
-        btn.onclick=()=>{ State.medsBuffer.splice(idx,1); UI.renderMedsBuffer(); };
-        chip.appendChild(btn); host.appendChild(chip);
-      });
-    }
-  };
-  window.UI = UI;
-
-  /* ==================== Actions ==================== */
-  const Actions = {
-    async init(){
-      await DB.open();
-      const fields=await DB.getConfig('fieldsVisible'); if(fields) State.fieldsVisible=new Set(fields);
-      const thresholds=await DB.getConfig('thresholds'); if(thresholds) State.thresholds=thresholds;
-      const options=await DB.getConfig('options'); if(options) State.options=options;
-      const ui=await DB.getConfig('ui'); if(ui && typeof ui.chartEnabled==='boolean') State.ui.chartEnabled=ui.chartEnabled;
-
-      document.getElementById('toggleChart').value = State.ui.chartEnabled ? 'on' : 'off';
-      document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-
-      State.entries=await DB.getAllEntries();
-      UI.initChartMetricSelector();
-      UI.buildTable();
-      UI.refreshKPIs();
-      UI.refreshChart();
-    },
-    async saveEntryFromForm(){
-      const isEdit = State.editId != null;
-      const en = {
-        date: document.getElementById('f_date').value || null,
-        time: document.getElementById('f_time').value || null,
-        glucose: num('f_glucose'),
-        bodyBattery: num('f_bodyBattery'),
-        stress: num('f_stress'),
-        weightLbs: num('f_weightLbs'),
-        heightIn: num('f_heightIn'),
-        waistIn: num('f_waistIn'),
-        tempF: num('f_tempF'),
-        lungFluidCc: num('f_lungFluidCc'),
-        sys: num('f_sys'),
-        dia: num('f_dia'),
-        spo2: num('f_spo2'),
-        hr: num('f_hr'),
-        resp: num('f_resp'),
-        sleep: num('f_sleep'),
-        steps: num('f_steps'),
-        pain: num('f_pain'),
-        emotions: document.getElementById('f_emotions').value || '',
-        comments: document.getElementById('f_comments').value || '',
-        meds: JSON.parse(JSON.stringify(State.medsBuffer)),
-      };
-      if(isEdit) en.id = Number(State.editId);
-      function num(id){ const v=document.getElementById(id).value; return v===''?null:Number(v); }
-      if(!en.date){ alert('Date is required.'); return; }
-      await DB.putEntry(en);
-      State.editId = null;
-      UI.closeEntry();
-    },
-    async deleteEntry(id){ await DB.deleteEntry(id); },
-    async refreshAll(){ State.entries=await DB.getAllEntries(); UI.buildTable(); UI.refreshKPIs(); UI.refreshChart(); },
-    async saveFields(){ await DB.putConfig('fieldsVisible', Array.from(State.fieldsVisible)); UI.closeFields(); UI.buildTable(); },
-
-    // DEFENSIVE saveThresholds (prevents "reading 'value' of null")
-    async saveThresholds(){
-      const merged = { ...State.thresholds };
-      const keys = ['glucose','sys','dia','spo2','hr','tempF','stress','bodyBattery','lungFluidCc','resp','sleep','steps','pain','bmi','whtr'];
-      const read = (id) => {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        const n = Number(el.value);
-        return Number.isFinite(n) ? n : null;
-      };
-      for (const k of keys) {
-        const wl = read(`t_${k}_warnLow`);
-        const bl = read(`t_${k}_bandLow`);
-        const bh = read(`t_${k}_bandHigh`);
-        const wh = read(`t_${k}_warnHigh`);
-        if ([wl, bl, bh, wh].some(v => v !== null)) {
-          const cur = merged[k] || { warnLow:'', bandLow:'', bandHigh:'', warnHigh:'' };
-          merged[k] = {
-            warnLow:  (wl !== null ? wl : cur.warnLow),
-            bandLow:  (bl !== null ? bl : cur.bandLow),
-            bandHigh: (bh !== null ? bh : cur.bandHigh),
-            warnHigh: (wh !== null ? wh : cur.warnHigh),
-          };
-        }
-      }
-      State.thresholds = merged;
-      await DB.putConfig('thresholds', merged);
-      const thModal = document.getElementById('thModal');
-      if (thModal && thModal.classList.contains('show')) thModal.classList.remove('show');
-      UI.refreshKPIs();
-      UI.refreshChart();
+      document.getElementById('optAutosave').value = State.options.autosave;
+      document.getElementById('optCsvSelected').value = State.options.csvSelectedOnly;
+      document.getElementById('optPdfChart').value = State.options.pdfIncludeChart;
     },
 
-    async saveOptions(){
-      State.options={
-        autosave: document.getElementById('optAutosave').value,
-        csvSelectedOnly: document.getElementById('optCsvSelected').value,
-        pdfIncludeChart: document.getElementById('optPdfChart').value,
-      };
-      await DB.putConfig('options', State.options);
-      UI.closeOptions();
-    },
-    exportCSV(){
-      try{
-        const start=document.getElementById('filterStart').value;
-        const end  =document.getElementById('filterEnd').value;
-        const rows=State.entries.filter(e=>U.dateInRange(e.date,start,end));
-        const fields=State.options.csvSelectedOnly==='yes' ? [...State.fieldsVisible] : CORE_FIELDS;
-
-        const headers=[]; if(fields.includes('date')) headers.push('date'); if(fields.includes('time')) headers.push('time');
-        CORE_FIELDS.filter(f=>!['date','time'].includes(f)).forEach(f=>{ if(fields.includes(f)) headers.push(f); });
-
-        let csv=headers.join(',')+'\n';
-        for(const r of rows){
-          const vals=headers.map(h=>{
-            let v=r[h];
-            if(h==='meds') v=Array.isArray(v)? v.map(m=>`${m.name} ${m.dose}${m.units?(' '+m.units):''}`).join('; ') : '';
-            return U.csvEscape(v==null?'':v);
-          });
-          csv+=vals.join(',')+'\n';
-        }
-        const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-        const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-        a.download=`health-tracker_${U.toISODate(new Date())}.csv`; a.click(); URL.revokeObjectURL(a.href);
-      }catch(err){ console.error(err); alert('CSV export failed. See console for details.'); }
-    }
-  };
-  window.Actions = Actions;
-
-  /* ==================== Save buttons ==================== */
-  /* // Saves */
-
-  //Save Entry
-  
-document.getElementById('btnSaveEntry').addEventListener('click', async (e) => {
-+  e.stopPropagation();
-   await Actions.saveEntryFromForm();
-   await Actions.refreshAll();
-});
-``
-//Save Fields
-
-document.getElementById('btnSaveFields').addEventListener('click', async (e) => {
-+  e.stopPropagation();
-   await Actions.saveFields();
-});
-
-//Save Thresholds
-
-document.getElementById('btnSaveThresholds').addEventListener('click', async (e) => {
-+  e.stopPropagation();
-   await Actions.saveThresholds();
-});
-
-//Save Options
-
-document.getElementById('btnSaveOptions').addEventListener('click', async (e) => {
-+  e.stopPropagation();
-   await Actions.saveOptions();
-});
-``
-//Backdrop
-
- 
-document.getElementById('btnDeleteEntry').addEventListener('click', async (e) => {
-  e.stopPropagation();
-
-  if (State.editId != null && confirm('Delete this entry?')) {
-    await Actions.deleteEntry(State.editId);
-    UI.closeEntry();
-    await Actions.refreshAll();
-  }
-});
-``
-
-  /* ==================== Chart → PNG (stable) helpers + PDF Export ==================== */
-  function logPDF(msg, data) { try { console.debug('[PDF]', msg, data ?? ''); } catch {} }
-
-  function chartHasRenderableData(chart) {
-    try { return (chart?.data?.datasets || []).some(ds => (ds.data || []).some(v => v != null && v !== '')); }
-    catch { return false; }
-  }
-  async function waitForStableCanvas() {
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await new Promise(r => setTimeout(r, 20));
-  }
-  async function renderChartImageForPDF(chart, targetWidthPt, pdfDpi = 96) {
-    if (!chart || typeof chart.toBase64Image !== 'function') { logPDF('Chart missing'); return null; }
-    if (!chartHasRenderableData(chart)) { logPDF('Chart has no data'); return null; }
-
-    let prevAnim = chart.options?.animation;
-    try {
-      if (typeof chart.stop === 'function') chart.stop();
-      chart.options.animation = false;
-      chart.update('none');
-    } catch {}
-
-    await waitForStableCanvas();
-
-    const src = chart.canvas;
-    if (!src || !src.width || !src.height) { logPDF('Canvas invalid', { w: src?.width, h: src?.height }); chart.options.animation = prevAnim; return null; }
-
-    const targetWpx = Math.max(700, Math.floor(targetWidthPt * (pdfDpi / 72)));
-    const aspect = src.height / src.width;
-    const targetHpx = Math.max(350, Math.floor(targetWpx * aspect));
-
-    const off = document.createElement('canvas');
-    off.width = targetWpx; off.height = targetHpx;
-    const ctx = off.getContext('2d', { alpha: true });
-    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(src, 0, 0, off.width, off.height);
-
-    const dataUrl = off.toDataURL('image/png');
-    chart.options.animation = prevAnim;
-
-    if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
-      logPDF('Downscaled PNG invalid', { length: dataUrl?.length || 0 });
-      return null;
-    }
-    logPDF('Chart PNG ready', { w: off.width, h: off.height, bytes: Math.round((dataUrl.length * 3) / 4) });
-    return { dataUrl, pxWidth: off.width, pxHeight: off.height };
-  }
-
-  Actions.exportPDF = async function exportPDF(){
-    try{
-      if(!window.jspdf){ alert('jsPDF failed to load.'); return; }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({unit:'pt', format:'a4'});
-
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 36;
-      const contentW = pageW - margin*2;
-      const bottomLimit = pageH - margin;
-
-      let y = margin;
-      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(20);
-      doc.text('Health Tracker Export', margin, y); y += 18;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y); y += 16;
-
-      const start=document.getElementById('filterStart').value;
-      const end  =document.getElementById('filterEnd').value;
-      const parseDT=(d,t)=>{ if(!d) return 0; const T=t&&t.length?t:'00:00'; const X=new Date(`${d}T${T}`); return X.getTime()||0; };
-
-      const all=(State.entries||[])
-        .filter(e=>{
-          if(!e.date) return false;
-          const D=new Date(e.date);
-          if(start && D<new Date(start)) return false;
-          if(end   && D>new Date(end))   return false;
-          return true;
-        })
-        .sort((a,b)=>parseDT(a.date,a.time) - parseDT(b.date,b.time));
-      logPDF('Row count after filter', all.length);
-
-      const visible = new Set(State.fieldsVisible||[]);
-      const baseHeaders = ['date','time', ...METRICS.map(m=>m.key)].filter(k=>visible.has(k));
-      const headers=[]; if(baseHeaders.includes('date')) headers.push('date'); if(baseHeaders.includes('time')) headers.push('time');
-      baseHeaders.forEach(h=>{ if(!['date','time'].includes(h)) headers.push(h); });
-      if(!headers.length) headers.push('date','time');
-
-      // Chart (only if enabled + valid)
-      const wantChart = (State.options?.pdfIncludeChart==='yes') && State.ui?.chartEnabled === true;
-      if (wantChart && UI.chart) {
-        const img = await renderChartImageForPDF(UI.chart, contentW);
-        if (img && img.dataUrl) {
-          const chartW = contentW;
-          const aspect = img.pxHeight / img.pxWidth;
-          const naturalH = chartW * aspect;
-          const chartH = Math.min(260, Math.max(170, naturalH));
-          if (y + chartH + 10 > bottomLimit) { doc.addPage(); y = margin; }
-          doc.addImage(img.dataUrl, 'PNG', margin, y, chartW, chartH, undefined, 'MEDIUM');
-          y += chartH + 12;
-        } else {
-          logPDF('Chart skipped');
-        }
-      } else {
-        logPDF('Chart disabled via option/toggle');
-      }
-
-      const rows = all.map(r=>{
-        const flat={...r};
-        if(Array.isArray(flat.meds)){
-          flat.meds = flat.meds.map(m=>`${m.name} ${m.dose}${m.units?(' '+m.units):''}`).join('; ');
-        }
-        return flat;
-      });
-
-      const LABEL_ABBR = {
-        'Glucose (mg/dL)':'Glucose','Systolic (mmHg)':'Sys','Diastolic (mmHg)':'Dia',
-        'Temperature (°F)':'Temp','Heart Rate (bpm)':'HR','Respiration (br/min)':'Resp',
-        'Body Battery':'BodyBat','SpO₂ (%)':'SpO2','Lung Fluid (cc)':'LungFl',
-        'Weight (lbs)':'Wt','Height (in)':'Ht','Waist (in)':'Waist',
-        'Sleep (hrs)':'Sleep','Medicines':'Meds','Emotions':'Mood','Comments':'Notes'
-      };
-      const labelOf=(k)=> (k==='date'?'Date':(k==='time'?'Time':(METRICS.find(x=>x.key===k)?.label||k.toUpperCase())));
-      const shortLabel=(label,colW)=>{ const abbr=LABEL_ABBR[label]||label; const maxChars=Math.max(3,Math.floor((colW-8)/6)); return abbr.length>maxChars?(abbr.slice(0,maxChars-1)+'…'):abbr; };
-      const chunk=(arr,n)=>{ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; };
-
-      if (!rows.length) { doc.setFont('helvetica','bold'); doc.setTextColor(120); doc.text('No rows in current date range.', margin, y); y += 18; }
-      if (!headers.length) { doc.setFont('helvetica','bold'); doc.setTextColor(120); doc.text('No visible columns selected. Showing Date/Time only.', margin, y); y += 18; headers.push('date','time'); }
-
-      const maxColsPerChunk=6;
-      const headerChunks=chunk(headers,maxColsPerChunk);
-      const cellPadX=4, cellPadY=3;
-      const headerH=14, rowBaseH=12;
-
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(15);
-
-      for(const cols of headerChunks){
-        const colW=Math.floor(contentW/Math.max(1,cols.length));
-        if(y+headerH+6>bottomLimit){ doc.addPage(); y=margin; }
-
-        // header
-        let x=margin;
-        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(20);
-        cols.forEach(col=>{ doc.text(shortLabel(labelOf(col), colW), x+cellPadX, y+10); x+=colW; });
-        doc.setDrawColor(160); doc.setLineWidth(0.5);
-        doc.line(margin,y+headerH,margin+contentW,y+headerH);
-        y+=headerH+4;
-
-        // body
-        doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(15);
-        for(const r of rows){
-          let rowH=rowBaseH;
-          const wrapped=cols.map(col=>{
-            let v=r[col]; if(v==null) v=''; v=String(v);
-            const lines=doc.splitTextToSize(v, colW - cellPadX*2);
-            const h=lines.length*12 + cellPadY*2;
-            if(h>rowH) rowH=h; return lines;
-          });
-
-          if(y+rowH>bottomLimit){ doc.addPage(); y=margin; }
-
-          let xCell=margin;
-          for(let i=0;i<cols.length;i++){
-            let lineY=y+10;
-            for(const ln of wrapped[i]){ doc.text(ln, xCell+cellPadX, lineY); lineY+=12; }
-            xCell+=colW;
-          }
-          y+=rowH;
-        }
-        y+=10;
-      }
-
-      if (y < margin + 40) y = margin + 40;
-      doc.setFont('helvetica','italic'); doc.setTextColor(140);
-      doc.text('— End of report —', margin, Math.min(y, bottomLimit));
-
-      const stamp=new Date().toISOString().slice(0,10);
-      doc.save(`health-tracker_${stamp}.pdf`);
-    }catch(err){
-      console.error(err);
-      alert('PDF export failed. See console for details.');
-    }
-  };
-
-<script>
-// ...everything above unchanged...
-
-/* ==================== Events ==================== */
-
-// Open/close actions
-document.getElementById('btnAdd').addEventListener('click', () => UI.openEntry(null));
-document.getElementById('btnFields').addEventListener('click', () => UI.openFields());
-document.getElementById('btnThresholds').addEventListener('click', () => UI.openThresholds());
-document.getElementById('btnOptions').addEventListener('click', () => UI.openOptions());
-
-// ✅ Save buttons: stop propagation so backdrop doesn’t close the modal first
-document.getElementById('btnSaveFields').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  await Actions.saveFields();
-});
-
-document.getElementById('btnSaveThresholds').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  await Actions.saveThresholds();
-});
-
-document.getElementById('btnSaveOptions').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  await Actions.saveOptions();
-});
-
-document.getElementById('btnSaveEntry').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  await Actions.saveEntryFromForm();
-  await Actions.refreshAll();
-});
-
-document.getElementById('btnDeleteEntry').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  if (State.editId != null && confirm('Delete this entry?')) {
-    await Actions.deleteEntry(State.editId);
-    UI.closeEntry();
-    await Actions.refreshAll();
-  }
-});
-
-// Non-modal buttons
-document.getElementById('btnRefresh').addEventListener('click', () => {
-  UI.buildTable();
-  UI.refreshKPIs();
-  UI.refreshChart();
-});
-document.getElementById('btnSaveCSV').addEventListener('click', Actions.exportCSV);
-document.getElementById('btnSavePDF').addEventListener('click', Actions.exportPDF);
-
-// Inline meds adder in Entry modal
-document.getElementById('btnAddMed').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const name = document.getElementById('med_name').value.trim();
-  const dose = document.getElementById('med_dose').value.trim();
-  const units = document.getElementById('med_units').value.trim();
-  if (!name) return;
-  State.medsBuffer.push({ name, dose, units });
-  document.getElementById('med_name').value = '';
-  document.getElementById('med_dose').value = '';
-  document.getElementById('med_units').value = '';
-  UI.renderMedsBuffer();
-});
-
-// Filters & chart controls
-document.getElementById('chartMetrics').addEventListener('change', () => UI.refreshChart());
-document.getElementById('axisMode').addEventListener('change', () => UI.refreshChart());
-document.getElementById('filterStart').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
-document.getElementById('filterEnd').addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
-
-document.getElementById('toggleChart').addEventListener('change', async (e) => {
-  State.ui.chartEnabled = (e.target.value === 'on');
-  document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-  if (!State.ui.chartEnabled && UI.chart) { UI.chart.destroy(); UI.chart = null; }
-  await DB.putConfig('ui', State.ui);
-  UI.refreshChart();
-});
-
-// ✅ Backdrop click: only close when the click is on the backdrop itself
-for (const id of ['entryModal','fieldsModal','thModal','optModal']) {
-  const el = document.getElementById(id);
-  el.addEventListener('click', (ev) => {
-    if (ev.target === ev.currentTarget) {
-      ev.currentTarget.classList.remove('show');
-    }
-  });
-}
-
-// ✅ SAFE INIT: guard so we see real errors if something else breaks
-(async () => {
-  try {
-    await Actions.init();
-  } catch (err) {
-    console.error('Init failed:', err);
-  }
-})();
-</script>
-</body>
-</html>
-
-
+    closeOptions() { document.getElementById('optModal').class
