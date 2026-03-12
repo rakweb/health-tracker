@@ -1136,15 +1136,18 @@ document.getElementById('btnSaveOptions').addEventListener('click', async (e) =>
 ``
 //Backdrop
 
- document.getElementById(id).addEventListener('click', (ev) => {
--  if (ev.target.classList.contains('modal-backdrop'))
--    ev.target.classList.remove('show');
-+  if (ev.target === ev.currentTarget) {
-+    ev.currentTarget.classList.remove('show');
-+  }
+ 
+document.getElementById('btnDeleteEntry').addEventListener('click', async (e) => {
+  e.stopPropagation();
+
+  if (State.editId != null && confirm('Delete this entry?')) {
+    await Actions.deleteEntry(State.editId);
+    UI.closeEntry();
+    await Actions.refreshAll();
+  }
 });
 ``
- 
+
   /* ==================== Chart → PNG (stable) helpers + PDF Export ==================== */
   function logPDF(msg, data) { try { console.debug('[PDF]', msg, data ?? ''); } catch {} }
 
@@ -1428,4 +1431,5 @@ for (const id of ['entryModal','fieldsModal','thModal','optModal']) {
 </script>
 </body>
 </html>
+
 
