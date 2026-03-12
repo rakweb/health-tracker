@@ -1102,6 +1102,49 @@
   };
   window.Actions = Actions;
 
+  /* ==================== Save buttons ==================== */
+  /* // Saves */
+
+  //Save Entry
+  
+document.getElementById('btnSaveEntry').addEventListener('click', async (e) => {
++  e.stopPropagation();
+   await Actions.saveEntryFromForm();
+   await Actions.refreshAll();
+});
+``
+//Save Fields
+
+document.getElementById('btnSaveFields').addEventListener('click', async (e) => {
++  e.stopPropagation();
+   await Actions.saveFields();
+});
+
+//Save Thresholds
+
+document.getElementById('btnSaveThresholds').addEventListener('click', async (e) => {
++  e.stopPropagation();
+   await Actions.saveThresholds();
+});
+
+//Save Options
+
+document.getElementById('btnSaveOptions').addEventListener('click', async (e) => {
++  e.stopPropagation();
+   await Actions.saveOptions();
+});
+``
+//Backdrop
+
+ document.getElementById(id).addEventListener('click', (ev) => {
+-  if (ev.target.classList.contains('modal-backdrop'))
+-    ev.target.classList.remove('show');
++  if (ev.target === ev.currentTarget) {
++    ev.currentTarget.classList.remove('show');
++  }
+});
+``
+ 
   /* ==================== Chart → PNG (stable) helpers + PDF Export ==================== */
   function logPDF(msg, data) { try { console.debug('[PDF]', msg, data ?? ''); } catch {} }
 
