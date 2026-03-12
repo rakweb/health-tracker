@@ -1,31 +1,13 @@
 {
   "name": "Health Tracker",
-  "short_name": "HealthTrack",
-         "start_url": "/health-tracker/",
-         "scope": "/health-tracker/"
+  "short_name": "Health",
+  "start_url": "/health-tracker/",
+  "scope": "/health-tracker/",
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
-  "scope": "./",
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
-      "sizes": "64x64",
-      "type": "image/svg+xml",
-      "purpose": "any monochrome"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230b1220'/%3E%3Cpath d='M30 126h36l18-54 27 81 18-45h24l12 24h30' fill='none' stroke='%234ba3ff' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230b1220'/%3E%3Cpath d='M80 336h96l48-144 72 216 48-120h64l32 64h80' fill='none' stroke='%234ba3ff' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
-
 }
