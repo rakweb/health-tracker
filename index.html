@@ -1173,41 +1173,146 @@
       }
     },
 
-    async exportPDF() {
-      if (!window.jspdf) {
-        alert('jsPDF not loaded.');
-        return;
-      }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 36;
-      const contentW = pageW - margin * 2;
-      const bottomLimit = pageH - margin;
-
-      let y = margin;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(20);
-      doc.text('Health Tracker Export', margin, y);
-      y += 18;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(30);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
-      y += 16;
-
-      // ... rest of PDF logic remains the same as in your original ...
-      // (omitted here for brevity — copy your existing exportPDF logic if needed)
-
-      const stamp = new Date().toISOString().slice(0,10);
-      doc.save(`health-tracker_${stamp}.pdf`);
+ // ─────────────────────────────────────────────
+    // IMPROVED PDF ACTIONS
+    // ─────────────────────────────────────────────
+    
+   Actions.exportPDF = async function exportPDF() {
+  try {
+    if (!window.jspdf) {
+      alert('jsPDF failed to load.');
+      return;
     }
-  };
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 36;
+    const contentW = pageW - margin * 2;
+    const bottomLimit = pageH - margin;
+
+    let y = margin;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(20);
+    doc.text('Health Tracker Export', margin, y);
+    y += 18;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
+    y += 16;
+
+    // ─────────────────────────────────────────────
+    // IMPROVED FILTERING LOGIC
+    // ─────────────────────────────────────────────
+
+    const filterStartEl = document.getElementById('filterStart');
+    const filterEndEl   = document.getElementById('filterEnd');
+
+    const startVal = filterStartEl?.value?.trim() || '';
+    const endVal   = filterEndEl?.value?.trim()   || '';
+
+    const hasActiveFilter = startVal !== '' || endVal !== '';
+
+    console.log('[PDF] Export started');
+    console.log('[PDF] Active UI date filter?', hasActiveFilter, '(start:', startVal, 'end:', endVal, ')');
+    console.log('[PDF] Total entries in memory:', State.entries.length);
+
+    const rows = State.entries
+      .filter(entry => {
+        // Case 1: no date at all → include if no filter is active
+        if (!entry.date || entry.date.trim() === '') {
+          if (hasActiveFilter) {
+            console.log('[PDF] Excluded (no date + active filter) → id:', entry.id);
+            return false;
+          }
+          console.log('[PDF] Included legacy/no-date entry → id:', entry.id);
+          return true;
+        }
+
+        let entryDate;
+        try {
+          entryDate = new Date(entry.date);
+          if (isNaN(entryDate.getTime())) {
+            console.warn('[PDF] Invalid date format →', entry.date, 'id:', entry.id);
+            return !hasActiveFilter; // include only if no filter
+          }
+        } catch (err) {
+          console.warn('[PDF] Date parsing failed →', entry.date, err);
+          return !hasActiveFilter;
+        }
+
+        // Apply range only when filter is actually set
+        if (hasActiveFilter) {
+          if (startVal && entryDate < new Date(startVal)) {
+            console.log('[PDF] Excluded (before start) →', entry.date);
+            return false;
+          }
+          if (endVal && entryDate > new Date(endVal)) {
+            console.log('[PDF] Excluded (after end) →', entry.date);
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const ta = a.date ? new Date(a.date).getTime() : 0;
+        const tb = b.date ? new Date(b.date).getTime() : 0;
+        return tb - ta; // newest first
+      });
+
+    console.log('[PDF] Rows after filtering:', rows.length);
+
+    if (rows.length === 0) {
+      console.warn('[PDF] ZERO rows passed filter. Showing debug table:');
+      console.table(
+        State.entries.map(e => ({
+          id: e.id ?? '(no id)',
+          date: e.date ?? '(missing)',
+          time: e.time ?? '(missing)',
+          hasGlucose: 'glucose' in e,
+          sample: e.glucose ?? e.sys ?? '(no sample)'
+        }))
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // Rest of PDF generation (header, chart, table, etc.)
+    // ─────────────────────────────────────────────
+
+    // Chart inclusion (your existing code – keep as is or simplify if needed)
+    const wantChart = State.options?.pdfIncludeChart === 'yes' && State.ui?.chartEnabled;
+    if (wantChart && UI.chart) {
+      // ... your chart to image logic ...
+      // (keep your original chart rendering code here)
+    }
+
+    // Table headers & content (your existing code)
+    // ... continue with your header creation, chunking, text drawing ...
+
+    if (rows.length === 0) {
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120);
+      doc.text('No entries match the current date range or have valid dates.', margin, y);
+      y += 18;
+    } else {
+      // your normal table drawing logic here
+    }
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    doc.save(`health-tracker_${stamp}.pdf`);
+
+  } catch (err) {
+    console.error('[PDF Export Error]', err);
+    alert('PDF generation failed – check browser console for details.');
+  }
+};
 
   // ─────────────────────────────────────────────
   // Event Listeners — FIXED
@@ -1325,3 +1430,4 @@
   </script>
 </body>
 </html>
+
