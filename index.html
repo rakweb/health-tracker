@@ -47,7 +47,7 @@
     th, td { padding:12px; text-align:left; border-bottom:1px solid #1f2a45; }
     th { background:#0a1426; }
 
-    /* MODAL ANIMATIONS */
+    /* Modal + Animations */
     .modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.75);
@@ -69,7 +69,7 @@
       padding: 20px;
       transform: scale(0.85);
       opacity: 0;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); /* nice spring */
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .modal-backdrop.show .modal {
       transform: scale(1);
@@ -96,7 +96,7 @@
 <header>
   <div class="wrap">
     <h1>Health Tracker</h1>
-    <div class="sub">Track your vitals and notes</div>
+    <div class="sub">Track vitals, symptoms & notes</div>
   </div>
 </header>
 
@@ -105,6 +105,9 @@
     <button id="btnAdd" class="ok">+ Add Entry</button>
     <button id="btnRefresh">Refresh</button>
     <button id="btnExportCSV">Export CSV</button>
+    <button id="btnFields">Select Fields</button>
+    <button id="btnThresholds">Thresholds</button>
+    <button id="btnOptions">Options</button>
   </div>
 
   <table>
@@ -117,7 +120,7 @@
   </table>
 </main>
 
-<!-- Entry Modal -->
+<!-- Add/Edit Entry Modal -->
 <div class="modal-backdrop" id="entryModal">
   <div class="modal">
     <div class="modal-header">
@@ -183,8 +186,16 @@
   </div>
 </div>
 
+<!-- Placeholder modals for other buttons -->
+<div class="modal-backdrop" id="fieldsModal"><div class="modal"><h2>Select Fields</h2><p>(to be implemented)</p></div></div>
+<div class="modal-backdrop" id="thresholdsModal"><div class="modal"><h2>Thresholds</h2><p>(to be implemented)</p></div></div>
+<div class="modal-backdrop" id="optionsModal"><div class="modal"><h2>Options</h2><p>(to be implemented)</p></div></div>
+
 <script>
-// Database + core functions (same as previous working version)
+// ─────────────────────────────────────────────
+// Database
+// ─────────────────────────────────────────────
+
 let db;
 const DB_NAME = 'healthTracker';
 const STORE = 'entries';
@@ -228,11 +239,17 @@ async function deleteEntry(id) {
   });
 }
 
+// ─────────────────────────────────────────────
 // State
+// ─────────────────────────────────────────────
+
 let editId = null;
 let meds = [];
 
+// ─────────────────────────────────────────────
 // Render table
+// ─────────────────────────────────────────────
+
 async function renderTable() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
@@ -254,7 +271,10 @@ async function renderTable() {
   });
 }
 
+// ─────────────────────────────────────────────
 // Modal with animations
+// ─────────────────────────────────────────────
+
 function openEntry(id = null, data = {}) {
   editId = id;
   meds = data.meds ? [...data.meds] : [];
@@ -262,7 +282,6 @@ function openEntry(id = null, data = {}) {
   document.getElementById('modalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
   document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
 
-  // Fill fields
   const fields = ['date','time','glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn','tempF','lungFluidCc','resp','sleep','steps','stress','bodyBattery','pain','emotions','comments'];
   fields.forEach(f => {
     const el = document.getElementById('f_' + f);
@@ -273,6 +292,7 @@ function openEntry(id = null, data = {}) {
   document.getElementById('f_pain').value = data.pain ?? 0;
 
   renderMeds();
+
   const backdrop = document.getElementById('entryModal');
   backdrop.classList.add('show');
 }
@@ -301,7 +321,38 @@ function closeModal() {
   }, 350);
 }
 
-// Save
+// ─────────────────────────────────────────────
+// Event Listeners
+// ─────────────────────────────────────────────
+
+document.getElementById('btnAdd').addEventListener('click', () => openEntry());
+
+document.getElementById('btnRefresh').addEventListener('click', renderTable);
+
+document.getElementById('btnExportCSV').addEventListener('click', async () => {
+  const entries = await getAllEntries();
+  if (!entries.length) return alert('No entries yet.');
+
+  const lines = ['date,time,glucose,sys,dia,spo2,hr,weightLbs,heightIn,waistIn,tempF,lungFluidCc,resp,sleep,steps,stress,bodyBattery,pain,emotions,comments,meds'];
+  entries.forEach(e => {
+    const medsStr = (e.meds || []).map(m => `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''}`).join('; ');
+    lines.push([
+      e.date||'', e.time||'', e.glucose??'', e.sys??'', e.dia??'', e.spo2??'', e.hr??'',
+      e.weightLbs??'', e.heightIn??'', e.waistIn??'', e.tempF??'', e.lungFluidCc??'',
+      e.resp??'', e.sleep??'', e.steps??'', e.stress??'', e.bodyBattery??'', e.pain??'',
+      `"${(e.emotions||'').replace(/"/g,'""')}"`, `"${(e.comments||'').replace(/"/g,'""')}"`, `"${medsStr.replace(/"/g,'""')}"`
+    ].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'health-data.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
 document.getElementById('btnSaveEntry').addEventListener('click', async e => {
   e.preventDefault();
   e.stopPropagation();
@@ -338,36 +389,51 @@ document.getElementById('btnSaveEntry').addEventListener('click', async e => {
   renderTable();
 });
 
-// Other listeners
-document.getElementById('btnAdd').addEventListener('click', () => openEntry());
-document.getElementById('btnRefresh').addEventListener('click', renderTable);
 document.getElementById('btnAddMed').addEventListener('click', () => {
   const name = document.getElementById('medName').value.trim();
   if (!name) return;
-  meds.push({name, dose: document.getElementById('medDose').value.trim() || null, unit: document.getElementById('medUnit').value.trim() || null});
+  meds.push({
+    name,
+    dose: document.getElementById('medDose').value.trim() || null,
+    unit: document.getElementById('medUnit').value.trim() || null
+  });
   document.getElementById('medName').value = '';
   document.getElementById('medDose').value = '';
   document.getElementById('medUnit').value = '';
   renderMeds();
 });
+
 document.getElementById('btnDeleteEntry').addEventListener('click', async e => {
   e.preventDefault(); e.stopPropagation();
-  if (editId && confirm('Delete?')) {
+  if (editId && confirm('Delete permanently?')) {
     await deleteEntry(editId);
     closeModal();
     renderTable();
   }
 });
+
 document.getElementById('entryModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
-document.querySelector('#entryModal .close-modal').addEventListener('click', closeModal);
 
-// Keyboard support
+document.querySelector('#entryModal .close-modal')?.addEventListener('click', closeModal);
+
+document.getElementById('btnFields')?.addEventListener('click', () => {
+  document.getElementById('fieldsModal').classList.add('show');
+});
+
+document.getElementById('btnThresholds')?.addEventListener('click', () => {
+  document.getElementById('thresholdsModal').classList.add('show');
+});
+
+document.getElementById('btnOptions')?.addEventListener('click', () => {
+  document.getElementById('optionsModal').classList.add('show');
+});
+
+// Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    const modal = document.getElementById('entryModal');
-    if (modal.classList.contains('show')) closeModal();
+    document.querySelectorAll('.modal-backdrop.show').forEach(m => m.classList.remove('show'));
   }
 });
 
