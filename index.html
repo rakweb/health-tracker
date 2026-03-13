@@ -6,17 +6,11 @@
   <title>Health Tracker</title>
   <meta name="theme-color" content="#0b1220">
 
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
-  <link rel="manifest" href="data:application/manifest+json,{
-    'name': 'Health Tracker',
-    'short_name': 'HealthTrack',
-    'start_url': '.',
-    'display': 'standalone',
-    'background_color': '#0b1220',
-    'theme_color': '#0b1220',
-    'icons': [{'src': 'data:image/svg+xml,%3Csvg...%3E', 'sizes': '192x192', 'type': 'image/svg+xml'}]
-  }">
+  <!-- Manifest (inline fixed version) -->
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiSGVhbHRoIFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiSGVhbHRoVHJhY2siLCJzdGFydF91cmwiOiIuIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwgPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyByeD0nMTInIGZpbGw9JyMwYjEyMjAnLz48cGF0aCBkPSdNMTAgNDJoMTJsNi0xOCA5IDI3IDYtMTVoOGw0IDhoMTAnIGZpbGw9J25vbmUnIHN0cm9rZT0nIzRiYTNmZicgc3Ryb2tlLXdpZHRoPSc0JyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnLz48L3N2Zz4iLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XSwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwgPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyByeD0nMTInIGZpbGw9JyMwYjEyMjAnLz48cGF0aCBkPSdNMTAgNDJoMTJsNi0xOCA5IDI3IDYtMTVoOGw0IDhoMTAnIGZpbGw9J25vbmUnIHN0cm9rZT0nIzRiYTNmZicgc3Ryb2tlLXdpZHRoPSc0JyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnLz48L3N2Zz4iLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XSwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwgPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyByeD0nMTInIGZpbGw9JyMwYjEyMjAnLz48cGF0aCBkPSdNMTAgNDJoMTJsNi0xOCA5IDI3IDYtMTVoOGw0IDhoMTAnIGZpbGw9J25vbmUnIHN0cm9rZT0nIzRiYTNmZicgc3Ryb2tlLXdpZHRoPSc0JyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnLz48L3N2Zz4iLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XSwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBiMTIyMCIsInRoZW1lX2NvbG9yIjoiIzBiMTIyMCJ9">
 
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -69,7 +63,8 @@
     .modal-backdrop.show { display: flex; opacity: 1; }
     .modal {
       background: var(--card); border: 1px solid var(--ring); border-radius: 12px;
-      width: 94%; max-width: 920px; max-height: 90vh; overflow-y: auto; padding: 20px;
+      width: 94%; max-width: 920px; max-height: 90vh; overflow-y: auto;
+      padding: 20px;
       transform: scale(0.85); opacity: 0;
       transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
@@ -105,7 +100,7 @@
     <button id="btnRefresh">Refresh</button>
     <button id="btnExportCSV">Export CSV</button>
     <button id="btnExportPDF">Export PDF</button>
-    <button id="btnImport">Import CSV</button>
+    <button id="btnImportCSV">Import CSV</button>
     <input type="file" id="fileImport" accept=".csv" style="display:none">
   </div>
 
@@ -155,7 +150,7 @@
       <div>
         <label>Pain (0-10)</label>
         <input type="range" id="f_pain" min="0" max="10" value="0" step="1"
-               oninput="document.getElementById('painVal').textContent=this.value">
+               oninput="const v = document.getElementById('painVal'); if (v) v.textContent = this.value;">
         <div>Level: <strong id="painVal">0</strong></div>
       </div>
 
@@ -191,340 +186,422 @@
   </div>
 </div>
 
-
 <script>
-'use strict';
+// ─────────────────────────────────────────────
+// Database with error handling
+// ─────────────────────────────────────────────
+
+let db;
+const DB_NAME = 'healthTracker';
+const STORE = 'entries';
+
+async function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onerror = e => {
+      console.error('IndexedDB open failed:', e.target.error);
+      reject(e.target.error);
+    };
+  });
+}
+
+async function saveEntry(entry) {
+  try {
+    if (!db) await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const store = tx.objectStore(STORE);
+      let req;
+
+      // For new entries: remove id so autoIncrement works
+      const { id, ...cleanEntry } = entry;
+      if (id != null && Number.isInteger(id)) {
+        req = store.put({ ...cleanEntry, id });
+      } else {
+        req = store.add(cleanEntry);
+      }
+
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error || new Error('Unknown IndexedDB error'));
+    });
+  } catch (err) {
+    console.error('saveEntry failed:', err);
+    throw err;
+  }
+}
+
+async function getAllEntries() {
+  try {
+    if (!db) await initDB();
+    return new Promise(r => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => r(req.result || []);
+      req.onerror = () => r([]);
+    });
+  } catch (err) {
+    console.error('getAllEntries failed:', err);
+    return [];
+  }
+}
+
+async function deleteEntry(id) {
+  try {
+    if (!db) await initDB();
+    return new Promise(r => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(id).onsuccess = () => r();
+    });
+  } catch (err) {
+    console.error('deleteEntry failed:', err);
+  }
+}
 
 // ─────────────────────────────────────────────
-// Build metadata
-const BUILD = { appVersion: '1.0.0', buildNumber: 'dev', commit: '-', timestamp: '-' };
+// State
+// ─────────────────────────────────────────────
+
+let editId = null;
+let meds = [];
 
 // ─────────────────────────────────────────────
-// Install / A2HS
-let deferredPrompt = null;
-const installBtn = document.getElementById('btnInstall');
-const installHint = document.getElementById('installHint');
+// Render table + chart + risk chips
+// ─────────────────────────────────────────────
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn?.style.removeProperty('display');
-  installHint.textContent = 'Click Install to add to your device.';
+async function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  try {
+    const entries = await getAllEntries();
+    entries.sort((a,b) => (b.id||0) - (a.id||0));
+
+    entries.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${e.date||'—'}</td>
+        <td>${e.time||'—'}</td>
+        <td>${e.glucose??'—'}</td>
+        <td>${e.sys&&e.dia ? e.sys+'/'+e.dia : '—'}</td>
+        <td>${e.spo2??'—'}</td>
+        <td>${e.hr??'—'}</td>
+        <td>${e.weightLbs??'—'}</td>
+        <td><button class="edit">Edit</button> <button class="delete">Delete</button></td>
+      `;
+      tr.querySelector('.edit').onclick = () => openEntry(e.id, e);
+      tr.querySelector('.delete').onclick = async () => {
+        if (confirm('Delete entry?')) {
+          try {
+            await deleteEntry(e.id);
+            renderTable();
+          } catch (err) {
+            alert('Delete failed: ' + err.message);
+          }
+        }
+      };
+      tbody.appendChild(tr);
+    });
+
+    // Update chart & risk chips
+    updateChart(entries);
+    updateRiskChips(entries);
+  } catch (err) {
+    console.error('renderTable failed:', err);
+    tbody.innerHTML = '<tr><td colspan="8">Error loading data</td></tr>';
+  }
+}
+
+// ─────────────────────────────────────────────
+// Chart
+// ─────────────────────────────────────────────
+
+let chart;
+function updateChart(entries) {
+  const ctx = document.getElementById('healthChart');
+  if (!ctx) return;
+
+  entries.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  const labels = entries.map(e => e.date || '—');
+  const glucose = entries.map(e => e.glucose ?? null);
+  const hr = entries.map(e => e.hr ?? null);
+  const spo2 = entries.map(e => e.spo2 ?? null);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Glucose', data: glucose, borderColor: '#4ba3ff', fill: false },
+        { label: 'HR', data: hr, borderColor: '#ff5c5c', fill: false },
+        { label: 'SpO₂', data: spo2, borderColor: '#27d79b', fill: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: false } }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// Risk chips (basic)
+function updateRiskChips(entries) {
+  const container = document.getElementById('riskChips');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="chip">No data yet</div>';
+    return;
+  }
+
+  const latest = entries[entries.length - 1];
+
+  const addChip = (text, cls) => {
+    const c = document.createElement('div');
+    c.className = `chip ${cls}`;
+    c.textContent = text;
+    container.appendChild(c);
+  };
+
+  if (latest.glucose != null) {
+    if (latest.glucose < 70 || latest.glucose > 180) addChip(`Glucose: ${latest.glucose}`, 'danger');
+    else if (latest.glucose < 80 || latest.glucose > 140) addChip(`Glucose: ${latest.glucose}`, 'warn');
+    else addChip(`Glucose: ${latest.glucose}`, 'ok');
+  }
+
+  if (latest.spo2 != null && latest.spo2 < 92) addChip(`SpO₂: ${latest.spo2}`, 'danger');
+  if (latest.hr != null && (latest.hr < 50 || latest.hr > 110)) addChip(`HR: ${latest.hr}`, 'warn');
+}
+
+// ─────────────────────────────────────────────
+// Modal open/close with animation
+// ─────────────────────────────────────────────
+
+function openEntry(id = null, data = {}) {
+  editId = id;
+  meds = data.meds ? [...data.meds] : [];
+
+  const titleEl = document.getElementById('modalTitle');
+  if (titleEl) titleEl.textContent = id ? 'Edit Entry' : 'Add Entry';
+
+  const deleteBtn = document.getElementById('btnDeleteEntry');
+  if (deleteBtn) deleteBtn.style.display = id ? '' : 'none';
+
+  const fields = ['date','time','glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn','tempF','lungFluidCc','resp','sleep','steps','stress','bodyBattery','pain','emotions','comments'];
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el) el.value = data[f] ?? (f==='pain' ? 0 : '');
+  });
+
+  const painVal = document.getElementById('painVal');
+  if (painVal) painVal.textContent = data.pain ?? 0;
+
+  const painInput = document.getElementById('f_pain');
+  if (painInput) painInput.value = data.pain ?? 0;
+
+  renderMeds();
+
+  const backdrop = document.getElementById('entryModal');
+  if (backdrop) backdrop.classList.add('show');
+}
+
+function renderMeds() {
+  const container = document.getElementById('medList');
+  if (!container) return;
+  container.innerHTML = '';
+  meds.forEach((m,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''} <button>×</button>`;
+    chip.lastChild.onclick = () => { meds.splice(i,1); renderMeds(); };
+    container.appendChild(chip);
+  });
+}
+
+function closeModal() {
+  const backdrop = document.getElementById('entryModal');
+  if (!backdrop) return;
+  const modal = backdrop.querySelector('.modal');
+  if (modal) {
+    modal.style.transform = 'scale(0.85)';
+    modal.style.opacity = '0';
+  }
+  setTimeout(() => {
+    backdrop.classList.remove('show');
+    if (modal) {
+      modal.style.transform = '';
+      modal.style.opacity = '';
+    }
+  }, 350);
+}
+
+// ─────────────────────────────────────────────
+// Event Listeners
+// ─────────────────────────────────────────────
+
+document.getElementById('btnAdd').addEventListener('click', () => openEntry());
+
+document.getElementById('btnRefresh').addEventListener('click', renderTable);
+
+document.getElementById('btnExportCSV').addEventListener('click', async () => {
+  try {
+    const entries = await getAllEntries();
+    if (!entries.length) return alert('No data to export');
+
+    const lines = ['date,time,glucose,sys,dia,spo2,hr,weightLbs,heightIn,waistIn,tempF,lungFluidCc,resp,sleep,steps,stress,bodyBattery,pain,emotions,comments,meds'];
+    entries.forEach(e => {
+      const medsStr = (e.meds||[]).map(m => `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''}`).join('; ');
+      lines.push([
+        e.date||'', e.time||'', e.glucose??'', e.sys??'', e.dia??'', e.spo2??'', e.hr??'',
+        e.weightLbs??'', e.heightIn??'', e.waistIn??'', e.tempF??'', e.lungFluidCc??'',
+        e.resp??'', e.sleep??'', e.steps??'', e.stress??'', e.bodyBattery??'', e.pain??'',
+        `"${(e.emotions||'').replace(/"/g,'""')}"`, `"${(e.comments||'').replace(/"/g,'""')}"`, `"${medsStr.replace(/"/g,'""')}"`
+      ].join(','));
+    });
+
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'health-data.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('CSV export failed:', err);
+    alert('Export failed: ' + err.message);
+  }
 });
 
-installBtn?.addEventListener('click', async () => {
+document.getElementById('btnSaveEntry').addEventListener('click', async e => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const entry = {
+    date: document.getElementById('f_date').value,
+    time: document.getElementById('f_time').value || null,
+    glucose: Number(document.getElementById('f_glucose').value) || null,
+    sys: Number(document.getElementById('f_sys').value) || null,
+    dia: Number(document.getElementById('f_dia').value) || null,
+    spo2: Number(document.getElementById('f_spo2').value) || null,
+    hr: Number(document.getElementById('f_hr').value) || null,
+    weightLbs: Number(document.getElementById('f_weightLbs').value) || null,
+    heightIn: Number(document.getElementById('f_heightIn').value) || null,
+    waistIn: Number(document.getElementById('f_waistIn').value) || null,
+    tempF: Number(document.getElementById('f_tempF').value) || null,
+    lungFluidCc: Number(document.getElementById('f_lungFluidCc').value) || null,
+    resp: Number(document.getElementById('f_resp').value) || null,
+    sleep: Number(document.getElementById('f_sleep').value) || null,
+    steps: Number(document.getElementById('f_steps').value) || null,
+    stress: Number(document.getElementById('f_stress').value) || null,
+    bodyBattery: Number(document.getElementById('f_bodyBattery').value) || null,
+    pain: Number(document.getElementById('f_pain').value) || 0,
+    emotions: document.getElementById('f_emotions').value || '',
+    comments: document.getElementById('f_comments').value || '',
+    meds: [...meds]
+  };
+
+  if (!entry.date) {
+    alert('Date is required');
+    return;
+  }
+
+  if (editId !== null && Number.isInteger(editId)) {
+    entry.id = editId;
+  }
+
+  try {
+    await saveEntry(entry);
+    closeModal();
+    renderTable();
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Health Tracker", { body: "Entry saved successfully" });
+    } else {
+      alert("Entry saved");
+    }
+  } catch (err) {
+    console.error('Save failed:', err);
+    alert('Failed to save entry:\n' + (err.name + ': ' + err.message || 'Unknown error'));
+  }
+});
+
+document.getElementById('btnAddMed').addEventListener('click', () => {
+  const name = document.getElementById('medName').value.trim();
+  if (!name) return;
+  meds.push({
+    name,
+    dose: document.getElementById('medDose').value.trim() || null,
+    unit: document.getElementById('medUnit').value.trim() || null
+  });
+  document.getElementById('medName').value = '';
+  document.getElementById('medDose').value = '';
+  document.getElementById('medUnit').value = '';
+  renderMeds();
+});
+
+document.getElementById('btnDeleteEntry').addEventListener('click', async e => {
+  e.preventDefault(); e.stopPropagation();
+  if (editId && confirm('Delete permanently?')) {
+    try {
+      await deleteEntry(editId);
+      closeModal();
+      renderTable();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+document.getElementById('entryModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.querySelector('#entryModal .close-modal')?.addEventListener('click', closeModal);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// PWA install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('btnInstall').style.display = 'inline-block';
+});
+
+document.getElementById('btnInstall').addEventListener('click', async () => {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
-  installHint.textContent = outcome === 'accepted' ? 'Installing…' : 'Install dismissed.';
-  setTimeout(() => installHint.textContent = '', 2500);
+  console.log('Install outcome:', outcome);
   deferredPrompt = null;
-  installBtn.style.display = 'none';
+  document.getElementById('btnInstall').style.display = 'none';
 });
 
-window.addEventListener('appinstalled', () => {
-  installBtn.style.display = 'none';
-  installHint.textContent = 'Installed!';
-  setTimeout(() => installHint.textContent = '', 2500);
-});
-
-// ─────────────────────────────────────────────
-// Service Worker + version display
-let swReg = null;
-
-document.getElementById('appVersion').textContent = BUILD.appVersion;
-document.getElementById('buildNumber').textContent = BUILD.buildNumber;
-
-fetch('./version.json', { cache: 'no-store' })
-  .then(r => r.ok ? r.json() : null)
-  .then(v => {
-    if (v) {
-      BUILD.appVersion = v.version || BUILD.appVersion;
-      BUILD.buildNumber = v.build || BUILD.buildNumber;
-      document.getElementById('appVersion').textContent = BUILD.appVersion;
-      document.getElementById('buildNumber').textContent = BUILD.buildNumber;
-    }
-  })
-  .catch(() => {});
-
-const checkBtn = document.getElementById('btnCheckUpdates');
-const toast = document.getElementById('updateToast');
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      swReg = await navigator.serviceWorker.register('./sw.js');
-      const askVersion = () => navigator.serviceWorker.controller?.postMessage({type:'GET_VERSION'});
-      navigator.serviceWorker.addEventListener('message', e => {
-        if (e.data?.type === 'VERSION' && e.data?.cache) {
-          document.getElementById('swVersion').textContent = e.data.cache;
-        }
-      });
-      if (swReg.active) askVersion(); else navigator.serviceWorker.ready.then(askVersion);
-
-      swReg.addEventListener('updatefound', () => {
-        const sw = swReg.installing;
-        sw?.addEventListener('statechange', () => {
-          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-            toast.classList.add('show');
-          }
-        });
-      });
-    } catch (e) {
-      console.error('SW registration failed', e);
-    }
-  });
-
-  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
-}
-
-document.getElementById('btnReloadNow')?.addEventListener('click', () => {
-  swReg?.waiting?.postMessage({type:'SKIP_WAITING'});
-});
-
-document.getElementById('btnDismissToast')?.addEventListener('click', () => {
-  toast.classList.remove('show');
-});
-
-checkBtn?.addEventListener('click', async () => {
-  installHint.textContent = 'Checking…';
-  try {
-    await swReg?.update();
-    if (swReg?.waiting) toast.classList.add('show');
-    else installHint.textContent = 'No updates found.';
-  } catch (e) {
-    installHint.textContent = 'Update check failed.';
-  }
-  setTimeout(() => installHint.textContent = '', 2200);
-});
-
-// ─────────────────────────────────────────────
-// Register Chart.js annotation plugin (safe)
-if (window.Chart && window['chartjs-plugin-annotation']) {
-  Chart.register(window['chartjs-plugin-annotation']);
-}
-
-// ─────────────────────────────────────────────
-// Data model, defaults, utils, state (unchanged except small fixes)
-const METRICS = [ /* ... your METRICS array ... */ ]; // keep as-is
-
-const CORE_FIELDS = ['date','time', ...METRICS.map(m=>m.key)];
-const DEFAULT_FIELDS_VISIBLE = [ /* ... your list ... */ ];
-const DEFAULT_THRESHOLDS = { /* ... your thresholds ... */ };
-const OPTIONS = { autosave:'on', csvSelectedOnly:'yes', pdfIncludeChart:'yes' };
-
-const DB = { /* ... your DB object ... keep as-is */ };
-window.DB = DB;
-
-const State = {
-  entries: [],
-  fieldsVisible: new Set(DEFAULT_FIELDS_VISIBLE),
-  thresholds: JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
-  options: {...OPTIONS},
-  ui: { chartEnabled: true },
-  editId: null,
-  medsBuffer: [],
-};
-
-const U = { /* ... your utils ... keep as-is */ };
-
-const UI = { /* ... keep most of your UI object ... */ };
-
-UI.renderMedsBuffer = function() {
-  const host = document.getElementById('medList');
-  if (!host) return;
-  host.innerHTML = '';
-  State.medsBuffer.forEach((m, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.innerHTML = `${m.name} ${m.dose||''}${m.units ? ' ' + m.units : ''} `;
-    const btn = document.createElement('button');
-    btn.className = 'btn danger';
-    btn.style.cssText = 'padding:2px 6px; margin-left:6px; font-size:11px;';
-    btn.textContent = '×';
-    btn.onclick = () => {
-      State.medsBuffer.splice(i, 1);
-      UI.renderMedsBuffer();
-    };
-    chip.appendChild(btn);
-    host.appendChild(chip);
-  });
-};
-
-// ─────────────────────────────────────────────
-// Actions (keep most, but update saveThresholds & saveEntryFromForm slightly)
-
-const Actions = {
-  // ... keep init, putEntry, deleteEntry, getAllEntries, etc. ...
-
-  async saveEntryFromForm() {
-    const en = {
-      date: document.getElementById('f_date')?.value || null,
-      time: document.getElementById('f_time')?.value || null,
-      glucose: num('f_glucose'),
-      // ... all other fields using num() ...
-      meds: [...State.medsBuffer],
-      // ... emotions, comments ...
-    };
-    function num(id) {
-      const v = document.getElementById(id)?.value?.trim();
-      return v === '' ? null : Number(v);
-    }
-
-    if (!en.date) {
-      alert('Date is required.');
-      return;
-    }
-
-    if (State.editId != null) en.id = Number(State.editId);
-    await DB.putEntry(en);
-    State.editId = null;
-  },
-
-  async saveThresholds() {
-    const merged = { ...State.thresholds };
-    const keys = Object.keys(DEFAULT_THRESHOLDS);
-    keys.forEach(k => {
-      const wl = Number(document.getElementById(`t_${k}_warnLow`)?.value) || null;
-      const bl = Number(document.getElementById(`t_${k}_bandLow`)?.value) || null;
-      const bh = Number(document.getElementById(`t_${k}_bandHigh`)?.value) || null;
-      const wh = Number(document.getElementById(`t_${k}_warnHigh`)?.value) || null;
-
-      if ([wl,bl,bh,wh].some(v => v !== null)) {
-        merged[k] = {
-          warnLow:   wl ?? merged[k]?.warnLow ?? '',
-          bandLow:   bl ?? merged[k]?.bandLow ?? '',
-          bandHigh:  bh ?? merged[k]?.bandHigh ?? '',
-          warnHigh:  wh ?? merged[k]?.warnHigh ?? ''
-        };
-      }
-    });
-    State.thresholds = merged;
-    await DB.putConfig('thresholds', merged);
-    UI.closeThresholds?.();
-    UI.refreshKPIs();
-    UI.refreshChart();
-  },
-
-  // ... keep exportCSV, exportPDF, refreshAll, saveFields, saveOptions ...
-};
-
-// ─────────────────────────────────────────────
-// Event Listeners — FIXED VERSION
-
-// Modal open buttons
-document.getElementById('btnAdd')?.addEventListener('click', () => UI.openEntry(null));
-document.getElementById('btnFields')?.addEventListener('click', () => UI.openFields());
-document.getElementById('btnThresholds')?.addEventListener('click', () => UI.openThresholds());
-document.getElementById('btnOptions')?.addEventListener('click', () => UI.openOptions());
-
-// Modal SAVE / DELETE buttons
-document.getElementById('btnSaveEntry')?.addEventListener('click', async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  await Actions.saveEntryFromForm();
-  UI.closeEntry();
-  await Actions.refreshAll();
-});
-
-document.getElementById('btnDeleteEntry')?.addEventListener('click', async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (!State.editId || !confirm('Delete this entry?')) return;
-  await Actions.deleteEntry(State.editId);
-  UI.closeEntry();
-  await Actions.refreshAll();
-});
-
-document.getElementById('btnSaveFields')?.addEventListener('click', async (e) => {
-  e.preventDefault(); e.stopPropagation();
-  await Actions.saveFields();
-});
-
-document.getElementById('btnSaveThresholds')?.addEventListener('click', async (e) => {
-  e.preventDefault(); e.stopPropagation();
-  await Actions.saveThresholds();
-});
-
-document.getElementById('btnSaveOptions')?.addEventListener('click', async (e) => {
-  e.preventDefault(); e.stopPropagation();
-  await Actions.saveOptions();
-});
-
-// Medicine add
-document.getElementById('btnAddMed')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  const nameEl  = document.getElementById('med_name');
-  const doseEl  = document.getElementById('med_dose');
-  const unitsEl = document.getElementById('med_units');
-
-  const name = nameEl?.value?.trim();
-  if (!name) return;
-
-  State.medsBuffer.push({
-    name,
-    dose: doseEl?.value?.trim() || null,
-    units: unitsEl?.value?.trim() || null
-  });
-
-  nameEl.value = '';
-  doseEl.value = '';
-  unitsEl.value = '';
-
-  UI.renderMedsBuffer();
-});
-
-// Other controls
-document.getElementById('btnRefresh')?.addEventListener('click', () => {
-  UI.buildTable();
-  UI.refreshKPIs();
-  UI.refreshChart();
-});
-
-document.getElementById('btnSaveCSV')?.addEventListener('click', () => Actions.exportCSV());
-document.getElementById('btnSavePDF')?.addEventListener('click', () => Actions.exportPDF());
-
-// Chart & filter changes
-['chartMetrics','axisMode','toggleChart','filterStart','filterEnd'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => {
-    if (id === 'toggleChart') {
-      State.ui.chartEnabled = document.getElementById('toggleChart').value === 'on';
-      document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-      if (!State.ui.chartEnabled && UI.chart) {
-        UI.chart.destroy();
-        UI.chart = null;
-      }
-      DB.putConfig('ui', State.ui);
-    }
-    UI.refreshChart();
-    if (id.startsWith('filter')) {
-      UI.buildTable();
-    }
-  });
-});
-
-// Backdrop click-to-close — only when clicking the backdrop itself
-['entryModal','fieldsModal','thModal','optModal'].forEach(id => {
-  const backdrop = document.getElementById(id);
-  backdrop?.addEventListener('click', e => {
-    if (e.target === backdrop) {
-      backdrop.classList.remove('show');
-    }
-  });
-});
-
-// ─────────────────────────────────────────────
-// Safe init
+// Start
 (async () => {
   try {
-    await Actions.init();
+    await initDB();
+    renderTable();
+    console.log("Health Tracker ready");
   } catch (err) {
-    console.error('App initialization failed:', err);
+    console.error("Startup failed:", err);
   }
 })();
 </script>
-  
-  
 </body>
 </html>
