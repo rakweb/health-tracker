@@ -10,9 +10,17 @@
 
   <style>
     :root {
-      --bg: #0b1220; --panel: #121a2a; --muted: #8aa0c3; --text: #e6eefc;
-      --accent: #4ba3ff; --danger: #ff5c5c; --ok: #27d79b; --warn: #ffcc66;
-      --ring: #2a3a58; --chip: #1a2440; --btn: #1a2842; --btn-hover: #223152;
+      --bg: #0b1220;
+      --panel: #121a2a;
+      --muted: #8aa0c3;
+      --text: #e6eefc;
+      --accent: #4ba3ff;
+      --danger: #ff5c5c;
+      --ok: #27d79b;
+      --ring: #2a3a58;
+      --chip: #1a2440;
+      --btn: #1a2842;
+      --btn-hover: #223152;
       --card: #0e1628;
     }
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -21,7 +29,6 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding-bottom: 40px;
     }
     header {
       position: sticky; top:0; z-index:10;
@@ -32,31 +39,24 @@
     }
     .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
     h1 { font-size: 1.8rem; margin: 0.5rem 0; }
-    .sub { color: var(--muted); font-size: 0.9rem; }
-
     .toolbar {
       display: flex; flex-wrap: wrap; gap: 12px;
       background: var(--panel); padding: 16px; border-radius: 12px;
-      margin: 16px 0; align-items: flex-end;
+      margin: 16px 0;
     }
-    .toolbar button, .toolbar input, .toolbar select {
+    button, input, select {
       padding: 9px 14px; border-radius: 8px; border: 1px solid #2a3a58;
-      background: #0c1426; color: white; font-size: 0.95rem;
+      background: #0c1426; color: white;
     }
-    button {
-      cursor: pointer; background: var(--btn); border: 1px solid #2a3b67; color: white;
-    }
-    button:hover { background: var(--btn-hover); }
-    .ok    { background: #113c2d; border-color: #2f8f73; }
-    .danger { background: #3a1216; border-color: #8e2b37; }
-
+    button { cursor: pointer; }
+    button.ok { background: #113c2d; border-color: #2f8f73; }
+    button.danger { background: #3a1216; border-color: #8e2b37; }
     table {
       width: 100%; border-collapse: collapse; margin: 20px 0;
-      background: var(--panel); border-radius: 10px; overflow: hidden;
+      background: var(--panel); border-radius: 10px;
     }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1f2a45; }
-    th { background: #0a1426; font-weight: 600; }
-
+    th { background: #0a1426; }
     .modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.75);
@@ -69,31 +69,20 @@
       border-radius: 12px; width: 94%; max-width: 920px;
       max-height: 90vh; overflow-y: auto; padding: 20px;
     }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #2a3a58;
-    }
-    .row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px 20px;
-    }
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 20px; }
     label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 5px; }
     input, select, textarea {
       width: 100%; padding: 10px; border-radius: 6px;
       border: 1px solid #2a3a58; background: #0c1426; color: white;
-      font-size: 0.95rem;
     }
-    textarea { min-height: 80px; resize: vertical; }
     .field-full { grid-column: 1 / -1; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .chip {
       background: #1a2440; border: 1px solid #2a3a58; border-radius: 999px;
       padding: 5px 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;
     }
-    .chip button {
-      background: transparent; border: none; color: #ff5c5c;
-      font-weight: bold; cursor: pointer; padding: 0 4px;
-    }
+    .chip button { background: none; border: none; color: #ff5c5c; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -101,28 +90,21 @@
 <header>
   <div class="wrap">
     <h1>Health Tracker</h1>
-    <div class="sub">Track vitals, symptoms & notes</div>
+    <div class="sub">Track your vitals and notes</div>
   </div>
 </header>
 
 <main class="wrap">
   <div class="toolbar">
     <button id="btnAdd" class="ok">+ Add Entry</button>
-    <button id="btnRefresh">Refresh List</button>
-    <button id="btnSaveCSV">Export CSV</button>
+    <button id="btnRefresh">Refresh</button>
+    <button id="btnExportCSV">Export CSV</button>
   </div>
 
-  <table id="entriesTable">
+  <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Glucose</th>
-        <th>BP (sys/dia)</th>
-        <th>SpO₂</th>
-        <th>HR</th>
-        <th>Weight (lbs)</th>
-        <th>Actions</th>
+        <th>Date</th><th>Time</th><th>Glucose</th><th>BP</th><th>SpO₂</th><th>HR</th><th>Weight</th><th>Actions</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -133,334 +115,10 @@
 <div class="modal-backdrop" id="entryModal">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="entryModalTitle">Add Entry</h2>
-      <button type="button" onclick="document.getElementById('entryModal').classList.remove('show')">×</button>
+      <h2 id="modalTitle">Add Entry</h2>
+      <button type="button" class="close-modal">×</button>
     </div>
 
     <div class="row">
       <div><label>Date *</label><input type="date" id="f_date" required></div>
-      <div><label>Time</label><input type="time" id="f_time"></div>
-
-      <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" step="1"></div>
-      <div><label>Systolic (mmHg)</label><input type="number" id="f_sys" step="1"></div>
-      <div><label>Diastolic (mmHg)</label><input type="number" id="f_dia" step="1"></div>
-      <div><label>SpO₂ (%)</label><input type="number" id="f_spo2" min="0" max="100" step="0.1"></div>
-      <div><label>Heart Rate (bpm)</label><input type="number" id="f_hr" step="1"></div>
-      <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs" step="0.1"></div>
-      <div><label>Height (in)</label><input type="number" id="f_heightIn" step="0.1"></div>
-      <div><label>Waist (in)</label><input type="number" id="f_waistIn" step="0.1"></div>
-      <div><label>Temperature (°F)</label><input type="number" id="f_tempF" step="0.1"></div>
-      <div><label>Lung Fluid (cc)</label><input type="number" id="f_lungFluidCc" step="0.1"></div>
-      <div><label>Respiration (br/min)</label><input type="number" id="f_resp" step="0.5"></div>
-      <div><label>Sleep (hours)</label><input type="number" id="f_sleep" step="0.1"></div>
-      <div><label>Steps</label><input type="number" id="f_steps" step="1"></div>
-      <div><label>Stress (0–100)</label><input type="number" id="f_stress" min="0" max="100" step="1"></div>
-      <div><label>Body Battery (0–100)</label><input type="number" id="f_bodyBattery" min="0" max="100" step="1"></div>
-
-      <div>
-        <label>Pain (0–10)</label>
-        <input type="range" id="f_pain" min="0" max="10" value="0" step="1"
-               oninput="document.getElementById('painVal').textContent = this.value">
-        <div>Level: <strong id="painVal">0</strong></div>
-      </div>
-
-      <div>
-        <label>Emotions</label>
-        <select id="f_emotions">
-          <option value="">— None —</option>
-          <option>Happy</option>
-          <option>Calm</option>
-          <option>Neutral</option>
-          <option>Anxious</option>
-          <option>Stressed</option>
-          <option>Sad</option>
-          <option>Fatigued</option>
-          <option>Irritable</option>
-        </select>
-      </div>
-
-      <div class="field-full">
-        <label>Medicines (add one at a time)</label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <input id="med_name" placeholder="Name (e.g. Metformin)" style="flex:2;">
-          <input id="med_dose" placeholder="Dose" style="flex:1;">
-          <input id="med_unit" placeholder="Unit (mg, ml, etc)" style="flex:1;">
-          <button type="button" id="btnAddMed">+ Add</button>
-        </div>
-        <div class="chips" id="medList"></div>
-      </div>
-
-      <div class="field-full">
-        <label>Comments / Notes</label>
-        <textarea id="f_comments" rows="4" placeholder="Any additional observations..."></textarea>
-      </div>
-    </div>
-
-    <div style="margin-top:24px; text-align:right;">
-      <button class="danger" id="btnDeleteEntry" style="display:none; margin-right:12px;">Delete Entry</button>
-      <button class="ok" id="btnSaveEntry">Save Entry</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ─────────────────────────────────────────────
-// Database
-// ─────────────────────────────────────────────
-
-let db;
-const DB_NAME = 'healthTrackerDB';
-const STORE = 'entries';
-
-async function initDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = e => {
-      db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
-      }
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(); };
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-async function getAll() {
-  if (!db) await initDB();
-  return new Promise(r => {
-    const tx = db.transaction(STORE, 'readonly');
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => r(req.result || []);
-  });
-}
-
-async function saveEntry(entry) {
-  if (!db) await initDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    const store = tx.objectStore(STORE);
-    const op = entry.id ? store.put(entry) : store.add(entry);
-    op.onsuccess = () => res();
-    op.onerror = () => rej(op.error);
-  });
-}
-
-async function deleteEntry(id) {
-  if (!db) await initDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    const req = tx.objectStore(STORE).delete(id);
-    req.onsuccess = () => res();
-    req.onerror = () => rej(req.error);
-  });
-}
-
-// ─────────────────────────────────────────────
-// State & Helpers
-// ─────────────────────────────────────────────
-
-let editId = null;
-let medsList = [];
-
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
-
-  getAll().then(entries => {
-    entries.sort((a,b) => (b.id||0) - (a.id||0));
-
-    entries.forEach(e => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${e.date || '—'}</td>
-        <td>${e.time || '—'}</td>
-        <td>${e.glucose ?? '—'}</td>
-        <td>${e.sys && e.dia ? e.sys + '/' + e.dia : '—'}</td>
-        <td>${e.spo2 ?? '—'}</td>
-        <td>${e.hr ?? '—'}</td>
-        <td>${e.weightLbs ?? '—'}</td>
-        <td>
-          <button class="edit-btn">Edit</button>
-          <button class="delete-btn">Delete</button>
-        </td>
-      `;
-      tr.querySelector('.edit-btn').onclick = () => openEntry(e.id, e);
-      tr.querySelector('.delete-btn').onclick = async () => {
-        if (confirm('Delete entry?')) {
-          await deleteEntry(e.id);
-          renderTable();
-        }
-      };
-      tbody.appendChild(tr);
-    });
-  });
-}
-
-function openEntry(id = null, data = {}) {
-  editId = id;
-  medsList = data.meds ? [...data.meds] : [];
-
-  document.getElementById('entryModalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
-  document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
-
-  // Fill form
-  const fields = [
-    'date', 'time', 'glucose', 'sys', 'dia', 'spo2', 'hr', 'weightLbs',
-    'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'resp', 'sleep', 'steps',
-    'stress', 'bodyBattery', 'pain', 'emotions', 'comments'
-  ];
-  fields.forEach(f => {
-    const el = document.getElementById('f_' + f);
-    if (el) el.value = data[f] ?? (f === 'pain' ? 0 : '');
-  });
-
-  document.getElementById('painVal').textContent = data.pain ?? 0;
-  document.getElementById('f_pain').value = data.pain ?? 0;
-
-  renderMeds();
-
-  document.getElementById('entryModal').classList.add('show');
-}
-
-function renderMeds() {
-  const container = document.getElementById('medList');
-  container.innerHTML = '';
-  medsList.forEach((m, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.innerHTML = `${m.name} ${m.dose||''}${m.unit ? ' ' + m.unit : ''} <button>×</button>`;
-    chip.lastElementChild.onclick = () => {
-      medsList.splice(i, 1);
-      renderMeds();
-    };
-    container.appendChild(chip);
-  });
-}
-
-function closeModal() {
-  document.getElementById('entryModal').classList.remove('show');
-  editId = null;
-  medsList = [];
-}
-
-// ─────────────────────────────────────────────
-// Event Handlers
-// ─────────────────────────────────────────────
-
-document.getElementById('btnAdd').onclick = () => openEntry();
-
-document.getElementById('btnRefresh').onclick = renderTable;
-
-document.getElementById('btnSaveCSV').onclick = async () => {
-  const entries = await getAll();
-  if (!entries.length) return alert('No entries yet.');
-
-  const lines = [
-    'date,time,glucose,sys,dia,spo2,hr,weightLbs,heightIn,waistIn,tempF,lungFluidCc,resp,sleep,steps,stress,bodyBattery,pain,emotions,comments,meds'
-  ];
-
-  entries.forEach(e => {
-    const medsStr = (e.meds || []).map(m => `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''}`).join('; ');
-    lines.push([
-      e.date||'', e.time||'', e.glucose??'', e.sys??'', e.dia??'', e.spo2??'', e.hr??'',
-      e.weightLbs??'', e.heightIn??'', e.waistIn??'', e.tempF??'', e.lungFluidCc??'',
-      e.resp??'', e.sleep??'', e.steps??'', e.stress??'', e.bodyBattery??'', e.pain??'',
-      `"${(e.emotions||'').replace(/"/g,'""')}"`, `"${(e.comments||'').replace(/"/g,'""')}"`, `"${medsStr.replace(/"/g,'""')}"`
-    ].join(','));
-  });
-
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement('a'), { href: url, download: 'health-data.csv' });
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-document.getElementById('btnSaveEntry').onclick = async function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const entry = {
-    id: editId || undefined,
-    date: document.getElementById('f_date').value,
-    time: document.getElementById('f_time').value,
-    glucose: Number(document.getElementById('f_glucose').value) || null,
-    sys: Number(document.getElementById('f_sys').value) || null,
-    dia: Number(document.getElementById('f_dia').value) || null,
-    spo2: Number(document.getElementById('f_spo2').value) || null,
-    hr: Number(document.getElementById('f_hr').value) || null,
-    weightLbs: Number(document.getElementById('f_weightLbs').value) || null,
-    heightIn: Number(document.getElementById('f_heightIn').value) || null,
-    waistIn: Number(document.getElementById('f_waistIn').value) || null,
-    tempF: Number(document.getElementById('f_tempF').value) || null,
-    lungFluidCc: Number(document.getElementById('f_lungFluidCc').value) || null,
-    resp: Number(document.getElementById('f_resp').value) || null,
-    sleep: Number(document.getElementById('f_sleep').value) || null,
-    steps: Number(document.getElementById('f_steps').value) || null,
-    stress: Number(document.getElementById('f_stress').value) || null,
-    bodyBattery: Number(document.getElementById('f_bodyBattery').value) || null,
-    pain: Number(document.getElementById('f_pain').value) || 0,
-    emotions: document.getElementById('f_emotions').value || '',
-    comments: document.getElementById('f_comments').value || '',
-    meds: [...medsList]
-  };
-
-  if (!entry.date) {
-    alert('Date is required.');
-    return;
-  }
-
-  await saveEntry(entry);
-  closeModal();
-  renderTable();
-};
-
-document.getElementById('btnAddMed').onclick = () => {
-  const name = document.getElementById('med_name').value.trim();
-  const dose = document.getElementById('med_dose').value.trim();
-  const unit = document.getElementById('med_unit').value.trim();
-
-  if (!name) return alert('Medicine name required');
-
-  medsList.push({ name, dose: dose || null, unit: unit || null });
-
-  document.getElementById('med_name').value = '';
-  document.getElementById('med_dose').value = '';
-  document.getElementById('med_unit').value = '';
-
-  renderMeds();
-};
-
-document.getElementById('btnDeleteEntry').onclick = async function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  if (editId && confirm('Delete this entry permanently?')) {
-    await deleteEntry(editId);
-    closeModal();
-    renderTable();
-  }
-};
-
-// Backdrop close
-document.getElementById('entryModal').onclick = e => {
-  if (e.target === e.currentTarget) closeModal();
-};
-
-// ─────────────────────────────────────────────
-// Start
-// ─────────────────────────────────────────────
-
-(async () => {
-  try {
-    await initDB();
-    renderTable();
-    console.log("Health Tracker ready");
-  } catch (err) {
-    console.error("Initialization failed", err);
-    alert("Database error – check browser console");
-  }
-})();
-</script>
-</body>
-</html>
+      <div><label>Time</label><input type="time
