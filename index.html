@@ -7,240 +7,304 @@
   <meta name="theme-color" content="#0b1220">
 
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <link rel="manifest" href="./manifest.webmanifest">
 
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
-    /* Keep your existing CSS – no major changes needed */
+    :root {
+      --bg: #0b1220; --panel: #121a2a; --muted: #8aa0c3; --text: #e6eefc;
+      --accent: #4ba3ff; --danger: #ff5c5c; --warn: #ffcc66; --ok: #27d79b;
+      --ring: #2a3a58; --chip: #1a2440; --btn: #1a2842; --btn-hover: #223152;
+      --card: #0e1628;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      position: sticky; top:0; z-index:10;
+      background: rgba(11,18,32,0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--ring);
+      padding: 12px 16px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0.4rem 0; }
+    .sub { color: var(--muted); font-size: 0.85rem; }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      background: var(--panel); padding: 16px; border-radius: 12px; margin: 16px 0;
+    }
+    .toolbar input, .toolbar select, .toolbar button {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid #2a3a58;
+      background: #0c1426; color: white; font-size: 0.95rem;
+    }
+    button {
+      cursor: pointer; background: #1a2842; border: 1px solid #2a3b67; color: white;
+    }
+    button:hover { background: #223152; }
+    .ok    { background: #113c2d; border-color: #2f8f73; }
+    .danger { background: #3a1216; border-color: #8e2b37; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: #0e1628; border: 1px solid #2a3a58; border-radius: 12px;
+      width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;
+      padding: 20px;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    input, select, textarea {
+      width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2a3a58;
+      background: #0c1426; color: white;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chip {
+      background: #1a2440; border: 1px solid #2a3a58; border-radius: 999px;
+      padding: 6px 12px; font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
 
-<!-- Your HTML structure remains mostly the same -->
-<!-- Toolbar, KPIs, Chart+Table, Modals, Toast... -->
+<header>
+  <div class="wrap">
+    <h1>Health Tracker</h1>
+    <div class="sub">Simple entry logger</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar">
+    <button id="btnAdd" class="ok">+ Add Entry</button>
+    <button id="btnRefresh">Refresh</button>
+    <button id="btnSaveCSV">Export CSV</button>
+  </div>
+
+  <div style="margin:20px 0;">
+    <table id="entriesTable" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#121a2a;">
+          <th style="padding:10px; text-align:left;">Date</th>
+          <th style="padding:10px; text-align:left;">Time</th>
+          <th style="padding:10px; text-align:left;">Glucose</th>
+          <th style="padding:10px; text-align:left;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Add Entry Modal -->
+<div class="modal-backdrop" id="entryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="entryModalTitle">Add Entry</h2>
+      <button type="button" onclick="document.getElementById('entryModal').classList.remove('show')">×</button>
+    </div>
+    <div class="row">
+      <div><label>Date</label><input type="date" id="f_date"></div>
+      <div><label>Time</label><input type="time" id="f_time"></div>
+      <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose"></div>
+    </div>
+    <div style="margin-top:20px; text-align:right;">
+      <button class="danger" id="btnDeleteEntry" style="display:none;">Delete</button>
+      <button class="ok" id="btnSaveEntry">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
-// === Constants & Config ===
-const BUILD = { appVersion: '1.0', buildNumber: 'dev' };
-const METRICS = [ /* your full METRICS array */ ];
-const CORE_FIELDS = ['date','time', ...METRICS.map(m=>m.key)];
-const DEFAULT_FIELDS_VISIBLE = ['date','time','glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn','sleep','steps','pain','emotions','comments'];
-const DEFAULT_THRESHOLDS = { /* your thresholds */ };
-const OPTIONS = { autosave:'on', csvSelectedOnly:'yes', pdfIncludeChart:'yes' };
+// ─────────────────────────────────────────────
+// Minimal state & DB
+// ─────────────────────────────────────────────
 
-// === DB ===
-const DB = {
-  db: null,
-  async open() {
-    return new Promise((res, rej) => {
-      if (!('indexedDB' in window)) return res();
-      const req = indexedDB.open('health-tracker-db', 1);
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('entries')) {
-          db.createObjectStore('entries', {keyPath:'id', autoIncrement:true}).createIndex('by_date','date');
-        }
-        if (!db.objectStoreNames.contains('config')) db.createObjectStore('config', {keyPath:'key'});
-      };
-      req.onsuccess = () => { DB.db = req.result; res(); };
-      req.onerror = () => rej(req.error);
-    });
-  },
-  async putEntry(entry) {
-    if (!DB.db) return;
-    const tx = DB.db.transaction('entries','readwrite');
-    const store = tx.objectStore('entries');
-    await (entry.id != null ? store.put(entry) : store.add(entry));
-  },
-  async deleteEntry(id) {
-    if (!DB.db) return;
-    const tx = DB.db.transaction('entries','readwrite');
-    await tx.objectStore('entries').delete(id);
-  },
-  async getAllEntries() {
-    if (!DB.db) return [];
-    const tx = DB.db.transaction('entries','readonly');
-    return (await tx.objectStore('entries').getAll()) || [];
-  },
-  async putConfig(key, value) {
-    if (!DB.db) return;
-    const tx = DB.db.transaction('config','readwrite');
-    await tx.objectStore('config').put({key, value});
-  },
-  async getConfig(key) {
-    if (!DB.db) return null;
-    const tx = DB.db.transaction('config','readonly');
-    const res = await tx.objectStore('config').get(key);
-    return res?.value ?? null;
-  }
-};
+const DB_NAME = 'health-tracker-db';
+const STORE_ENTRIES = 'entries';
 
-// === Utils ===
-const U = {
-  toISODate: d => d?.toISOString?.().slice(0,10),
-  parseDateTime: (d,t) => d ? new Date(`${d}T${t||'00:00'}`) : null,
-  fmt: (n,dp=0) => (n==null||isNaN(n)) ? '—' : Number(n).toFixed(dp),
-  bmi: (w,h) => w&&h ? 703*(w/(h*h)) : null,
-  whtr: (w,h) => w&&h ? w/h : null,
-  csvEscape: v => {
-    if (v==null) return '';
-    const s = typeof v==='string' ? v : JSON.stringify(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-  },
-  dateInRange: (ds,s,e) => {
-    if (!ds) return false;
-    const d = new Date(ds);
-    return !(s && d<new Date(s)) && !(e && d>new Date(e));
-  }
-};
+let db;
 
-// === State ===
-const State = {
-  entries: [],
-  fieldsVisible: new Set(DEFAULT_FIELDS_VISIBLE),
-  thresholds: structuredClone(DEFAULT_THRESHOLDS),
-  options: {...OPTIONS},
-  ui: { chartEnabled: true },
-  editId: null,
-  medsBuffer: []
-};
-
-// === UI ===
-const UI = {
-  chart: null,
-
-  initChartMetricSelector() {
-    const s = document.getElementById('chartMetrics');
-    s.innerHTML = '';
-    METRICS.forEach(m => {
-      if (m.type==='number' || m.key==='pain') {
-        const o = document.createElement('option');
-        o.value = m.key; o.text = m.label;
-        if (['glucose','sys','dia','spo2','hr','weightLbs'].includes(m.key)) o.selected = true;
-        s.appendChild(o);
+async function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_ENTRIES)) {
+        db.createObjectStore(STORE_ENTRIES, { keyPath: 'id', autoIncrement: true });
       }
-    });
-  },
-
-  buildTable() {
-    const h = document.getElementById('tableHead'), b = document.getElementById('tableBody');
-    h.innerHTML = b.innerHTML = '';
-    const tr = document.createElement('tr');
-    ['date','time',...State.fieldsVisible].forEach(k => {
-      const m = METRICS.find(x=>x.key===k);
-      const th = document.createElement('th');
-      th.textContent = m?.label || (k==='date'?'Date':'Time');
-      tr.appendChild(th);
-    });
-    tr.appendChild(Object.assign(document.createElement('th'),{textContent:'Actions'}));
-    h.appendChild(tr);
-
-    const start = document.getElementById('filterStart')?.value || '';
-    const end = document.getElementById('filterEnd')?.value || '';
-
-    State.entries
-      .filter(e => U.dateInRange(e.date, start, end))
-      .sort((a,b) => (U.parseDateTime(b.date,b.time)?.getTime()||0) - (U.parseDateTime(a.date,a.time)?.getTime()||0))
-      .forEach(e => {
-        const r = document.createElement('tr');
-        ['date','time',...State.fieldsVisible].forEach(k => {
-          const td = document.createElement('td');
-          let v = e[k];
-          if (k==='meds' && Array.isArray(v)) v = v.map(m=>`${m.name} ${m.dose||''}${m.units?' '+m.units:''}`).join('; ');
-          td.textContent = v ?? '—';
-          r.appendChild(td);
-        });
-        const td = document.createElement('td');
-        td.innerHTML = `<button class="btn">Edit</button> <button class="btn danger">Delete</button>`;
-        td.querySelector('.btn').onclick = () => UI.openEntry(e.id);
-        td.querySelector('.btn.danger').onclick = async () => {
-          if (confirm('Delete?')) { await Actions.deleteEntry(e.id); await Actions.refreshAll(); }
-        };
-        r.appendChild(td);
-        b.appendChild(r);
-      });
-  },
-
-  // ... keep your refreshKPIs, refreshRiskChips, refreshChart, openEntry, closeEntry, openFields, closeFields, openThresholds, closeThresholds, openOptions, closeOptions, renderMedsBuffer ...
-};
-
-// === Actions ===
-const Actions = {
-  async init() {
-    await DB.open();
-    State.fieldsVisible = new Set(await DB.getConfig('fieldsVisible') || DEFAULT_FIELDS_VISIBLE);
-    State.thresholds = await DB.getConfig('thresholds') || structuredClone(DEFAULT_THRESHOLDS);
-    State.options = await DB.getConfig('options') || {...OPTIONS};
-    const ui = await DB.getConfig('ui');
-    if (ui?.chartEnabled != null) State.ui.chartEnabled = ui.chartEnabled;
-
-    document.getElementById('toggleChart').value = State.ui.chartEnabled ? 'on' : 'off';
-    document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-
-    State.entries = await DB.getAllEntries();
-    UI.initChartMetricSelector();
-    UI.buildTable();
-    UI.refreshKPIs();
-    UI.refreshChart();
-  },
-
-  // keep saveEntryFromForm, deleteEntry, refreshAll, saveFields, saveThresholds, saveOptions, exportCSV, exportPDF (with improved filtering)
-};
-
-// === Event Listeners ===
-function bindEvents() {
-  document.querySelectorAll('.modal-backdrop').forEach(bd => {
-    bd.addEventListener('click', e => {
-      if (e.target === bd) bd.classList.remove('show');
-    });
-  });
-
-  document.getElementById('btnAdd')?.onclick = () => UI.openEntry();
-  document.getElementById('btnFields')?.onclick = () => UI.openFields();
-  document.getElementById('btnThresholds')?.onclick = () => UI.openThresholds();
-  document.getElementById('btnOptions')?.onclick = () => UI.openOptions();
-
-  document.getElementById('btnSaveEntry')?.addEventListener('click', async e => {
-    e.preventDefault(); e.stopPropagation();
-    if (await Actions.saveEntryFromForm()) {
-      UI.closeEntry();
-      await Actions.refreshAll();
-    }
-  });
-
-  document.getElementById('btnDeleteEntry')?.addEventListener('click', async e => {
-    e.preventDefault(); e.stopPropagation();
-    if (State.editId && confirm('Delete?')) {
-      await Actions.deleteEntry(State.editId);
-      UI.closeEntry();
-      await Actions.refreshAll();
-    }
-  });
-
-  // similar pattern for btnSaveFields, btnSaveThresholds, btnSaveOptions, btnAddMed, btnRefresh, btnSaveCSV, btnSavePDF ...
-
-  document.getElementById('toggleChart')?.addEventListener('change', e => {
-    State.ui.chartEnabled = e.target.value === 'on';
-    document.getElementById('chartCard').style.display = State.ui.chartEnabled ? '' : 'none';
-    if (!State.ui.chartEnabled && UI.chart) { UI.chart.destroy(); UI.chart = null; }
-    DB.putConfig('ui', State.ui);
-    UI.refreshChart();
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
   });
 }
 
-// Bootstrap
+async function getAllEntries() {
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE_ENTRIES, 'readonly');
+    const req = tx.objectStore(STORE_ENTRIES).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function putEntry(entry) {
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE_ENTRIES, 'readwrite');
+    const store = tx.objectStore(STORE_ENTRIES);
+    const req = entry.id ? store.put(entry) : store.add(entry);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function deleteEntry(id) {
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE_ENTRIES, 'readwrite');
+    const req = tx.objectStore(STORE_ENTRIES).delete(id);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+// ─────────────────────────────────────────────
+// UI helpers
+// ─────────────────────────────────────────────
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  getAllEntries().then(entries => {
+    entries.sort((a,b) => (b.id || 0) - (a.id || 0)); // newest first
+
+    entries.forEach(entry => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${entry.date || '—'}</td>
+        <td>${entry.time || '—'}</td>
+        <td>${entry.glucose ?? '—'}</td>
+        <td>
+          <button class="edit-btn">Edit</button>
+          <button class="delete-btn">Delete</button>
+        </td>
+      `;
+      tr.querySelector('.edit-btn').onclick = () => openEntry(entry.id, entry);
+      tr.querySelector('.delete-btn').onclick = async () => {
+        if (confirm('Delete this entry?')) {
+          await deleteEntry(entry.id);
+          renderTable();
+        }
+      };
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function openEntry(id = null, data = {}) {
+  const modal = document.getElementById('entryModal');
+  document.getElementById('entryModalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
+  document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
+
+  document.getElementById('f_date').value     = data.date  || '';
+  document.getElementById('f_time').value     = data.time  || '';
+  document.getElementById('f_glucose').value  = data.glucose ?? '';
+
+  modal.classList.add('show');
+
+  document.getElementById('btnSaveEntry').onclick = async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const entry = {
+      id: id || undefined,
+      date:    document.getElementById('f_date').value,
+      time:    document.getElementById('f_time').value,
+      glucose: Number(document.getElementById('f_glucose').value) || null
+    };
+
+    if (!entry.date) {
+      alert('Date is required');
+      return;
+    }
+
+    await putEntry(entry);
+    modal.classList.remove('show');
+    renderTable();
+  };
+
+  document.getElementById('btnDeleteEntry').onclick = async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (id && confirm('Delete?')) {
+      await deleteEntry(id);
+      modal.classList.remove('show');
+      renderTable();
+    }
+  };
+}
+
+// ─────────────────────────────────────────────
+// Event listeners
+// ─────────────────────────────────────────────
+
+document.getElementById('btnAdd').onclick = () => openEntry();
+
+document.getElementById('btnRefresh').onclick = renderTable;
+
+document.getElementById('btnSaveCSV').onclick = async () => {
+  const entries = await getAllEntries();
+  if (!entries.length) return alert('No data to export');
+
+  const csv = [
+    'date,time,glucose',
+    ...entries.map(e => `${e.date || ''},${e.time || ''},${e.glucose ?? ''}`)
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'health-tracker-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Close modal when clicking backdrop
+document.getElementById('entryModal').onclick = e => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('show');
+  }
+};
+
+// ─────────────────────────────────────────────
+// Start
+// ─────────────────────────────────────────────
+
 (async () => {
   try {
-    await Actions.init();
-    bindEvents();
+    await openDB();
+    renderTable();
+    console.log("App ready");
   } catch (err) {
-    console.error('Startup failed', err);
+    console.error("Startup failed", err);
   }
 })();
 </script>
 </body>
 </html>
-
