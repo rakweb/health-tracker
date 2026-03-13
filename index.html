@@ -864,6 +864,21 @@
         doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
         y += 16;
 
+        document.getElementById('btnAdd')?.addEventListener('click', () => UI.openEntry());
+document.getElementById('btnFields')?.addEventListener('click', () => UI.openFields());
+document.getElementById('btnThresholds')?.addEventListener('click', () => UI.openThresholds());
+document.getElementById('btnOptions')?.addEventListener('click', () => UI.openOptions());
+
+document.getElementById('btnSaveEntry')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  await Actions.saveEntryFromForm();
+  UI.closeEntry();
+  await Actions.refreshAll();
+});
+
+// etc.
+
         // ─────────────────────────────────────────────
         // IMPROVED FILTERING LOGIC
         // ─────────────────────────────────────────────
@@ -1024,3 +1039,4 @@
   </script>
 </body>
 </html>
+
