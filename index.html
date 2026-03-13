@@ -121,4 +121,312 @@
 
     <div class="row">
       <div><label>Date *</label><input type="date" id="f_date" required></div>
-      <div><label>Time</label><input type="time
+      <div><label>Time</label><input type="time" id="f_time"></div>
+
+      <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" step="any"></div>
+      <div><label>Systolic (mmHg)</label><input type="number" id="f_sys" step="any"></div>
+      <div><label>Diastolic (mmHg)</label><input type="number" id="f_dia" step="any"></div>
+      <div><label>SpO₂ (%)</label><input type="number" id="f_spo2" min="0" max="100" step="0.1"></div>
+      <div><label>Heart Rate (bpm)</label><input type="number" id="f_hr" step="any"></div>
+      <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs" step="0.1"></div>
+      <div><label>Height (in)</label><input type="number" id="f_heightIn" step="0.1"></div>
+      <div><label>Waist (in)</label><input type="number" id="f_waistIn" step="0.1"></div>
+      <div><label>Temp (°F)</label><input type="number" id="f_tempF" step="0.1"></div>
+      <div><label>Lung Fluid (cc)</label><input type="number" id="f_lungFluidCc" step="0.1"></div>
+      <div><label>Respiration (br/min)</label><input type="number" id="f_resp" step="0.5"></div>
+      <div><label>Sleep (hrs)</label><input type="number" id="f_sleep" step="0.1"></div>
+      <div><label>Steps</label><input type="number" id="f_steps" step="1"></div>
+      <div><label>Stress (0–100)</label><input type="number" id="f_stress" min="0" max="100"></div>
+      <div><label>Body Battery (0–100)</label><input type="number" id="f_bodyBattery" min="0" max="100"></div>
+
+      <div>
+        <label>Pain (0–10)</label>
+        <input type="range" id="f_pain" min="0" max="10" value="0" step="1"
+               oninput="document.getElementById('painVal').textContent = this.value">
+        <div>Level: <strong id="painVal">0</strong></div>
+      </div>
+
+      <div>
+        <label>Emotions</label>
+        <select id="f_emotions">
+          <option value="">— None —</option>
+          <option>Happy</option><option>Calm</option><option>Neutral</option>
+          <option>Anxious</option><option>Stressed</option><option>Sad</option>
+          <option>Fatigued</option>
+        </select>
+      </div>
+
+      <div class="field-full">
+        <label>Medicines</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="medName" placeholder="Name" style="flex:2;">
+          <input id="medDose" placeholder="Dose" style="flex:1;">
+          <input id="medUnit" placeholder="Unit" style="flex:1;">
+          <button type="button" id="btnAddMed">+ Add</button>
+        </div>
+        <div id="medList" class="chips"></div>
+      </div>
+
+      <div class="field-full">
+        <label>Comments</label>
+        <textarea id="f_comments" rows="4" placeholder="Notes..."></textarea>
+      </div>
+    </div>
+
+    <div style="margin-top:24px; text-align:right;">
+      <button class="danger" id="btnDeleteEntry" style="display:none; margin-right:12px;">Delete</button>
+      <button class="ok" id="btnSaveEntry">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// Database
+// ─────────────────────────────────────────────
+
+let db;
+const DB_NAME = 'healthTracker';
+const STORE = 'entries';
+
+async function initDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, {keyPath: 'id', autoIncrement: true});
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; res(); };
+    req.onerror = e => rej(e.target.error);
+  });
+}
+
+async function saveEntry(entry) {
+  if (!db) await initDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = entry.id ? tx.objectStore(STORE).put(entry) : tx.objectStore(STORE).add(entry);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function getAllEntries() {
+  if (!db) await initDB();
+  return new Promise(r => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => r(req.result || []);
+  });
+}
+
+async function deleteEntry(id) {
+  if (!db) await initDB();
+  return new Promise(r => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = tx.objectStore(STORE).delete(id);
+    req.onsuccess = () => r();
+  });
+}
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+
+let editId = null;
+let meds = [];
+
+// ─────────────────────────────────────────────
+// Render table
+// ─────────────────────────────────────────────
+
+async function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  const entries = await getAllEntries();
+  entries.sort((a,b) => (b.id||0) - (a.id||0));
+
+  entries.forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.date||'—'}</td>
+      <td>${e.time||'—'}</td>
+      <td>${e.glucose??'—'}</td>
+      <td>${e.sys&&e.dia ? e.sys+'/'+e.dia : '—'}</td>
+      <td>${e.spo2??'—'}</td>
+      <td>${e.hr??'—'}</td>
+      <td>${e.weightLbs??'—'}</td>
+      <td>
+        <button class="edit">Edit</button>
+        <button class="delete">Delete</button>
+      </td>
+    `;
+    tr.querySelector('.edit').onclick = () => openEntry(e.id, e);
+    tr.querySelector('.delete').onclick = async () => {
+      if (confirm('Delete?')) {
+        await deleteEntry(e.id);
+        renderTable();
+      }
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+// ─────────────────────────────────────────────
+// Modal logic
+// ─────────────────────────────────────────────
+
+function openEntry(id = null, data = {}) {
+  editId = id;
+  meds = data.meds ? [...data.meds] : [];
+
+  document.getElementById('modalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
+  document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
+
+  const fields = [
+    'date','time','glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn',
+    'tempF','lungFluidCc','resp','sleep','steps','stress','bodyBattery','pain',
+    'emotions','comments'
+  ];
+
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el) el.value = data[f] ?? (f === 'pain' ? 0 : '');
+  });
+
+  document.getElementById('painVal').textContent = data.pain ?? 0;
+  document.getElementById('f_pain').value = data.pain ?? 0;
+
+  renderMeds();
+  document.getElementById('entryModal').classList.add('show');
+}
+
+function renderMeds() {
+  const container = document.getElementById('medList');
+  container.innerHTML = '';
+  meds.forEach((m, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''} <button>×</button>`;
+    chip.lastChild.onclick = () => { meds.splice(i,1); renderMeds(); };
+    container.appendChild(chip);
+  });
+}
+
+function closeModal() {
+  document.getElementById('entryModal').classList.remove('show');
+  editId = null;
+  meds = [];
+}
+
+// ─────────────────────────────────────────────
+// Save handler
+// ─────────────────────────────────────────────
+
+document.getElementById('btnSaveEntry').addEventListener('click', async e => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  console.log("Save clicked");
+
+  const entry = {
+    id: editId ?? undefined,
+    date: document.getElementById('f_date').value,
+    time: document.getElementById('f_time').value || null,
+    glucose: Number(document.getElementById('f_glucose').value) || null,
+    sys: Number(document.getElementById('f_sys').value) || null,
+    dia: Number(document.getElementById('f_dia').value) || null,
+    spo2: Number(document.getElementById('f_spo2').value) || null,
+    hr: Number(document.getElementById('f_hr').value) || null,
+    weightLbs: Number(document.getElementById('f_weightLbs').value) || null,
+    heightIn: Number(document.getElementById('f_heightIn').value) || null,
+    waistIn: Number(document.getElementById('f_waistIn').value) || null,
+    tempF: Number(document.getElementById('f_tempF').value) || null,
+    lungFluidCc: Number(document.getElementById('f_lungFluidCc').value) || null,
+    resp: Number(document.getElementById('f_resp').value) || null,
+    sleep: Number(document.getElementById('f_sleep').value) || null,
+    steps: Number(document.getElementById('f_steps').value) || null,
+    stress: Number(document.getElementById('f_stress').value) || null,
+    bodyBattery: Number(document.getElementById('f_bodyBattery').value) || null,
+    pain: Number(document.getElementById('f_pain').value) || 0,
+    emotions: document.getElementById('f_emotions').value || '',
+    comments: document.getElementById('f_comments').value || '',
+    meds: [...meds]
+  };
+
+  if (!entry.date) {
+    alert('Date is required');
+    return;
+  }
+
+  try {
+    await saveEntry(entry);
+    console.log('Saved:', entry);
+    closeModal();
+    renderTable();
+    alert('Entry saved');
+  } catch (err) {
+    console.error('Save failed:', err);
+    alert('Save failed – check console');
+  }
+});
+
+// ─────────────────────────────────────────────
+// Other handlers
+// ─────────────────────────────────────────────
+
+document.getElementById('btnAdd').addEventListener('click', () => openEntry());
+
+document.getElementById('btnRefresh').addEventListener('click', renderTable);
+
+document.getElementById('btnAddMed').addEventListener('click', () => {
+  const name = document.getElementById('medName').value.trim();
+  const dose = document.getElementById('medDose').value.trim();
+  const unit = document.getElementById('medUnit').value.trim();
+
+  if (!name) return alert('Name required');
+
+  meds.push({ name, dose: dose || null, unit: unit || null });
+
+  document.getElementById('medName').value = '';
+  document.getElementById('medDose').value = '';
+  document.getElementById('medUnit').value = '';
+
+  renderMeds();
+});
+
+document.getElementById('btnDeleteEntry').addEventListener('click', async e => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (editId && confirm('Delete permanently?')) {
+    await deleteEntry(editId);
+    closeModal();
+    renderTable();
+  }
+});
+
+document.getElementById('entryModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.querySelector('#entryModal .close-modal').addEventListener('click', closeModal);
+
+// ─────────────────────────────────────────────
+// Start
+// ─────────────────────────────────────────────
+
+(async () => {
+  try {
+    await initDB();
+    renderTable();
+    console.log("Health Tracker ready");
+  } catch (err) {
+    console.error("Init failed", err);
+  }
+})();
+</script>
+</body>
+</html>
