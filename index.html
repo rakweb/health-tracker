@@ -255,6 +255,11 @@
       <button class="btn" id="btnSaveCSV" type="button">Save CSV</button>
       <button class="btn" id="btnSavePDF" type="button">Save PDF</button>
       <button class="btn warn" id="btnOptions" type="button">Options</button>
+      <button class="btn" id="btnImportCSV" type="button">Import CSV</button>
+      <input type="file" id="fileInputCSV" accept=".csv" style="display:none">
+      <button class="btn" id="btnExportJSON">Export JSON Backup</button>
+      <button class="btn" id="btnImportJSON">Import JSON Backup</button>
+      <input type="file" id="fileInputJSON" accept=".json" style="display:none">
     </div>
 
     <div class="kpis">
@@ -421,6 +426,78 @@
 
   <script>
   'use strict';
+
+    // === Constants & Config ===
+const BUILD = { ... };
+const METRICS = [ ... ];
+// ... other consts ...
+
+// === Database ===
+const DB = { ... };
+
+// === Utilities ===
+const U = { ... };
+
+// === State ===
+const State = { ... };
+
+// === UI Components ===
+const UI = {
+  initChartMetricSelector() { ... },
+  buildTable() { ... },
+  refreshKPIs() { ... },
+  // ... all modal open/close, render methods ...
+};
+
+// === Business Logic / Actions ===
+const Actions = {
+  async init() { ... },
+  async saveEntryFromForm() { ... },
+  exportPDF() { ... },
+  // ... import/export functions ...
+};
+
+// === Event Listeners & Init ===
+function attachListeners() {
+  // all .addEventListener calls go here
+  document.getElementById('btnAdd').onclick = () => UI.openEntry(null);
+  // ...
+}
+
+(async function bootstrap() {
+  try {
+    await Actions.init();
+    attachListeners();
+    await requestNotificationPermission(); // optional
+  } catch (err) {
+    console.error("Bootstrap failed", err);
+  }
+})();
+
+  // Add at top of script
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission !== "denied") {
+    const perm = await Notification.requestPermission();
+    return perm === "granted";
+  }
+  return false;
+}
+
+// Example usage – call after successful save
+async function notify(message) {
+  if (await requestNotificationPermission()) {
+    new Notification("Health Tracker", {
+      body: message,
+      icon: "data:image/svg+xml,%3Csvg ... your favicon SVG ..."
+    });
+  }
+}
+
+// Then in saveEntryFromForm success:
+await notify("Entry saved successfully");
+    
 
   // ─────────────────────────────────────────────
   // Build metadata
@@ -834,6 +911,68 @@
       // ... your existing CSV export code remains unchanged ...
     },
 
+    // Export
+document.getElementById('btnExportJSON').addEventListener('click', async () => {
+  const data = {
+    entries: await DB.getAllEntries(),
+    config: {
+      fieldsVisible: Array.from(State.fieldsVisible),
+      thresholds: State.thresholds,
+      options: State.options,
+      ui: State.ui
+    }
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `health-tracker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Import
+document.getElementById('btnImportJSON').addEventListener('click', () => {
+  document.getElementById('fileInputJSON').click();
+});
+
+document.getElementById('fileInputJSON').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    // Clear existing data (careful!)
+    if (!confirm("This will OVERWRITE all current data. Continue?")) return;
+
+    const tx = DB.db.transaction(['entries', 'config'], 'readwrite');
+    await tx.objectStore('entries').clear();
+    await tx.objectStore('config').clear();
+
+    for (const entry of data.entries || []) {
+      await DB.putEntry(entry);
+    }
+
+    if (data.config) {
+      await DB.putConfig('fieldsVisible', data.config.fieldsVisible);
+      await DB.putConfig('thresholds', data.config.thresholds);
+      await DB.putConfig('options', data.config.options);
+      await DB.putConfig('ui', data.config.ui);
+    }
+
+    await Actions.init();  // reload state
+    alert("Backup restored successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Restore failed – invalid or corrupted file");
+  }
+
+  e.target.value = '';
+});
+    
     async exportPDF() {
       try {
         if (!window.jspdf) {
@@ -877,6 +1016,71 @@ document.getElementById('btnSaveEntry')?.addEventListener('click', async (e) => 
   await Actions.refreshAll();
 });
 
+ document.getElementById('btnImportCSV').addEventListener('click', () => {
+  document.getElementById('fileInputCSV').click();
+});
+
+document.getElementById('fileInputCSV').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim().replace(/^"|"$/g, '')));
+
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+
+    for (const row of dataRows) {
+      if (row.length < headers.length) continue;
+
+      const entry = {};
+      headers.forEach((h, i) => {
+        let val = row[i];
+        if (val === '—' || val === '') val = null;
+        if (['glucose','sys','dia','spo2','hr','weightLbs','heightIn','waistIn','tempF','lungFluidCc','steps','pain'].includes(h)) {
+          val = val ? Number(val) : null;
+        }
+        entry[h] = val;
+      });
+
+      if (entry.date) {
+        await DB.putEntry(entry);
+      }
+    }
+
+    await Actions.refreshAll();
+    alert(`Imported ${dataRows.length} rows (some may have been skipped)`);
+  } catch (err) {
+    console.error(err);
+    alert("Import failed – check console");
+  }
+
+  e.target.value = ''; // reset file input
+});       
+
+ // Example: Save Entry
+document.getElementById('btnSaveEntry').addEventListener('click', async function(e) {
+  e.preventDefault();
+  e.stopPropagation();           // ← crucial
+  try {
+    await Actions.saveEntryFromForm();
+    UI.closeEntry();
+    await Actions.refreshAll();
+  } catch (err) {
+    console.error("Save failed", err);
+    alert("Could not save entry");
+  }
+});
+
+// Backdrop – only close when clicking the backdrop itself (not modal content)
+document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+  backdrop.addEventListener('click', e => {
+    if (e.target === backdrop) {   // ← important check
+      backdrop.classList.remove('show');
+    }
+  });
+        
 // etc.
 
         // ─────────────────────────────────────────────
@@ -1036,7 +1240,10 @@ document.getElementById('btnSaveEntry')?.addEventListener('click', async (e) => 
       console.error('App init failed:', err);
     }
   })();
+
+    
   </script>
 </body>
 </html>
+
 
