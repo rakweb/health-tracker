@@ -1,56 +1,65 @@
-const CACHE_NAME = 'health-tracker-v1';
-const OFFLINE_URL = '/index.html'; // fallback page
+// sw.js – clean & safe version
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll([
-        OFFLINE_URL,
-        './index.html',
-        // add other static assets if needed
-      ]);
-    })
+const CACHE_NAME = 'health-tracker-static-v2';
+const OFFLINE_FALLBACK = '/index.html';
+
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  // add other static files if you split CSS/JS later
+];
+
+// Install → cache essentials
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      );
-    })
+// Activate → clean old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME)
+            .map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', e => {
-  // Skip caching chrome-extension resources
-  if (e.request.url.startsWith('chrome-extension://')) {
-    e.respondWith(fetch(e.request));
+// Fetch – network-first + offline fallback + skip bad schemes
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Never cache or handle chrome-extension / moz-extension resources
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    event.respondWith(fetch(event.request).catch(() => new Response('')));
     return;
   }
 
-  e.respondWith(
-    caches.match(e.request).then(resp => {
-      return resp || fetch(e.request).then(netResp => {
-        if (!netResp || netResp.status !== 200 || netResp.type !== 'basic') {
-          return netResp;
+  event.respondWith(
+    fetch(event.request)
+      .then(networkResponse => {
+        // Don't cache non-200 or non-basic responses
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
         }
 
-        const respToCache = netResp.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(e.request, respToCache);
-        });
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME)
+          .then(cache => cache.put(event.request, responseClone));
 
-        return netResp;
-      }).catch(() => {
-        // Offline fallback
-        if (e.request.mode === 'navigate') {
-          return caches.match(OFFLINE_URL);
+        return networkResponse;
+      })
+      .catch(() => {
+        // Offline fallback – only for page navigations
+        if (event.request.mode === 'navigate') {
+          return caches.match(OFFLINE_FALLBACK);
         }
-      });
-    })
+        return new Response('Offline – content not available', { status: 503 });
+      })
   );
 });
