@@ -8,14 +8,10 @@
 
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1220'/%3E%3Cpath d='M10 42h12l6-18 9 27 6-15h8l4 8h10' fill='none' stroke='%234ba3ff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
   <style>
     :root {
       --bg: #0b1220; --panel: #121a2a; --muted: #8aa0c3; --text: #e6eefc;
-      --accent: #4ba3ff; --danger: #ff5c5c; --warn: #ffcc66; --ok: #27d79b;
+      --accent: #4ba3ff; --danger: #ff5c5c; --ok: #27d79b; --warn: #ffcc66;
       --ring: #2a3a58; --chip: #1a2440; --btn: #1a2842; --btn-hover: #223152;
       --card: #0e1628;
     }
@@ -25,55 +21,78 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      padding-bottom: 40px;
     }
     header {
       position: sticky; top:0; z-index:10;
-      background: rgba(11,18,32,0.85);
+      background: rgba(11,18,32,0.9);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--ring);
       padding: 12px 16px;
     }
-    .wrap { max-width: 1200px; margin: 0 auto; }
-    h1 { font-size: 1.6rem; margin: 0.4rem 0; }
-    .sub { color: var(--muted); font-size: 0.85rem; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    h1 { font-size: 1.8rem; margin: 0.5rem 0; }
+    .sub { color: var(--muted); font-size: 0.9rem; }
 
     .toolbar {
       display: flex; flex-wrap: wrap; gap: 12px;
-      background: var(--panel); padding: 16px; border-radius: 12px; margin: 16px 0;
+      background: var(--panel); padding: 16px; border-radius: 12px;
+      margin: 16px 0; align-items: flex-end;
     }
-    .toolbar input, .toolbar select, .toolbar button {
-      padding: 8px 12px; border-radius: 8px; border: 1px solid #2a3a58;
+    .toolbar button, .toolbar input, .toolbar select {
+      padding: 9px 14px; border-radius: 8px; border: 1px solid #2a3a58;
       background: #0c1426; color: white; font-size: 0.95rem;
     }
     button {
-      cursor: pointer; background: #1a2842; border: 1px solid #2a3b67; color: white;
+      cursor: pointer; background: var(--btn); border: 1px solid #2a3b67; color: white;
     }
-    button:hover { background: #223152; }
+    button:hover { background: var(--btn-hover); }
     .ok    { background: #113c2d; border-color: #2f8f73; }
     .danger { background: #3a1216; border-color: #8e2b37; }
 
+    table {
+      width: 100%; border-collapse: collapse; margin: 20px 0;
+      background: var(--panel); border-radius: 10px; overflow: hidden;
+    }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1f2a45; }
+    th { background: #0a1426; font-weight: 600; }
+
     .modal-backdrop {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       display: none; align-items: center; justify-content: center;
       z-index: 1000;
     }
     .modal-backdrop.show { display: flex; }
     .modal {
-      background: #0e1628; border: 1px solid #2a3a58; border-radius: 12px;
-      width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;
-      padding: 20px;
+      background: var(--card); border: 1px solid var(--ring);
+      border-radius: 12px; width: 94%; max-width: 920px;
+      max-height: 90vh; overflow-y: auto; padding: 20px;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #2a3a58;
+    }
+    .row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px 20px;
+    }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 5px; }
     input, select, textarea {
-      width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2a3a58;
-      background: #0c1426; color: white;
+      width: 100%; padding: 10px; border-radius: 6px;
+      border: 1px solid #2a3a58; background: #0c1426; color: white;
+      font-size: 0.95rem;
     }
+    textarea { min-height: 80px; resize: vertical; }
+    .field-full { grid-column: 1 / -1; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .chip {
       background: #1a2440; border: 1px solid #2a3a58; border-radius: 999px;
-      padding: 6px 12px; font-size: 0.85rem;
+      padding: 5px 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;
+    }
+    .chip button {
+      background: transparent; border: none; color: #ff5c5c;
+      font-weight: bold; cursor: pointer; padding: 0 4px;
     }
   </style>
 </head>
@@ -82,132 +101,194 @@
 <header>
   <div class="wrap">
     <h1>Health Tracker</h1>
-    <div class="sub">Simple entry logger</div>
+    <div class="sub">Track vitals, symptoms & notes</div>
   </div>
 </header>
 
 <main class="wrap">
   <div class="toolbar">
     <button id="btnAdd" class="ok">+ Add Entry</button>
-    <button id="btnRefresh">Refresh</button>
+    <button id="btnRefresh">Refresh List</button>
     <button id="btnSaveCSV">Export CSV</button>
   </div>
 
-  <div style="margin:20px 0;">
-    <table id="entriesTable" style="width:100%; border-collapse:collapse;">
-      <thead>
-        <tr style="background:#121a2a;">
-          <th style="padding:10px; text-align:left;">Date</th>
-          <th style="padding:10px; text-align:left;">Time</th>
-          <th style="padding:10px; text-align:left;">Glucose</th>
-          <th style="padding:10px; text-align:left;">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+  <table id="entriesTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Glucose</th>
+        <th>BP (sys/dia)</th>
+        <th>SpO₂</th>
+        <th>HR</th>
+        <th>Weight (lbs)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
 </main>
 
-<!-- Add Entry Modal -->
+<!-- Entry Modal -->
 <div class="modal-backdrop" id="entryModal">
   <div class="modal">
     <div class="modal-header">
       <h2 id="entryModalTitle">Add Entry</h2>
       <button type="button" onclick="document.getElementById('entryModal').classList.remove('show')">×</button>
     </div>
+
     <div class="row">
-      <div><label>Date</label><input type="date" id="f_date"></div>
+      <div><label>Date *</label><input type="date" id="f_date" required></div>
       <div><label>Time</label><input type="time" id="f_time"></div>
-      <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose"></div>
+
+      <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" step="1"></div>
+      <div><label>Systolic (mmHg)</label><input type="number" id="f_sys" step="1"></div>
+      <div><label>Diastolic (mmHg)</label><input type="number" id="f_dia" step="1"></div>
+      <div><label>SpO₂ (%)</label><input type="number" id="f_spo2" min="0" max="100" step="0.1"></div>
+      <div><label>Heart Rate (bpm)</label><input type="number" id="f_hr" step="1"></div>
+      <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs" step="0.1"></div>
+      <div><label>Height (in)</label><input type="number" id="f_heightIn" step="0.1"></div>
+      <div><label>Waist (in)</label><input type="number" id="f_waistIn" step="0.1"></div>
+      <div><label>Temperature (°F)</label><input type="number" id="f_tempF" step="0.1"></div>
+      <div><label>Lung Fluid (cc)</label><input type="number" id="f_lungFluidCc" step="0.1"></div>
+      <div><label>Respiration (br/min)</label><input type="number" id="f_resp" step="0.5"></div>
+      <div><label>Sleep (hours)</label><input type="number" id="f_sleep" step="0.1"></div>
+      <div><label>Steps</label><input type="number" id="f_steps" step="1"></div>
+      <div><label>Stress (0–100)</label><input type="number" id="f_stress" min="0" max="100" step="1"></div>
+      <div><label>Body Battery (0–100)</label><input type="number" id="f_bodyBattery" min="0" max="100" step="1"></div>
+
+      <div>
+        <label>Pain (0–10)</label>
+        <input type="range" id="f_pain" min="0" max="10" value="0" step="1"
+               oninput="document.getElementById('painVal').textContent = this.value">
+        <div>Level: <strong id="painVal">0</strong></div>
+      </div>
+
+      <div>
+        <label>Emotions</label>
+        <select id="f_emotions">
+          <option value="">— None —</option>
+          <option>Happy</option>
+          <option>Calm</option>
+          <option>Neutral</option>
+          <option>Anxious</option>
+          <option>Stressed</option>
+          <option>Sad</option>
+          <option>Fatigued</option>
+          <option>Irritable</option>
+        </select>
+      </div>
+
+      <div class="field-full">
+        <label>Medicines (add one at a time)</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="med_name" placeholder="Name (e.g. Metformin)" style="flex:2;">
+          <input id="med_dose" placeholder="Dose" style="flex:1;">
+          <input id="med_unit" placeholder="Unit (mg, ml, etc)" style="flex:1;">
+          <button type="button" id="btnAddMed">+ Add</button>
+        </div>
+        <div class="chips" id="medList"></div>
+      </div>
+
+      <div class="field-full">
+        <label>Comments / Notes</label>
+        <textarea id="f_comments" rows="4" placeholder="Any additional observations..."></textarea>
+      </div>
     </div>
-    <div style="margin-top:20px; text-align:right;">
-      <button class="danger" id="btnDeleteEntry" style="display:none;">Delete</button>
-      <button class="ok" id="btnSaveEntry">Save</button>
+
+    <div style="margin-top:24px; text-align:right;">
+      <button class="danger" id="btnDeleteEntry" style="display:none; margin-right:12px;">Delete Entry</button>
+      <button class="ok" id="btnSaveEntry">Save Entry</button>
     </div>
   </div>
 </div>
 
 <script>
 // ─────────────────────────────────────────────
-// Minimal state & DB
+// Database
 // ─────────────────────────────────────────────
 
-const DB_NAME = 'health-tracker-db';
-const STORE_ENTRIES = 'entries';
-
 let db;
+const DB_NAME = 'healthTrackerDB';
+const STORE = 'entries';
 
-async function openDB() {
+async function initDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = e => {
       db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_ENTRIES)) {
-        db.createObjectStore(STORE_ENTRIES, { keyPath: 'id', autoIncrement: true });
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
       }
     };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
     req.onerror = e => reject(e.target.error);
   });
 }
 
-async function getAllEntries() {
-  if (!db) await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE_ENTRIES, 'readonly');
-    const req = tx.objectStore(STORE_ENTRIES).getAll();
-    req.onsuccess = () => res(req.result);
-    req.onerror = () => rej(req.error);
+async function getAll() {
+  if (!db) await initDB();
+  return new Promise(r => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => r(req.result || []);
   });
 }
 
-async function putEntry(entry) {
-  if (!db) await openDB();
+async function saveEntry(entry) {
+  if (!db) await initDB();
   return new Promise((res, rej) => {
-    const tx = db.transaction(STORE_ENTRIES, 'readwrite');
-    const store = tx.objectStore(STORE_ENTRIES);
-    const req = entry.id ? store.put(entry) : store.add(entry);
-    req.onsuccess = () => res();
-    req.onerror = () => rej(req.error);
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    const op = entry.id ? store.put(entry) : store.add(entry);
+    op.onsuccess = () => res();
+    op.onerror = () => rej(op.error);
   });
 }
 
 async function deleteEntry(id) {
-  if (!db) await openDB();
+  if (!db) await initDB();
   return new Promise((res, rej) => {
-    const tx = db.transaction(STORE_ENTRIES, 'readwrite');
-    const req = tx.objectStore(STORE_ENTRIES).delete(id);
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = tx.objectStore(STORE).delete(id);
     req.onsuccess = () => res();
     req.onerror = () => rej(req.error);
   });
 }
 
 // ─────────────────────────────────────────────
-// UI helpers
+// State & Helpers
 // ─────────────────────────────────────────────
+
+let editId = null;
+let medsList = [];
 
 function renderTable() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
 
-  getAllEntries().then(entries => {
-    entries.sort((a,b) => (b.id || 0) - (a.id || 0)); // newest first
+  getAll().then(entries => {
+    entries.sort((a,b) => (b.id||0) - (a.id||0));
 
-    entries.forEach(entry => {
+    entries.forEach(e => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${entry.date || '—'}</td>
-        <td>${entry.time || '—'}</td>
-        <td>${entry.glucose ?? '—'}</td>
+        <td>${e.date || '—'}</td>
+        <td>${e.time || '—'}</td>
+        <td>${e.glucose ?? '—'}</td>
+        <td>${e.sys && e.dia ? e.sys + '/' + e.dia : '—'}</td>
+        <td>${e.spo2 ?? '—'}</td>
+        <td>${e.hr ?? '—'}</td>
+        <td>${e.weightLbs ?? '—'}</td>
         <td>
           <button class="edit-btn">Edit</button>
           <button class="delete-btn">Delete</button>
         </td>
       `;
-      tr.querySelector('.edit-btn').onclick = () => openEntry(entry.id, entry);
+      tr.querySelector('.edit-btn').onclick = () => openEntry(e.id, e);
       tr.querySelector('.delete-btn').onclick = async () => {
-        if (confirm('Delete this entry?')) {
-          await deleteEntry(entry.id);
+        if (confirm('Delete entry?')) {
+          await deleteEntry(e.id);
           renderTable();
         }
       };
@@ -217,50 +298,54 @@ function renderTable() {
 }
 
 function openEntry(id = null, data = {}) {
-  const modal = document.getElementById('entryModal');
+  editId = id;
+  medsList = data.meds ? [...data.meds] : [];
+
   document.getElementById('entryModalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
   document.getElementById('btnDeleteEntry').style.display = id ? '' : 'none';
 
-  document.getElementById('f_date').value     = data.date  || '';
-  document.getElementById('f_time').value     = data.time  || '';
-  document.getElementById('f_glucose').value  = data.glucose ?? '';
+  // Fill form
+  const fields = [
+    'date', 'time', 'glucose', 'sys', 'dia', 'spo2', 'hr', 'weightLbs',
+    'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'resp', 'sleep', 'steps',
+    'stress', 'bodyBattery', 'pain', 'emotions', 'comments'
+  ];
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el) el.value = data[f] ?? (f === 'pain' ? 0 : '');
+  });
 
-  modal.classList.add('show');
+  document.getElementById('painVal').textContent = data.pain ?? 0;
+  document.getElementById('f_pain').value = data.pain ?? 0;
 
-  document.getElementById('btnSaveEntry').onclick = async function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  renderMeds();
 
-    const entry = {
-      id: id || undefined,
-      date:    document.getElementById('f_date').value,
-      time:    document.getElementById('f_time').value,
-      glucose: Number(document.getElementById('f_glucose').value) || null
+  document.getElementById('entryModal').classList.add('show');
+}
+
+function renderMeds() {
+  const container = document.getElementById('medList');
+  container.innerHTML = '';
+  medsList.forEach((m, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `${m.name} ${m.dose||''}${m.unit ? ' ' + m.unit : ''} <button>×</button>`;
+    chip.lastElementChild.onclick = () => {
+      medsList.splice(i, 1);
+      renderMeds();
     };
+    container.appendChild(chip);
+  });
+}
 
-    if (!entry.date) {
-      alert('Date is required');
-      return;
-    }
-
-    await putEntry(entry);
-    modal.classList.remove('show');
-    renderTable();
-  };
-
-  document.getElementById('btnDeleteEntry').onclick = async function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (id && confirm('Delete?')) {
-      await deleteEntry(id);
-      modal.classList.remove('show');
-      renderTable();
-    }
-  };
+function closeModal() {
+  document.getElementById('entryModal').classList.remove('show');
+  editId = null;
+  medsList = [];
 }
 
 // ─────────────────────────────────────────────
-// Event listeners
+// Event Handlers
 // ─────────────────────────────────────────────
 
 document.getElementById('btnAdd').onclick = () => openEntry();
@@ -268,28 +353,98 @@ document.getElementById('btnAdd').onclick = () => openEntry();
 document.getElementById('btnRefresh').onclick = renderTable;
 
 document.getElementById('btnSaveCSV').onclick = async () => {
-  const entries = await getAllEntries();
-  if (!entries.length) return alert('No data to export');
+  const entries = await getAll();
+  if (!entries.length) return alert('No entries yet.');
 
-  const csv = [
-    'date,time,glucose',
-    ...entries.map(e => `${e.date || ''},${e.time || ''},${e.glucose ?? ''}`)
-  ].join('\n');
+  const lines = [
+    'date,time,glucose,sys,dia,spo2,hr,weightLbs,heightIn,waistIn,tempF,lungFluidCc,resp,sleep,steps,stress,bodyBattery,pain,emotions,comments,meds'
+  ];
 
-  const blob = new Blob([csv], { type: 'text/csv' });
+  entries.forEach(e => {
+    const medsStr = (e.meds || []).map(m => `${m.name} ${m.dose||''}${m.unit?' '+m.unit:''}`).join('; ');
+    lines.push([
+      e.date||'', e.time||'', e.glucose??'', e.sys??'', e.dia??'', e.spo2??'', e.hr??'',
+      e.weightLbs??'', e.heightIn??'', e.waistIn??'', e.tempF??'', e.lungFluidCc??'',
+      e.resp??'', e.sleep??'', e.steps??'', e.stress??'', e.bodyBattery??'', e.pain??'',
+      `"${(e.emotions||'').replace(/"/g,'""')}"`, `"${(e.comments||'').replace(/"/g,'""')}"`, `"${medsStr.replace(/"/g,'""')}"`
+    ].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'health-tracker-' + new Date().toISOString().slice(0,10) + '.csv';
+  const a = Object.assign(document.createElement('a'), { href: url, download: 'health-data.csv' });
   a.click();
   URL.revokeObjectURL(url);
 };
 
-// Close modal when clicking backdrop
-document.getElementById('entryModal').onclick = e => {
-  if (e.target === e.currentTarget) {
-    e.currentTarget.classList.remove('show');
+document.getElementById('btnSaveEntry').onclick = async function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const entry = {
+    id: editId || undefined,
+    date: document.getElementById('f_date').value,
+    time: document.getElementById('f_time').value,
+    glucose: Number(document.getElementById('f_glucose').value) || null,
+    sys: Number(document.getElementById('f_sys').value) || null,
+    dia: Number(document.getElementById('f_dia').value) || null,
+    spo2: Number(document.getElementById('f_spo2').value) || null,
+    hr: Number(document.getElementById('f_hr').value) || null,
+    weightLbs: Number(document.getElementById('f_weightLbs').value) || null,
+    heightIn: Number(document.getElementById('f_heightIn').value) || null,
+    waistIn: Number(document.getElementById('f_waistIn').value) || null,
+    tempF: Number(document.getElementById('f_tempF').value) || null,
+    lungFluidCc: Number(document.getElementById('f_lungFluidCc').value) || null,
+    resp: Number(document.getElementById('f_resp').value) || null,
+    sleep: Number(document.getElementById('f_sleep').value) || null,
+    steps: Number(document.getElementById('f_steps').value) || null,
+    stress: Number(document.getElementById('f_stress').value) || null,
+    bodyBattery: Number(document.getElementById('f_bodyBattery').value) || null,
+    pain: Number(document.getElementById('f_pain').value) || 0,
+    emotions: document.getElementById('f_emotions').value || '',
+    comments: document.getElementById('f_comments').value || '',
+    meds: [...medsList]
+  };
+
+  if (!entry.date) {
+    alert('Date is required.');
+    return;
   }
+
+  await saveEntry(entry);
+  closeModal();
+  renderTable();
+};
+
+document.getElementById('btnAddMed').onclick = () => {
+  const name = document.getElementById('med_name').value.trim();
+  const dose = document.getElementById('med_dose').value.trim();
+  const unit = document.getElementById('med_unit').value.trim();
+
+  if (!name) return alert('Medicine name required');
+
+  medsList.push({ name, dose: dose || null, unit: unit || null });
+
+  document.getElementById('med_name').value = '';
+  document.getElementById('med_dose').value = '';
+  document.getElementById('med_unit').value = '';
+
+  renderMeds();
+};
+
+document.getElementById('btnDeleteEntry').onclick = async function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (editId && confirm('Delete this entry permanently?')) {
+    await deleteEntry(editId);
+    closeModal();
+    renderTable();
+  }
+};
+
+// Backdrop close
+document.getElementById('entryModal').onclick = e => {
+  if (e.target === e.currentTarget) closeModal();
 };
 
 // ─────────────────────────────────────────────
@@ -298,11 +453,12 @@ document.getElementById('entryModal').onclick = e => {
 
 (async () => {
   try {
-    await openDB();
+    await initDB();
     renderTable();
-    console.log("App ready");
+    console.log("Health Tracker ready");
   } catch (err) {
-    console.error("Startup failed", err);
+    console.error("Initialization failed", err);
+    alert("Database error – check browser console");
   }
 })();
 </script>
