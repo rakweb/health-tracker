@@ -84,6 +84,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // sw.js – add this check before cache.put()
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).then(networkResponse => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+
+        // Skip caching chrome-extension resources
+        if (event.request.url.startsWith('chrome-extension://')) {
+          return networkResponse;
+        }
+
+        const responseToCache = networkResponse.clone();
+        caches.open('health-tracker-cache-v1').then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return networkResponse;
+      });
+    })
+  );
+});
+  
   // Same-origin & cross-origin assets: stale-while-revalidate
   event.respondWith(
     (async () => {
@@ -120,3 +145,4 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
