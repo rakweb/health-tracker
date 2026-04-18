@@ -6,18 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0d9488" />
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json" />
+  
+  <!-- Icons -->
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="range-slider.css" />
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles.css" />
+  
+  <!-- Range slider base styling (0–10 gradient track) -->
+  <link rel="stylesheet" href="./range-slider.css" />
 
+   <!-- Libraries (deferred so they load before our init-on-load) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <script src="range-slider.js" defer></script>
-  <script src="chart.js" defer></script>
+  <script src="./range-slider.js" defer></script>
+  <script src="./chart.js" defer></script>
 </head>
 <body>
 
