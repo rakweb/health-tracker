@@ -1,228 +1,264 @@
+/* ====================== HEALTH TRACKER - styles.css ====================== */
+
 :root {
   --bg: #0b1220;
-  --panel: rgba(18, 27, 44, 0.72);
-  --ring: rgba(66, 92, 140, 0.45);
-  --text: #e6eefc;
+  --panel: #121a2a;
   --muted: #8aa0c3;
-
+  --text: #e6eefc;
   --accent: #4ba3ff;
   --danger: #ff5c5c;
-
-  --btn: rgba(26, 40, 66, 0.9);
-  --btnHover: rgba(34, 49, 82, 0.95);
-
-  --radius: 16px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --font: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --warn: #ffcc66;
+  --ok: #27d79b;
+  --ring: #2a3a58;
+  --chip: #1a2440;
+  --btn: #1a2842;
+  --btn-hover: #223152;
+  --card: #0e1628;
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0;
-  font-family: var(--font);
+  font-family: 'Inter', system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg, #0a1120 0%, #0b1220 60%, #0d1322 100%);
   color: var(--text);
-  background:
-    radial-gradient(1200px 600px at 20% -20%, rgba(75,163,255,0.18), transparent 60%),
-    linear-gradient(180deg, var(--bg), #0a1120);
+  line-height: 1.5;
+}
+
+/* ====================== HEADER & LAYOUT ====================== */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  background: rgba(9, 13, 24, 0.95);
+  border-bottom: 1px solid var(--ring);
 }
 
 .wrap {
-  width: min(1180px, calc(100% - 32px));
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 12px 16px;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(11, 18, 32, 0.75);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--ring);
-}
-
-.headbar {
-  padding: 12px 0;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-h1 { margin: 0; font-size: 20px; }
-.sub { margin-top: 4px; color: var(--muted); font-size: 13px; }
-
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-.grid {
-  display: grid;
-  gap: 14px;
-  padding: 16px 0 40px;
-}
-
+/* ====================== CARDS & TOOLBAR ====================== */
 .card {
-  background: linear-gradient(90deg, var(--ok) 0%, var(--warn) 50%, var(--danger) 100%);
-  border: 1px solid var(--ring);
-  border-radius: var(--radius);
-  padding: 14px;
-  box-shadow: var(--shadow);
-}
-
-.card h2 { margin: 0 0 10px; font-size: 15px; letter-spacing: 0.2px; color: #d6e6ff; }
-
-.btn {
-  appearance: none;
-  border: 1px solid color-mix(in oklab, var(--ring) 80%, transparent);
-  background: var(--btn);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.12s ease, transform 0.05s ease, border-color 0.12s ease;
-}
-
-.btn:hover { background: var(--btnHover); border-color: color-mix(in oklab, var(--accent) 30%, var(--ring)); }
-.btn:active { transform: translateY(1px); }
-.btn-primary { border-color: color-mix(in oklab, var(--accent) 60%, var(--ring)); }
-.btn-danger { border-color: color-mix(in oklab, var(--danger) 60%, var(--ring)); }
-
-.chartWrap {
-  height: 360px;
-  padding: 6px 2px 2px;
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.legend label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid var(--ring);
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--btn) 85%, transparent);
-  font-size: 12px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.legend .swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-}
-
-.tableWrap { overflow: auto; border: 1px solid var(--ring); border-radius: 14px; }
-.table { width: 100%; border-collapse: collapse; min-width: 760px; }
-.table thead th {
-  position: sticky;
-  top: 0;
-  background: rgba(11, 18, 32, 0.85);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--ring);
-  padding: 10px;
-  text-align: left;
-  font-size: 12px;
-  color: var(--muted);
-}
-.table tbody td {
-  border-bottom: 1px solid color-mix(in oklab, var(--ring) 70%, transparent);
-  padding: 10px;
-  font-size: 13px;
-}
-.table tbody tr:hover td { background: color-mix(in oklab, var(--accent) 6%, transparent); }
-
-.hint { margin-top: 10px; color: var(--muted); font-size: 12px; }
-
-/* Modal */
-.modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 100; }
-.modal[hidden] { display: none; }
-.backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); }
-
-.modalPanel {
-  position: relative;
-  width: min(720px, calc(100% - 28px));
-  border-radius: 18px;
-  border: 1px solid var(--ring);
-  background: rgba(12, 20, 38, 0.96);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.modalHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
-  border-bottom: 1px solid var(--ring);
-}
-
-.modalHead h3 { margin: 0; font-size: 14px; }
-
-.iconBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid var(--ring);
-  background: color-mix(in oklab, var(--btn) 90%, transparent);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.modalBody { padding: 14px; }
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-@media (max-width: 720px) {
-  .formGrid { grid-template-columns: 1fr; }
-  .span2 { grid-column: auto; }
-}
-
-.field label { display: block; font-size: 12px; color: var(--muted); margin: 2px 0 6px; }
-.field input, .field textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in oklab, var(--ring) 80%, transparent);
-  background: rgba(10, 16, 32, 0.85);
-  color: var(--text);
-  outline: none;
-}
-.field input:focus, .field textarea:focus {
-  border-color: color-mix(in oklab, var(--accent) 60%, var(--ring));
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
-}
-.span2 { grid-column: span 2; }
-
-.modalActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-}
-.spacer { flex: 1; }
-
-/* Toasts */
-.toasts { position: fixed; right: 14px; bottom: 14px; display: grid; gap: 8px; z-index: 200; }
-.toast {
+  background: linear-gradient(180deg, rgba(26, 38, 64, 0.45) 0%, rgba(9, 15, 29, 0.7) 100%);
   border: 1px solid var(--ring);
   border-radius: 14px;
-  background: rgba(12, 20, 38, 0.96);
-  box-shadow: var(--shadow);
-  padding: 10px 12px;
-  width: min(360px, calc(100vw - 28px));
-  font-size: 13px;
+  padding: 16px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
 }
-.toast strong { display: block; margin-bottom: 2px; font-size: 12px; color: var(--muted); }
+
+.toolbar .row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.row > div {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* ====================== MODALS - MOBILE RESPONSIVE ====================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 14, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 920px;
+  max-height: 94vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
+}
+
+/* Mobile Optimization */
+@media (max-width: 640px) {
+  .modal {
+    max-height: 96vh;
+    border-radius: 12px;
+    margin: 8px;
+  }
+  
+  .modal-header {
+    padding: 14px 16px;
+  }
+  
+  .modal {
+    padding: 0;
+  }
+  
+  .modal-content {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ring);
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-actions {
+  padding: 16px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--ring);
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+/* Make buttons bigger on mobile */
+@media (max-width: 640px) {
+  .btn {
+    padding: 12px 16px;
+    font-size: 15px;
+    min-height: 48px; /* Better touch target */
+  }
+  
+  .modal-actions {
+    padding: 12px 16px;
+  }
+}
+
+/* Scrollable content area */
+.modal > div:not(.modal-header):not(.modal-actions) {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Field Grid - Better on Mobile */
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ====================== OTHER STYLES ====================== */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  width: 100%;
+  background: #0c1426;
+  color: var(--text);
+  border: 1px solid #1f2a45;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 15px;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(75, 163, 255, 0.2);
+}
+
+.btn {
+  background: var(--btn);
+  border: 1px solid #2a3b67;
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: var(--btn-hover);
+}
+
+.btn.ok { background: #113c2d; border-color: #2f8f73; }
+.btn.warn { background: #453312; border-color: #997a2a; }
+.btn.danger { background: #3a1216; border-color: #8e2b37; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0b1220;
+  color: #e6eefc;
+  border: 1px solid #2a3a58;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: none;
+  z-index: 2000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  max-width: 90vw;
+}
+
+.toast.show {
+  display: block;
+  animation: toastPop 0.3s ease forwards;
+}
+
+@keyframes toastPop {
+  from { transform: translate(-50%, 30px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* Table & KPIs (unchanged but responsive) */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px 8px;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  table {
+    font-size: 13.5px;
+  }
+}
