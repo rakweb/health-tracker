@@ -1,118 +1,45 @@
-/* ====================== HEALTH TRACKER - styles.css ====================== */
-
 :root {
-  --bg: #0b1220;
-  --panel: #121a2a;
-  --muted: #8aa0c3;
-  --text: #e6eefc;
-  --accent: #4ba3ff;
-  --danger: #ff5c5c;
-  --warn: #ffcc66;
-  --ok: #27d79b;
-  --ring: #2a3a58;
-  --chip: #1a2440;
-  --btn: #1a2842;
-  --btn-hover: #223152;
-  --card: #0e1628;
+  --bg:#0b1220; --text:#e6eefc; --muted:#8aa0c3; --accent:#4ba3ff;
+  --danger:#ff5c5c; --btn:#1a2842; --btn-hover:#223152; --ring:#2a3a58;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui; }
 
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: linear-gradient(180deg, #0a1120 0%, #0b1220 60%, #0d1322 100%);
-  color: var(--text);
-}
-
-/* ==================== BUTTONS WITH ACTIONABLE STATES ==================== */
 .btn {
-  background: var(--btn);
-  border: 1px solid #2a3b67;
-  color: var(--text);
-  padding: 11px 16px;
+  padding: 12px 16px;
   border-radius: 10px;
-  font-size: 14.5px;
+  border: 1px solid #2a3b67;
+  background: var(--btn);
+  color: white;
   cursor: pointer;
-  transition: all 0.18s ease;
-  font-weight: 500;
-  min-height: 48px; /* Good touch target */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.btn:hover {
-  background: var(--btn-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
+.btn:active { transform: scale(0.95); }
+.btn:hover { background: var(--btn-hover); }
 
-.btn:active {
-  transform: scale(0.96);
-  background: #1f2e4f;
-  transition: transform 0.1s;
-}
-
-.btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(75, 163, 255, 0.4);
-}
-
-/* Button Variants */
-.btn.ok { background: #113c2d; border-color: #2f8f73; }
-.btn.ok:hover { background: #1a5a45; }
-.btn.warn { background: #453312; border-color: #997a2a; }
-.btn.warn:hover { background: #5c4518; }
-.btn.danger { background: #3a1216; border-color: #8e2b37; }
-.btn.danger:hover { background: #5c1f24; }
-
-/* ==================== MODALS - Enhanced Mobile Experience ==================== */
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(3, 6, 14, 0.94);
-  display: none;
-  align-items: flex-end;           /* Changed for better mobile feel */
-  justify-content: center;
-  z-index: 1000;
-  padding: 0 8px 8px;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+  display: none; align-items: center; justify-content: center; z-index: 1000;
 }
-
-.modal-backdrop.show {
-  display: flex;
-}
+.modal-backdrop.show { display: flex; }
 
 .modal {
-  background: var(--card);
-  border: 1px solid var(--ring);
-  border-radius: 16px 16px 0 0;     /* Rounded top only on mobile */
-  width: 100%;
-  max-width: 920px;
-  max-height: 94vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -4px 30px rgba(0,0,0,0.6);
-  overflow: hidden;
+  background: #0e1628;
+  border: 1px solid #2a3a58;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
 }
 
-@media (min-width: 641px) {
-  .modal {
-    border-radius: 16px;
-    margin: 20px;
-    align-self: center;
-  }
-}
-
-/* Swipe Handle */
+/* Mobile swipe handle */
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--ring);
   position: relative;
+  padding: 16px;
+  text-align: center;
 }
-
 .modal-header::before {
   content: '';
   position: absolute;
@@ -120,60 +47,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 40px;
-  height: 4px;
-  background: #4a5b7a;
-  border-radius: 4px;
-}
-
-/* Modal Content & Actions */
-.modal-content {
-  padding: 16px 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-actions {
-  padding: 16px 20px;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  border-top: 1px solid var(--ring);
-  background: rgba(11, 18, 32, 0.6);
-}
-
-/* Better spacing on mobile */
-@media (max-width: 640px) {
-  .modal-actions {
-    padding: 14px 16px;
-    gap: 10px;
-  }
-  
-  .btn {
-    padding: 13px 20px;
-    font-size: 15.5px;
-    flex: 1;                    /* Makes buttons full width on small modals */
-    max-width: 160px;
-  }
-}
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0b1220;
-  border: 1px solid #2a3a58;
-  border-radius: 12px;
-  padding: 14px 20px;
-  z-index: 2000;
-  display: none;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-}
-
-.toast.show { display: block; animation: toastUp 0.3s ease; }
-
-@keyframes toastUp {
-  from { transform: translate(-50%, 40px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
+  height: 5px;
+  background: #555;
+  border-radius: 10px;
 }
