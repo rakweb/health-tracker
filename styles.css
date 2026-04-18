@@ -1,45 +1,98 @@
+/* ====================== HEALTH TRACKER - styles.css ====================== */
+
 :root {
-  --bg:#0b1220; --text:#e6eefc; --muted:#8aa0c3; --accent:#4ba3ff;
-  --danger:#ff5c5c; --btn:#1a2842; --btn-hover:#223152; --ring:#2a3a58;
+  --bg: #0b1220;
+  --panel: #121a2a;
+  --muted: #8aa0c3;
+  --text: #e6eefc;
+  --accent: #4ba3ff;
+  --danger: #ff5c5c;
+  --warn: #ffcc66;
+  --ok: #27d79b;
+  --ring: #2a3a58;
+  --chip: #1a2440;
+  --btn: #1a2842;
+  --btn-hover: #223152;
+  --card: #0e1628;
 }
 
-* { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
+body {
+  font-family: 'Inter', system-ui, Arial, sans-serif;
+  background: linear-gradient(180deg, #0a1120 0%, #0b1220 60%, #0d1322 100%);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Buttons with proper states */
 .btn {
+  background: var(--btn);
+  border: 1px solid #2a3b67;
+  color: var(--text);
   padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid #2a3b67;
-  background: var(--btn);
-  color: white;
+  font-size: 14.5px;
   cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn:active { transform: scale(0.95); }
-.btn:hover { background: var(--btn-hover); }
+.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+.btn:active { transform: scale(0.96); }
+.btn:focus-visible { outline: 3px solid rgba(75, 163, 255, 0.5); }
 
+.btn.ok { background: #113c2d; border-color: #2f8f73; }
+.btn.warn { background: #453312; border-color: #997a2a; }
+.btn.danger { background: #3a1216; border-color: #8e2b37; }
+
+/* Modals */
 .modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-  display: none; align-items: center; justify-content: center; z-index: 1000;
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 14, 0.92);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 10px;
 }
-.modal-backdrop.show { display: flex; }
+
+.modal-backdrop.show {
+  display: flex;
+}
 
 .modal {
-  background: #0e1628;
-  border: 1px solid #2a3a58;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 920px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -6px 30px rgba(0,0,0,0.6);
 }
 
-/* Mobile swipe handle */
+@media (min-width: 641px) {
+  .modal { border-radius: 16px; margin: 20px; align-self: center; }
+}
+
 .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ring);
   position: relative;
-  padding: 16px;
   text-align: center;
 }
+
 .modal-header::before {
   content: '';
   position: absolute;
@@ -48,6 +101,64 @@ body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui;
   transform: translateX(-50%);
   width: 40px;
   height: 5px;
-  background: #555;
-  border-radius: 10px;
+  background: #4a5b7a;
+  border-radius: 999px;
 }
+
+.modal-content {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-actions {
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--ring);
+}
+
+/* Other styles */
+.card {
+  background: linear-gradient(180deg, rgba(26,38,64,0.45) 0%, rgba(9,15,29,0.7) 100%);
+  border: 1px solid var(--ring);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.row > div { flex: 1; min-width: 160px; }
+
+input, select, textarea {
+  width: 100%;
+  background: #0c1426;
+  border: 1px solid #1f2a45;
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: var(--text);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; border-bottom: 1px solid #1b2742; }
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0b1220;
+  border: 1px solid #2a3a58;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: none;
+  z-index: 2000;
+}
+
+.toast.show { display: block; }
