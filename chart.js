@@ -4,17 +4,19 @@ let entries = [];
 let chartInstance = null;
 let currentEditIndex = -1;
 
-function showToast(message) {
-  const toast = document.getElementById('updateToast') || document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
-}
+const showToast = (msg) => {
+  const toast = document.getElementById('updateToast');
+  if (toast) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+};
 
 window.UI = {
   closeEntry: () => document.getElementById('entryModal').classList.remove('show'),
   closeFields: () => document.getElementById('fieldsModal').classList.remove('show'),
+  closeBulkRemove: () => document.getElementById('bulkRemoveModal').classList.remove('show'),
   closeThresholds: () => document.getElementById('thModal').classList.remove('show'),
   closeOptions: () => document.getElementById('optModal').classList.remove('show')
 };
@@ -50,7 +52,7 @@ window.editEntry = function(i) {
 };
 
 window.deleteEntry = function(i) {
-  if (confirm('Delete entry?')) {
+  if (confirm('Delete this entry?')) {
     entries.splice(i, 1);
     renderTable();
     showToast('Entry deleted');
@@ -75,11 +77,11 @@ document.getElementById('btnSaveEntry').addEventListener('click', () => {
   }
 
   renderTable();
-  showToast('✅ Entry saved');
+  showToast('✅ Entry saved successfully');
   UI.closeEntry();
 });
 
-// Main Buttons
+// Button Connections
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnAdd').addEventListener('click', () => {
     currentEditIndex = -1;
@@ -92,6 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('✅ Refreshed');
   });
 
+  document.getElementById('btnFields').addEventListener('click', () => {
+    document.getElementById('fieldsModal').classList.add('show');
+  });
+
+  document.getElementById('btnThresholds').addEventListener('click', () => {
+    document.getElementById('thModal').classList.add('show');
+  });
+
+  document.getElementById('btnOptions').addEventListener('click', () => {
+    document.getElementById('optModal').classList.add('show');
+  });
+
   // Sample Data
   entries = [
     { date: "2026-04-17", glucose: 98, sys: 118, dia: 76, weightLbs: 185 },
@@ -99,5 +113,5 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   renderTable();
-  showToast('✅ Health Tracker Loaded');
+  showToast('✅ Health Tracker is ready');
 });
