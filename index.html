@@ -147,4 +147,160 @@
       // ... add more fields as needed
 
       document.getElementById('btnDeleteEntry').style.display = 'inline-block';
-      document.getElementById
+      document.getElementById('btnDeleteEntry').onclick = () => { deleteEntry(i); UI.closeEntry(); };
+      document.getElementById('entryModal').classList.add('show');
+    };
+
+    window.deleteEntry = function(i) {
+      if (confirm('Delete this entry?')) {
+        entries.splice(i, 1);
+        renderTable();
+        updateKPIs();
+        renderChart();
+        showToast('Entry deleted');
+      }
+    };
+
+    // Save Entry
+    document.getElementById('btnSaveEntry').addEventListener('click', () => {
+      const newEntry = {
+        date: document.getElementById('f_date').value,
+        time: document.getElementById('f_time').value,
+        glucose: parseFloat(document.getElementById('f_glucose').value),
+        sys: parseInt(document.getElementById('f_sys').value),
+        dia: parseInt(document.getElementById('f_dia').value),
+        weightLbs: parseFloat(document.getElementById('f_weightLbs').value),
+        waistIn: parseFloat(document.getElementById('f_waistIn').value),
+        spo2: parseInt(document.getElementById('f_spo2').value),
+        hr: parseInt(document.getElementById('f_hr').value),
+        // add all other fields you want
+      };
+
+      entries.unshift(newEntry);
+      renderTable();
+      updateKPIs();
+      renderChart();
+      showToast('Entry saved successfully');
+      document.getElementById('entryModal').classList.remove('show');
+    });
+
+    // Update KPIs
+    function updateKPIs() {
+      if (!entries.length) return;
+      const latest = entries[0];
+      document.getElementById('kpiGlucose').textContent = latest.glucose || '—';
+      document.getElementById('kpiBP').textContent = `${latest.sys || '—'}/${latest.dia || '—'}`;
+      document.getElementById('kpiBMI').textContent = latest.weightLbs ? (latest.weightLbs / 2.205 / ((latest.heightIn||70)/39.37)**2).toFixed(1) : '—';
+    }
+
+    // Render Chart
+    function renderChart() {
+      const ctx = document.getElementById('metricsChart');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: entries.map(e => e.date),
+          datasets: [{
+            label: 'Glucose',
+            data: entries.map(e => e.glucose),
+            borderColor: '#4ba3ff',
+            tension: 0.3
+          }, {
+            label: 'Systolic',
+            data: entries.map(e => e.sys),
+            borderColor: '#ff5c5c',
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // Button Connections
+    document.getElementById('btnRefresh').onclick = () => { renderTable(); renderChart(); showToast('Refreshed'); };
+    document.getElementById('btnAdd').onclick = () => {
+      document.getElementById('entryModalTitle').textContent = 'Add Entry';
+      document.getElementById('btnDeleteEntry').style.display = 'none';
+      document.getElementById('entryModal').classList.add('show');
+    };
+    document.getElementById('btnFields').onclick = () => document.getElementById('fieldsModal').classList.add('show');
+    document.getElementById('btnThresholds').onclick = () => document.getElementById('thModal').classList.add('show');
+    document.getElementById('btnOptions').onclick = () => document.getElementById('optModal').classList.add('show');
+
+    document.getElementById('btnSaveCSV').onclick = () => {
+      let csv = "Date,Glucose,Sys,Dia,Weight\n";
+      entries.forEach(e => csv += `${e.date},${e.glucose},${e.sys},${e.dia},${e.weightLbs}\n`);
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'health_tracker.csv';
+      a.click();
+      showToast('CSV exported');
+    };
+
+    document.getElementById('btnSavePDF').onclick = () => {
+      if (typeof jspdf !== "undefined") {
+        const { jsPDF } = jspdf;
+        const doc = new jsPDF();
+        doc.text("Health Tracker Report", 20, 20);
+        doc.text(`Total Entries: ${entries.length}`, 20, 30);
+        doc.save("health_report.pdf");
+        showToast('PDF saved');
+      }
+    };
+
+    document.getElementById('btnImportCSV').onclick = () => document.getElementById('importFile').click();
+    document.getElementById('importFile').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const lines = ev.target.result.split('\n');
+        lines.slice(1).forEach(line => {
+          if (line.trim()) {
+            const [date, glucose, sys, dia] = line.split(',');
+            entries.push({date, glucose: +glucose, sys: +sys, dia: +dia});
+          }
+        });
+        renderTable();
+        renderChart();
+        showToast('CSV Imported');
+      };
+      reader.readAsText(file);
+    };
+
+    // Close modals when clicking backdrop
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.addEventListener('click', e => {
+        if (e.target === modal) modal.classList.remove('show');
+      });
+    });
+
+    // Close buttons inside modals (using your existing onclick="UI.close..." will need UI object or we add it)
+    window.UI = {
+      closeEntry: () => document.getElementById('entryModal').classList.remove('show'),
+      closeFields: () => document.getElementById('fieldsModal').classList.remove('show'),
+      closeBulkRemove: () => document.getElementById('bulkRemoveModal').classList.remove('show'),
+      closeThresholds: () => document.getElementById('thModal').classList.remove('show'),
+      closeOptions: () => document.getElementById('optModal').classList.remove('show')
+    };
+
+    // Initial Load
+    window.addEventListener('load', () => {
+      // Sample data
+      entries = [
+        {date:"2026-04-17", time:"08:30", glucose:95, sys:118, dia:76, weightLbs:182, waistIn:34},
+        {date:"2026-04-16", time:"09:15", glucose:108, sys:125, dia:82, weightLbs:183, waistIn:34.5},
+        {date:"2026-04-15", time:"07:45", glucose:92, sys:115, dia:74, weightLbs:181, waistIn:34}
+      ];
+
+      renderTable();
+      updateKPIs();
+      renderChart();
+      showToast('Health Tracker loaded successfully');
+    });
+  </script>
+</body>
+</html>
