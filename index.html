@@ -6,21 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0d9488" />
 
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
 
-  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="range-slider.css" />
 
-  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <!-- Scripts -->
   <script src="range-slider.js" defer></script>
   <script src="chart.js" defer></script>
 </head>
@@ -37,7 +32,6 @@
   </header>
 
   <main class="wrap">
-    <!-- Toolbar -->
     <div class="toolbar card">
       <div class="row">
         <div><label>From Date</label><input type="date" id="filterStart"></div>
@@ -49,8 +43,8 @@
         <div>
           <label>Axis Mode</label>
           <select id="axisMode">
-            <option value="single">Single Y-axis</option>
-            <option value="perMetric" selected>Per-metric axes</option>
+            <option value="single">Single</option>
+            <option value="perMetric" selected>Per Metric</option>
           </select>
         </div>
         <div>
@@ -58,14 +52,6 @@
           <select id="toggleChart">
             <option value="on" selected>On</option>
             <option value="off">Off</option>
-          </select>
-        </div>
-        <div>
-          <label>View</label>
-          <select id="viewMode">
-            <option value="both" selected>Both</option>
-            <option value="table">Table only</option>
-            <option value="chart">Chart only</option>
           </select>
         </div>
       </div>
@@ -84,32 +70,26 @@
 
     <!-- KPIs -->
     <div class="kpis">
-      <div class="kpi"><div class="label">Latest Glucose</div><div class="value" id="kpiGlucose">—</div></div>
-      <div class="kpi"><div class="label">Latest BP</div><div class="value" id="kpiBP">—</div></div>
-      <div class="kpi"><div class="label">Latest BMI / WHtR</div><div class="value" id="kpiBMI">—</div></div>
-      <div class="kpi"><div class="label">Latest SpO₂ / HR</div><div class="value" id="kpiSpO2">—</div></div>
-    </div>
-
-    <!-- Risk Alerts -->
-    <div class="card">
-      <div class="section-title"><h2>Risk Alerts</h2></div>
-      <div class="chips" id="riskChips"></div>
+      <div class="kpi"><div class="label">Glucose</div><div class="value" id="kpiGlucose">—</div></div>
+      <div class="kpi"><div class="label">BP</div><div class="value" id="kpiBP">—</div></div>
+      <div class="kpi"><div class="label">BMI</div><div class="value" id="kpiBMI">—</div></div>
+      <div class="kpi"><div class="label">SpO₂ / HR</div><div class="value" id="kpiSpO2">—</div></div>
     </div>
 
     <!-- Entries -->
     <div class="card full-width" id="entriesCard">
-      <div class="section-title"><h2>Entries</h2></div>
+      <h2>Entries</h2>
       <div style="overflow:auto;">
         <table id="entriesTable">
-          <thead id="tableHead"></thead>
+          <thead><tr><th>Date</th><th>Glucose</th><th>BP</th><th>Weight</th><th>Actions</th></tr></thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Main Chart -->
+    <!-- Trend Chart -->
     <div class="card full-width" id="chartCard">
-      <div class="section-title"><h2>Trend Analysis</h2></div>
+      <h2>Trend Analysis</h2>
       <div style="height:380px">
         <canvas id="metricsChart"></canvas>
       </div>
@@ -119,13 +99,29 @@
   <!-- Toast -->
   <div id="updateToast" class="toast"></div>
 
-  <!-- Modals (kept from your original) -->
-  <!-- Add/Edit Modal, Fields Modal, etc. - kept as you had them -->
+  <!-- Simple Add Entry Modal -->
+  <div class="modal-backdrop" id="entryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="entryModalTitle">Add Entry</h2>
+        <button class="btn" onclick="UI.closeEntry()">Close</button>
+      </div>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="f_date"></div>
+        <div><label>Glucose</label><input type="number" id="f_glucose"></div>
+        <div><label>Systolic</label><input type="number" id="f_sys"></div>
+        <div><label>Diastolic</label><input type="number" id="f_dia"></div>
+        <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn danger" id="btnDeleteEntry" style="display:none">Delete</button>
+        <button class="btn" id="btnSaveEntry">Save Entry</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
-    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js");
   </script>
 </body>
 </html>
