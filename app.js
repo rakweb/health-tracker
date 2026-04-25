@@ -596,7 +596,7 @@ const UI = {
       const d = document.getElementById('f_date'); if (d) d.value = U.toISODate(new Date());
       const t = document.getElementById('f_time'); if (t) t.value = new Date().toTimeString().slice(0, 5);
 
-      ['glucose', 'bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps']
+      ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'glucose']
         .forEach(k => {
           const el = document.getElementById('f_' + k);
           if (el) el.value = '';
@@ -851,7 +851,7 @@ function csvRowToEntry(row, headerIndex) {
   if (!e.time && timeIdx != null) e.time = U.normalizeTimeString(String(row[timeIdx] ?? '').trim()) || '00:00';
   if (!e.date) return null;
 
-  const numericKeys = ['glucose', 'bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'pain', 'symptoms'];
+  const numericKeys = ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'glucose'];
   for (const k of numericKeys) {
     const idx = headerIndex[k];
     if (idx != null) {
