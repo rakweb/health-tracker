@@ -237,10 +237,11 @@ textarea{
 
     <!-- KPIs -->
     <div class="kpis">
-      <div class="kpi"><div class="label">Latest Glucose (mg/dL)</div><div class="value" id="kpiGlucose">—</div><div class="trend" id="kpiGlucoseTrend"></div></div>
+     
       <div class="kpi"><div class="label">Latest BP (Sys/Dia)</div><div class="value" id="kpiBP">—</div><div class="trend" id="kpiBPTrend"></div></div>
       <div class="kpi"><div class="label">Latest BMI / WHtR</div><div class="value"><span id="kpiBMI">—</span> <span class="small">/</span> <span id="kpiWHtR">—</span></div><div class="trend" id="kpiBMITrend"></div></div>
       <div class="kpi"><div class="label">Latest SpO₂ / HR</div><div class="value"><span id="kpiSpO2">—</span> <span class="small">/</span> <span id="kpiHR">—</span></div><div class="trend" id="kpiVitalsTrend"></div></div>
+	  <div class="kpi"><div class="label">Latest Glucose (mg/dL)</div><div class="value" id="kpiGlucose">—</div><div class="trend" id="kpiGlucoseTrend"></div></div>	
     </div>
 
     <!-- Risk alerts -->
@@ -294,7 +295,6 @@ textarea{
       <div class="row">
         <div><label>Date</label><input type="date" id="f_date"></div>
         <div><label>Time</label><input type="time" id="f_time"></div>
-        <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" inputmode="decimal"></div>
         <div><label>Body Battery (0-100)</label><input type="number" id="f_bodyBattery" min="0" max="100"></div>
         <div><label>Stress (0-100)</label><input type="number" id="f_stress" min="0" max="100"></div>
         <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs" inputmode="decimal"></div>
@@ -309,6 +309,7 @@ textarea{
         <div><label>Respiration (br/min)</label><input type="number" id="f_resp" inputmode="numeric"></div>
         <div><label>Sleep (hrs)</label><input type="number" id="f_sleep" step="0.1"></div>
         <div><label>Steps</label><input type="number" id="f_steps"></div>
+		<div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" inputmode="decimal"></div>  
         <div>
           <label>Pain (0-10)</label>
           <input type="range" class="score-range" id="f_pain" min="0" max="10" value="0" oninput="document.getElementById('painVal').textContent=this.value">
