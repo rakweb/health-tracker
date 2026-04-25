@@ -557,7 +557,6 @@ const UI = {
       document.getElementById('f_date').value = en.date || '';
       document.getElementById('f_time').value = en.time || '';
 
-      map('f_glucose', en.glucose);
       map('f_bodyBattery', en.bodyBattery);
       map('f_stress', en.stress);
       map('f_weightLbs', en.weightLbs);
@@ -572,6 +571,7 @@ const UI = {
       map('f_resp', en.resp);
       map('f_sleep', en.sleep);
       map('f_steps', en.steps);
+	  map('f_glucose', en.glucose);
 
       map('f_pain', en.pain ?? 0);
       const pval = document.getElementById('painVal');
