@@ -144,33 +144,133 @@ textarea{
     .full-width { width: 100%; margin-top: 12px; }
 	
 	
-/* ===== Light theme overrides ===== */
+/* ===================== Light theme (higher contrast) ===================== */
+/* Normal Light theme when user selects light */
 html[data-theme="light"] {
-  --bg: #f6f8fc;
-  --panel: #ffffff;
-  --muted: #5b6b85;
-  --text: #0b1220;
+  /* Surfaces */
+  --bg: #f3f6fb;        /* background base */
+  --panel: #ffffff;     /* panels */
+  --card: #ffffff;      /* cards/modals */
+  --chip: #e7eefb;      /* chips */
 
-  --accent: #1565ff;
-  --danger: #c62828;
-  --warn: #ff9800;
-  --ok: #1b8f6a;
+  /* Text */
+  --text: #0a1220;      /* near-black text */
+  --muted: #334866;     /* darker muted for contrast */
 
-  --ring: #d7deea;
-  --chip: #eef2fa;
-  --btn: #ffffff;
-  --btn-hover: #eef3ff;
-  --card: #ffffff;
+  /* Accents */
+  --accent: #0b57ff;    /* strong blue */
+  --ok: #0f7a5a;        /* deeper green */
+  --warn: #b45309;      /* deeper amber */
+  --danger: #b42318;    /* deeper red */
+
+  /* Lines & controls */
+  --ring: #b9c8de;      /* higher-contrast borders */
+  --btn: #f7f9ff;       /* button background */
+  --btn-hover: #e3ebff; /* button hover */
 }
 
-html[data-theme="light"] body {
-  background: linear-gradient(
-    180deg,
-    #f8faff 0%,
-    #eef3fb 60%,
-    #e7edf7 100%
-  );
-}	
+/* Body background for light theme */
+html[data-theme="light"] body{
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5fb 55%, #e8effa 100%);
+  color: var(--text);
+}
+
+/* Header for light theme */
+html[data-theme="light"] header{
+  background: rgba(255,255,255,0.82);
+  border-bottom: 1px solid var(--ring);
+}
+
+/* Cards / panels get a subtle shadow that reads on white */
+html[data-theme="light"] .card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,255,0.96) 100%);
+  border: 1px solid var(--ring);
+  box-shadow: 0 6px 20px rgba(10,18,32,0.08);
+}
+
+/* Inputs were dark in your global rules — override for light theme */
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #a9bbd6; /* stronger than ring for better visibility */
+}
+
+/* Table readability */
+html[data-theme="light"] table{
+  border: 1px solid var(--ring);
+}
+html[data-theme="light"] thead{
+  background: #eef4ff;
+}
+html[data-theme="light"] th,
+html[data-theme="light"] td{
+  border-bottom: 1px solid #c6d3e6;
+}
+html[data-theme="light"] tbody tr:hover{
+  background: #f2f7ff;
+}
+
+/* Chips look better with contrast */
+html[data-theme="light"] .chip{
+  background: var(--chip);
+  border: 1px solid #b9c8de;
+  color: var(--text);
+}
+html[data-theme="light"] .chip.ok{
+  border-color: rgba(15,122,90,0.55);
+  background: rgba(15,122,90,0.10);
+}
+html[data-theme="light"] .chip.warn{
+  border-color: rgba(180,83,9,0.55);
+  background: rgba(180,83,9,0.10);
+}
+html[data-theme="light"] .chip.danger{
+  border-color: rgba(180,35,24,0.55);
+  background: rgba(180,35,24,0.10);
+}
+
+
+/* ===================== PDF export always uses LIGHT ===================== */
+/* When exporting PDF, force light palette even if user is in dark mode */
+html[data-pdf-export="1"]{
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --chip: #e7eefb;
+
+  --text: #0a1220;
+  --muted: #334866;
+
+  --accent: #0b57ff;
+  --ok: #0f7a5a;
+  --warn: #b45309;
+  --danger: #b42318;
+
+  --ring: #b9c8de;
+  --btn: #f7f9ff;
+  --btn-hover: #e3ebff;
+}
+
+/* Ensure the page background becomes white for clean PDFs */
+html[data-pdf-export="1"] body{
+  background: #ffffff !important;
+  color: var(--text) !important;
+}
+
+/* Ensure inputs/tables are light during export */
+html[data-pdf-export="1"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-pdf-export="1"] select,
+html[data-pdf-export="1"] textarea{
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border: 1px solid #a9bbd6 !important;
+}
+
+html[data-pdf-export="1"] thead{ background:#eef4ff !important; }
+html[data-pdf-export="1"] tbody tr:hover{ background:#f2f7ff !important; }
+
 	
 	
 	/* ==================== Select Fields: align checkbox + label ==================== */
@@ -619,6 +719,36 @@ html[data-theme="light"] body {
       updateIcon();
     });
   });
+</script>
+
+
+<script>
+  (function () {
+    const root = document.documentElement;
+
+    // Capture click BEFORE app.js runs its click handler
+    window.addEventListener('load', () => {
+      const btn = document.getElementById('btnSavePDF');
+      if (!btn) return;
+
+      btn.addEventListener('click', () => {
+        // Turn on PDF light mode immediately
+        root.setAttribute('data-pdf-export', '1');
+
+        // Allow layout/paint to settle before jsPDF captures anything
+        // (Your app.js handler will run after this because we're in capture phase)
+        requestAnimationFrame(() => {
+          // nothing needed here; just ensures one paint occurs in light mode
+        });
+
+        // Turn it off after a short delay.
+        // If your PDF generation takes longer, increase this to e.g. 2500–4000ms.
+        setTimeout(() => {
+          root.removeAttribute('data-pdf-export');
+        }, 2000);
+      }, true); // <-- capture phase = runs before existing handlers
+    });
+  })();
 </script>
 
  
