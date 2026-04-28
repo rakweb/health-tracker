@@ -783,7 +783,81 @@ html[data-theme="light"] .toolbar .small{
  
 <script src="./app.js" defer></script>
  
- 
+ <script>
+(function () {
+  const root = document.documentElement;
+
+  function isLightForChart() {
+    // If you also force light during PDF export, keep charts light then too
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyLegendColor() {
+    if (!window.Chart) return;
+
+    const light = isLightForChart();
+
+    // Darken legend labels more than "muted"
+    const legendText = light ? '#0a1220' : '#e6eefc';   // <- darker in light mode
+    const tickText   = light ? '#2b3d57' : '#8aa0c3';   // keep ticks slightly muted
+    const grid       = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+
+    // Apply to global defaults (for any charts created later)
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = legendText;
+
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = tickText;
+    Chart.defaults.scale.grid.color  = grid;
+
+    // Force-update the existing metrics chart instance
+    try {
+      const ch = Chart.getChart('metricsChart');
+      if (!ch) return;
+
+      ch.options.plugins = ch.options.plugins || {};
+      ch.options.plugins.legend = ch.options.plugins.legend || {};
+      ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
+      ch.options.plugins.legend.labels.color = legendText;
+
+      // Also ensure scales use the intended colors (optional, but helps consistency)
+      if (ch.options.scales) {
+        for (const k of Object.keys(ch.options.scales)) {
+          const s = ch.options.scales[k];
+          if (!s) continue;
+          s.ticks = s.ticks || {};
+          s.grid  = s.grid  || {};
+          s.ticks.color = tickText;
+          s.grid.color  = grid;
+        }
+      }
+
+      ch.update();
+    } catch (_) {}
+  }
+
+  // Apply after everything loads, then keep watching for theme changes
+  window.addEventListener('load', () => {
+    // Retry until chart exists (app.js may build it slightly after load)
+    let tries = 0;
+    const t = setInterval(() => {
+      applyLegendColor();
+      if (window.Chart && Chart.getChart('metricsChart')) clearInterval(t);
+      if (++tries > 60) clearInterval(t);
+    }, 100);
+  });
+
+  // Re-apply when light/dark changes or PDF mode toggles
+  new MutationObserver(applyLegendColor)
+    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+
  <!-- ===== Show App Version ===== -->
 <script>
   window.addEventListener('load', function () {
