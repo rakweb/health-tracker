@@ -364,6 +364,28 @@ html[data-theme="light"] .btn.danger:hover{
   background: #ffd0d0 !important;
 }
 
+
+/* ===================== Light theme KPI tile overrides ===================== */
+html[data-theme="light"] .kpi{
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%) !important;
+  border: 1px solid #b9c8de !important;
+  box-shadow: 0 6px 18px rgba(10,18,32,0.08) !important;
+}
+
+html[data-theme="light"] .kpi .label{
+  color: #334866 !important; /* darker muted for contrast */
+}
+
+html[data-theme="light"] .kpi .value{
+  color: #0a1220 !important;
+}
+
+/* If you use trend text inside KPI tiles, ensure it's readable too */
+html[data-theme="light"] .kpi .trend,
+html[data-theme="light"] .kpi .small{
+  color: #334866 !important;
+}
+
   </style>
   
   <!-- ===== App Version ===== -->
