@@ -1,25 +1,22 @@
-const CACHE_NAME = 'health-tracker-v2';
+const CACHE_NAME = `health-tracker-${self.registration.scope}`;
+const VERSION = self.location.search;
 
-self.addEventListener('install', event => {
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/styles.css',
-        '/range-slider.css',
-        '/chart.js',
-        '/range-slider.js',
-        '/manifest.json'
-      ]);
-    })
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => k !== CACHE_NAME && caches.delete(k)))
+    )
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+``
