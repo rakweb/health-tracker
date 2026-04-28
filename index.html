@@ -386,6 +386,37 @@ html[data-theme="light"] .kpi .small{
   color: #334866 !important;
 }
 
+
+/* ===================== Light theme: Select Fields modal cards ===================== */
+html[data-theme="light"] #fieldsGrid > div{
+  background: #ffffff !important;
+  border: 1px solid #a9bbd6 !important;   /* stronger border for contrast */
+  color: #0a1220 !important;
+}
+
+html[data-theme="light"] #fieldsGrid > div:hover{
+  background: #f2f7ff !important;
+  border-color: #7fa0d6 !important;
+}
+
+/* Labels inside those cards */
+html[data-theme="light"] #fieldsGrid label{
+  color: #0a1220 !important;
+}
+
+/* Checkbox styling to match light mode */
+html[data-theme="light"] #fieldsGrid input[type="checkbox"]{
+  border-color: #7fa0d6 !important;
+  background: #ffffff !important;
+}
+
+/* Optional: focus ring looks nicer in light mode */
+html[data-theme="light"] #fieldsGrid input[type="checkbox"]:focus-visible{
+  box-shadow: 0 0 0 3px rgba(11,87,255,0.18) !important;
+}
+``
+
+
   </style>
   
   <!-- ===== App Version ===== -->
