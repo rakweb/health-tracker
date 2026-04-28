@@ -172,13 +172,31 @@ textarea{
 }
 
   </style>
+  
+  <!-- ===== App Version (safe, non-invasive) ===== -->
+<script>
+  (function () {
+    const version =
+      localStorage.getItem('APP_VERSION') ||
+      new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    localStorage.setItem('APP_VERSION', version);
+    window.APP_VERSION = version;
+  })();
+</script>
+``
+  
+  
 </head>
 <body>
 
   <header>
     <div class="wrap headbar">
       <div>
-        <h1>Health Tracker</h1>
+        
+<h1>Health Tracker</h1>
+<div class="small" id="appVersion"></div>
+
              </div>
       <div class="install">
         <button id="btnInstall" class="btn" style="display:none">Install</button>
@@ -461,6 +479,25 @@ textarea{
 
  
 <script src="./app.js" defer></script>
+ 
+ 
+ <!-- ===== Show App Version ===== -->
+<script>
+  window.addEventListener('load', function () {
+    const el = document.getElementById('appVersion');
+    if (el && window.APP_VERSION) {
+      el.textContent = 'Version ' + APP_VERSION;
+    }
+
+    // Optional: detect updates
+    const last = localStorage.getItem('LAST_SEEN_VERSION');
+    if (last && last !== APP_VERSION) {
+      const toast = document.getElementById('updateToast');
+      toast && toast.classList.add('show');
+    }
+    localStorage.setItem('LAST_SEEN_VERSION', APP_VERSION);
+  });
+</script>
  
 </body>
 </html>
