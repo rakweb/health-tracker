@@ -1,22 +1,18 @@
-const CACHE_NAME = `health-tracker-${self.registration.scope}`;
-const VERSION = self.location.search;
+// service-worker.js
+// Minimal safe Service Worker for Health Tracker
 
-self.addEventListener('install', () => {
+self.addEventListener('install', (event) => {
+  // Activate immediately
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(k => k !== CACHE_NAME && caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+  // Take control of all clients
+  event.waitUntil(self.clients.claim());
 });
 
+// Network-first strategy (no caching yet)
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  event.respondWith(fetch(event.request));
 });
 ``
