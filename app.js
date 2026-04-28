@@ -20,7 +20,7 @@ const buildNumberSpan = document.getElementById('buildNumber');
 
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('./sw.js')
+  navigator.serviceWorker.register('./service-worker.js')
     .then(reg => {
       swReg = reg;
       navigator.serviceWorker.addEventListener('message', (evt) => {
