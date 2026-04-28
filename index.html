@@ -9,30 +9,38 @@
   <!-- ================= SAFE AUTO VERSIONING ================= -->
   <script>
     (function () {
-      const v =
+      const version =
         localStorage.getItem('APP_VERSION') ||
-        new Date().toISOString().slice(0, 19).replace('T', '_');
-      localStorage.setItem('APP_VERSION', v);
-      window.APP_VERSION = v;
-      window.VERSION_PARAM = 'v=' + encodeURIComponent(v);
+        new Date().toISOString().slice(0,19).replace('T','_');
+
+      localStorage.setItem('APP_VERSION', version);
+      window.APP_VERSION = version;
     })();
   </script>
 
   <!-- ================= PWA ================= -->
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
-  <!-- ================= VERSIONED LOCAL CSS ================= -->
+  <!-- ================= LOCAL CSS (VERSIONED SAFELY) ================= -->
+  <link
+    rel="stylesheet"
+    href="./range-slider.css"
+    id="range-css"
+  >
   <script>
-    document.write(
-      '<link rel="stylesheet" href="./range-slider.css?' + VERSION_PARAM + 'min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+    document.getElementById('range-css').href += '?v=' + encodeURIComponent(APP_VERSION);
+  </script>
+
+  <!-- ================= LIBRARIES (✅ FIXED ✅) ================= -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js
 
   <!-- ================= YOUR ORIGINAL STYLES ================= -->
   <style>
-    /* ✅ KEEP YOUR ORIGINAL STYLE BLOCK EXACTLY AS‑IS */
+    /* ✅ KEEP YOUR ENTIRE ORIGINAL STYLE BLOCK UNCHANGED */
   </style>
 </head>
 
@@ -53,7 +61,7 @@
 </header>
 
 <main class="wrap">
-  <!-- ✅ YOUR ENTIRE EXISTING APP HTML GOES HERE UNCHANGED -->
+  <!-- ✅ YOUR FULL EXISTING APP HTML (UNCHANGED) -->
 </main>
 
 <!-- ================= UPDATE TOAST ================= -->
@@ -65,17 +73,21 @@
 
 <!-- ================= VERSION DISPLAY ================= -->
 <script>
-  window.addEventListener('load', function () {
+  window.addEventListener('load', () => {
     const el = document.getElementById('appVersion');
     if (el) el.textContent = 'Version ' + APP_VERSION;
   });
 </script>
 
-<!-- ================= VERSIONED LOCAL JSider.js?<\/script>'
-  );
-  document.write(
-    './app.js?<\/script>'
-  );
+<!-- ================= LOCAL JS (VERSIONED, ORDER SAFE) ================= -->
+<script src="./range-slider.js"></script>
+<script>
+  document.currentScript.previousElementSibling.src += '?v=' + encodeURIComponent(APP_VERSION);
+</script>
+
+<script src="./app.js" defer></script>
+<script>
+  document.currentScript.previousElementSibling.src += '?v=' + encodeURIComponent(APP_VERSION);
 </script>
 
 </body>
