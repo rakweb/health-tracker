@@ -1149,6 +1149,125 @@ html[data-theme="light"] .toolbar .small{
 })();
 </script>
 
- 
+ <script>
+(function () {
+  const root = document.documentElement;
+
+  function isLightForCharts() {
+    // Light mode OR PDF export mode should use dark text on light background
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function chartColors() {
+    const light = isLightForCharts();
+    return {
+      // Make legend and axis labels match card title darkness
+      text:  light ? '#0a1220' : '#e6eefc',
+      // Slightly softer text if you want ticks a bit muted; set equal to text if you want all dark
+      tick:  light ? '#0a1220' : '#e6eefc',
+      // Gridlines/borders tuned for visibility
+      grid:  light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)',
+      axis:  light ? 'rgba(10,18,32,0.28)' : 'rgba(230,238,252,0.22)'
+    };
+  }
+
+  function ensurePluginRegistered() {
+    if (!window.Chart || !Chart.register) return false;
+
+    // Register once
+    if (Chart.registry && Chart.registry.plugins && Chart.registry.plugins.get('themeEnforcer')) {
+      return true;
+    }
+
+    const plugin = {
+      id: 'themeEnforcer',
+      // Runs before each update/draw
+      beforeUpdate(chart) {
+        const c = chartColors();
+
+        // Legend
+        chart.options.plugins = chart.options.plugins || {};
+        chart.options.plugins.legend = chart.options.plugins.legend || {};
+        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+        chart.options.plugins.legend.labels.color = c.text;
+
+        // Title (if used)
+        if (chart.options.plugins.title) {
+          chart.options.plugins.title.color = c.text;
+        }
+
+        // Scales: ticks + axis title + grid
+        chart.options.scales = chart.options.scales || {};
+        for (const key of Object.keys(chart.options.scales)) {
+          const s = chart.options.scales[key];
+          if (!s) continue;
+
+          s.ticks = s.ticks || {};
+          s.grid  = s.grid  || {};
+          s.title = s.title || {};
+
+          // Tick labels (numbers/dates)
+          s.ticks.color = c.tick;
+
+          // Axis title label (“Glucose (mg/dL)”, etc.)
+          s.title.color = c.text;
+
+          // Grid + axis/border
+          s.grid.color = c.grid;
+          // Chart.js uses borderColor for the axis line in v4
+          s.border = s.border || {};
+          s.border.color = c.axis;
+        }
+
+        // Also set global default color for any plugin text that uses Chart.defaults.color
+        chart.options.color = c.text;
+      }
+    };
+
+    Chart.register(plugin);
+    return true;
+  }
+
+  function applyToExistingCharts() {
+    if (!window.Chart) return;
+
+    try {
+      // Update the specific chart by canvas id if present
+      const ch = Chart.getChart('metricsChart');
+      if (ch) ch.update();
+
+      // Also update any other charts that might exist
+      if (Chart.instances) {
+        for (const id of Object.keys(Chart.instances)) {
+          const inst = Chart.instances[id];
+          if (inst && inst.update) inst.update();
+        }
+      }
+    } catch (_) {}
+  }
+
+  function boot() {
+    // Wait until Chart is available, then register plugin and update
+    let tries = 0;
+    const t = setInterval(() => {
+      if (ensurePluginRegistered()) {
+        clearInterval(t);
+        applyToExistingCharts();
+      }
+      if (++tries > 200) clearInterval(t); // ~20s safety stop
+    }, 100);
+  }
+
+  // Start immediately
+  boot();
+
+  // Re-apply whenever theme changes (light/dark) or PDF export mode toggles
+  new MutationObserver(() => {
+    if (ensurePluginRegistered()) applyToExistingCharts();
+  }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+``
 </body>
 </html>
