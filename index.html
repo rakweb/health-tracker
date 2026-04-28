@@ -414,8 +414,37 @@ html[data-theme="light"] #fieldsGrid input[type="checkbox"]{
 html[data-theme="light"] #fieldsGrid input[type="checkbox"]:focus-visible{
   box-shadow: 0 0 0 3px rgba(11,87,255,0.18) !important;
 }
-``
 
+/* ===================== Light theme: fix hard-coded heading colors ===================== */
+/* Your base CSS sets .card h2 color to #d6e6ff (light). Override for light theme. */
+html[data-theme="light"] .card h2{
+  color: #0a1220 !important;
+}
+
+/* Section titles / misc text inside cards */
+html[data-theme="light"] .section-title,
+html[data-theme="light"] .section-title .small,
+html[data-theme="light"] .small,
+html[data-theme="light"] .sub{
+  color: #2b3d57 !important; /* darker muted for better contrast */
+}
+
+/* ===================== Light theme: labels & date fields readability ===================== */
+html[data-theme="light"] label{
+  color: #2b3d57 !important; /* labels were too faint */
+}
+
+/* Ensure the date/time input text itself is dark */
+html[data-theme="light"] input[type="date"],
+html[data-theme="light"] input[type="time"]{
+  color: #0a1220 !important;
+  border-color: #9fb2d6 !important;
+}
+
+/* If any helper text under controls is still faint */
+html[data-theme="light"] .toolbar .small{
+  color: #2b3d57 !important;
+}
 
   </style>
   
@@ -951,8 +980,101 @@ html[data-theme="light"] #fieldsGrid input[type="checkbox"]:focus-visible{
     if (window.Chart || ++tries > 20) clearInterval(t);
   }, 50);
 </script>
-
  
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantsLightChart() {
+    // If you force light theme for PDF exports, chart should also be light-styled
+    return root.getAttribute('data-pdf-export') === '1' ||
+           root.getAttribute('data-theme') === 'light';
+  }
+
+  function applyChartTheme() {
+    if (!window.Chart) return;
+
+    const light = wantsLightChart();
+
+    // High-contrast chart colors
+    const text = light ? '#0a1220' : '#e6eefc';
+    const muted = light ? '#2b3d57' : '#8aa0c3';
+    const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+    const axis  = light ? 'rgba(10,18,32,0.28)' : 'rgba(230,238,252,0.22)';
+
+    // Global defaults affect any charts created after this runs
+    Chart.defaults.color = text;
+    Chart.defaults.borderColor = axis;
+
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = muted;
+    Chart.defaults.scale.grid.color  = grid;
+    Chart.defaults.scale.grid.borderColor = axis;
+
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = muted;
+
+    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
+    Chart.defaults.plugins.title.color = text;
+
+    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
+    Chart.defaults.plugins.tooltip.titleColor = text;
+    Chart.defaults.plugins.tooltip.bodyColor  = text;
+
+    // Update the existing metrics chart if it already exists
+    try {
+      const ch = Chart.getChart('metricsChart');
+      if (ch) {
+        // Apply per-chart overrides to ensure it picks up the theme immediately
+        ch.options.color = text;
+
+        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
+        if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
+        if (ch.options.plugins?.tooltip) {
+          ch.options.plugins.tooltip.titleColor = text;
+          ch.options.plugins.tooltip.bodyColor  = text;
+        }
+
+        if (ch.options.scales) {
+          for (const k of Object.keys(ch.options.scales)) {
+            const s = ch.options.scales[k];
+            if (!s) continue;
+            s.ticks = s.ticks || {};
+            s.grid  = s.grid  || {};
+            s.ticks.color = muted;
+            s.grid.color  = grid;
+            s.grid.borderColor = axis;
+          }
+        }
+
+        ch.update();
+      }
+    } catch (e) {
+      // Ignore – safest behavior
+    }
+  }
+
+  // Apply after load (ensures Chart.js + app.js have had time to create the chart)
+  window.addEventListener('load', () => {
+    // Retry a few times in case the chart is created shortly after load
+    let tries = 0;
+    const t = setInterval(() => {
+      applyChartTheme();
+      if (window.Chart && Chart.getChart('metricsChart')) clearInterval(t);
+      if (++tries > 40) clearInterval(t);
+    }, 50);
+  });
+
+  // Re-apply when theme changes or when PDF export mode toggles
+  const obs = new MutationObserver(() => applyChartTheme());
+  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+
  
 </body>
 </html>
