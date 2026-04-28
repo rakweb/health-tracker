@@ -5,6 +5,8 @@
   <title>Health Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1220" />
+  <meta name="app-version" content="1.0.0">
+
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -173,17 +175,34 @@ textarea{
 
   </style>
   
-  <!-- ===== App Version (safe, non-invasive) ===== -->
+  <!-- ===== App Version ===== -->
 <script>
   (function () {
-    const version =
-      localStorage.getItem('APP_VERSION') ||
-      new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const meta = document.querySelector('meta[name="app-version"]');
+    const version = meta ? meta.content : '0.0.0';
 
-    localStorage.setItem('APP_VERSION', version);
+    const keyBase = 'HT_VERSION';
+    const keyBuild = 'HT_BUILD';
+
+    const lastVersion = localStorage.getItem(keyBase);
+
+    let build;
+    if (lastVersion !== version) {
+      // New version → reset build counter
+      build = 1;
+    } else {
+      build = Number(localStorage.getItem(keyBuild) || 0) + 1;
+    }
+
+    localStorage.setItem(keyBase, version);
+    localStorage.setItem(keyBuild, build);
+
     window.APP_VERSION = version;
+    window.APP_BUILD = build;
   })();
 </script>
+
+  
   
 </head>
 <body>
