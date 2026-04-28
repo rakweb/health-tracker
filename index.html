@@ -850,5 +850,109 @@ html[data-theme="light"] #fieldsGrid input[type="checkbox"]:focus-visible{
 </script>
 
  
+ <!-- Chart theme bridge: canvas text colors must be set via Chart.js defaults -->
+<script type="module">
+  // Runs AFTER parsing, and in document order relative to defer scripts.
+  // Put this between Chart.js deferred scripts and your deferred app.js script.
+
+  const root = document.documentElement;
+
+  function isLightModeForChart() {
+    // If you force light for PDF export, charts should also be light-styled.
+    if (root.getAttribute('data-pdf-export') === '1') return true;
+    return root.getAttribute('data-theme') === 'light';
+  }
+
+  function applyChartTheme() {
+    // Chart may not be ready yet on first tick; handle safely.
+    if (!window.Chart) return;
+
+    const light = isLightModeForChart();
+
+    // High-contrast colors for light theme canvas rendering
+    const text = light ? '#0a1220' : '#e6eefc';
+    const muted = light ? '#334866' : '#8aa0c3';
+    const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+    const axis  = light ? 'rgba(10,18,32,0.30)' : 'rgba(230,238,252,0.22)';
+
+    // Global defaults (affects new charts)
+    Chart.defaults.color = text;
+    Chart.defaults.borderColor = axis;
+
+    // Scale defaults (ticks/grid)
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = muted;
+    Chart.defaults.scale.grid.color  = grid;
+    Chart.defaults.scale.grid.borderColor = axis;
+
+    // Plugin defaults (legend/title/tooltip)
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = muted;
+
+    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
+    Chart.defaults.plugins.title.color = text;
+
+    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
+    Chart.defaults.plugins.tooltip.titleColor = text;
+    Chart.defaults.plugins.tooltip.bodyColor  = text;
+
+    // Update any charts already created (important if app.js built the chart already)
+    try {
+      const instances = Chart.instances || {};
+      for (const key of Object.keys(instances)) {
+        const ch = instances[key];
+        if (!ch || !ch.options) continue;
+
+        // Force per-chart options where they exist
+        ch.options.color = text;
+
+        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
+        if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
+        if (ch.options.plugins?.tooltip) {
+          ch.options.plugins.tooltip.titleColor = text;
+          ch.options.plugins.tooltip.bodyColor  = text;
+        }
+
+        if (ch.options.scales) {
+          for (const s of Object.keys(ch.options.scales)) {
+            const scale = ch.options.scales[s];
+            if (!scale) continue;
+            scale.ticks = scale.ticks || {};
+            scale.grid  = scale.grid  || {};
+            if (scale.ticks.color == null) scale.ticks.color = muted;
+            if (scale.grid.color  == null) scale.grid.color  = grid;
+            if (scale.grid.borderColor == null) scale.grid.borderColor = axis;
+          }
+        }
+
+        ch.update();
+      }
+    } catch {
+      // no-op
+    }
+  }
+
+  // Apply once after deferred scripts run
+  // (module runs after parse; Chart defer scripts should execute before this if ordered above it)
+  applyChartTheme();
+
+  // Re-apply when theme toggles / PDF export toggles
+  const obs = new MutationObserver(() => applyChartTheme());
+  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+
+  // As a fallback (in case Chart loads slightly later), retry a few times
+  let tries = 0;
+  const t = setInterval(() => {
+    applyChartTheme();
+    if (window.Chart || ++tries > 20) clearInterval(t);
+  }, 50);
+</script>
+``
+ 
+ 
 </body>
 </html>
