@@ -6,42 +6,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1220" />
 
-  <!-- ================= AUTO VERSION BOOTSTRAP ================= -->
+  <!-- ================= SAFE AUTO VERSIONING ================= -->
   <script>
     /*
-      Auto versioning (no build step)
-      Change VERSION_MODE if desired
+      Non-invasive auto versioning.
+      Does NOT touch app logic or execution order.
     */
-    const VERSION_MODE = 'build'; // 'build' or 'date'
+    (function () {
+      const stored = localStorage.getItem('APP_VERSION');
+      const version = stored || new Date().toISOString().slice(0, 19).replace('T', '_');
+      localStorage.setItem('APP_VERSION', version);
 
-    const APP_VERSION =
-      VERSION_MODE === 'date'
-        ? new Date().toISOString().slice(0, 19).replace('T',' ')
-        : '1.0.' + Math.floor(Date.now() / 1000);
-
-    const VERSION_PARAM = `v=${encodeURIComponent(APP_VERSION)}`;
-
-    window.APP_VERSION = APP_VERSION;
-    window.VERSION_PARAM = VERSION_PARAM;
-
-    // Inject versioned CSS
-    document.write(`
-      <link rel="stylesheet" href="./range-slider.css/script>
+      window.APP_VERSION = version;
+      window.VERSION_PARAM = 'v=' + encodeURIComponent(version);
+    })();
+  </script>
 
   <!-- ================= PWA ================= -->
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
-  <!-- ================= LIBRARIES ================= -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <!-- ================= VERSIONED LOCAL CSS ================= -->
+  <script>
+    document.write(
+      '<link rel="stylesheet" href="./range-slider.css?' + VERSION_PARAM +umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <!-- ================= YOUR EXISTING STYLES ================= -->
-  <!-- (UNCHANGED – omitted here for brevity; keep exactly as you sent) -->
+  <!-- ================= YOUR ORIGINAL STYLES ================= -->
   <style>
-    /* your full style block remains unchanged */
+    /* ✅ EXACTLY your original <style> block goes here
+       ✅ No changes required
+       ✅ Omitted here only for readability */
   </style>
 </head>
 
@@ -56,13 +53,13 @@
     <div class="install">
       <button id="btnInstall" class="btn" style="display:none">Install</button>
       <button id="btnCheckUpdates" class="btn">Check for updates</button>
+      <span id="installHint" class="small" style="color:#8aa0c3;"></span>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <!-- YOUR EXISTING BODY CONTENT -->
-  <!-- (UNCHANGED – everything you pasted stays exactly the same) -->
+  <!-- ✅ ALL of your existing HTML content goes here UNCHANGED -->
 </main>
 
 <!-- ================= UPDATE TOAST ================= -->
@@ -72,6 +69,17 @@
   <button id="btnDismissToast" class="btn">Later</button>
 </div>
 
-<!-- ================= VERSIONED LOCAL JS ================= -->
+<!-- ================= VERSION INFO (SAFE, INLINE) ================= -->
 <script>
-  document.write(`<script src="./range-slider.js?${VERSION_PARAM
+  window.addEventListener('load', function () {
+    const v = document.getElementById('appVersion');
+    if (v && window.APP_VERSION) {
+      v.textContent = 'Version ' + APP_VERSION;
+    }
+  });
+</script>
+
+<!-- ================= VERSIONED LOCAL JS (ORDER PRESERVED) ================= -->
+<script>
+  document.write(
+    '<script src="./range-slider.js?' + VERSION_PARAM + '
