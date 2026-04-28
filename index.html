@@ -264,6 +264,8 @@ html[data-theme="light"] body {
       <div class="install">
         <button id="btnInstall" class="btn" style="display:none">Install</button>
         <button id="btnCheckUpdates" class="btn">Check for updates</button>
+		<button id="btnTheme" class="btn" title="Toggle light/dark theme">  🌙</button>
+
         <span id="installHint" class="small" style="color:#8aa0c3;"></span>
       </div>
     </div>
@@ -592,7 +594,32 @@ html[data-theme="light"] body {
     });
   });
 </script>
-``
+
+
+<script>
+  window.addEventListener('load', () => {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+
+    const updateIcon = () => {
+      btn.textContent =
+        document.documentElement.getAttribute('data-theme') === 'dark'
+          ? '☀️'
+          : '🌙';
+    };
+
+    updateIcon();
+
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('HT_THEME', next);
+      updateIcon();
+    });
+  });
+</script>
 
  
 </body>
