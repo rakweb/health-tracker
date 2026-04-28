@@ -8,17 +8,13 @@
 
   <!-- ================= SAFE AUTO VERSIONING ================= -->
   <script>
-    /*
-      Non-invasive auto versioning.
-      Does NOT touch app logic or execution order.
-    */
     (function () {
-      const stored = localStorage.getItem('APP_VERSION');
-      const version = stored || new Date().toISOString().slice(0, 19).replace('T', '_');
-      localStorage.setItem('APP_VERSION', version);
-
-      window.APP_VERSION = version;
-      window.VERSION_PARAM = 'v=' + encodeURIComponent(version);
+      const v =
+        localStorage.getItem('APP_VERSION') ||
+        new Date().toISOString().slice(0, 19).replace('T', '_');
+      localStorage.setItem('APP_VERSION', v);
+      window.APP_VERSION = v;
+      window.VERSION_PARAM = 'v=' + encodeURIComponent(v);
     })();
   </script>
 
@@ -30,15 +26,13 @@
   <!-- ================= VERSIONED LOCAL CSS ================= -->
   <script>
     document.write(
-      '<link rel="stylesheet" href="./range-slider.css?' + VERSION_PARAM +umd.min.js" defer></script>
+      '<link rel="stylesheet" href="./range-slider.css?' + VERSION_PARAM + 'min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
   <!-- ================= YOUR ORIGINAL STYLES ================= -->
   <style>
-    /* ✅ EXACTLY your original <style> block goes here
-       ✅ No changes required
-       ✅ Omitted here only for readability */
+    /* ✅ KEEP YOUR ORIGINAL STYLE BLOCK EXACTLY AS‑IS */
   </style>
 </head>
 
@@ -59,7 +53,7 @@
 </header>
 
 <main class="wrap">
-  <!-- ✅ ALL of your existing HTML content goes here UNCHANGED -->
+  <!-- ✅ YOUR ENTIRE EXISTING APP HTML GOES HERE UNCHANGED -->
 </main>
 
 <!-- ================= UPDATE TOAST ================= -->
@@ -69,17 +63,20 @@
   <button id="btnDismissToast" class="btn">Later</button>
 </div>
 
-<!-- ================= VERSION INFO (SAFE, INLINE) ================= -->
+<!-- ================= VERSION DISPLAY ================= -->
 <script>
   window.addEventListener('load', function () {
-    const v = document.getElementById('appVersion');
-    if (v && window.APP_VERSION) {
-      v.textContent = 'Version ' + APP_VERSION;
-    }
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = 'Version ' + APP_VERSION;
   });
 </script>
 
-<!-- ================= VERSIONED LOCAL JS (ORDER PRESERVED) ================= -->
-<script>
+<!-- ================= VERSIONED LOCAL JSider.js?<\/script>'
+  );
   document.write(
-    '<script src="./range-slider.js?' + VERSION_PARAM + '
+    './app.js?<\/script>'
+  );
+</script>
+
+</body>
+</html>
