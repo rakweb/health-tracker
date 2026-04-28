@@ -319,6 +319,51 @@ html[data-pdf-export="1"] tbody tr:hover{ background:#f2f7ff !important; }
   box-shadow:0 0 0 3px rgba(75,163,255,0.18);
 }
 
+
+/* ===================== Light theme button overrides ===================== */
+/* Force ALL buttons to be light in light mode */
+html[data-theme="light"] .btn{
+  background: #ffffff !important;
+  color: #0a1220 !important;
+  border: 1px solid #9fb2d6 !important;
+}
+
+html[data-theme="light"] .btn:hover{
+  background: #e3ebff !important;
+}
+
+/* Make the "OK / Warn / Danger" variants light (instead of hard-coded dark) */
+html[data-theme="light"] .btn.ok{
+  background: #d9f6ec !important;     /* light green */
+  border-color: #0f7a5a !important;   /* deep green */
+  color: #064d39 !important;
+}
+
+html[data-theme="light"] .btn.warn{
+  background: #fff1d6 !important;     /* light amber */
+  border-color: #b45309 !important;   /* deep amber */
+  color: #6a2d00 !important;
+}
+
+html[data-theme="light"] .btn.danger{
+  background: #ffe0e0 !important;     /* light red */
+  border-color: #b42318 !important;   /* deep red */
+  color: #6b0e0b !important;
+}
+
+/* Keep hover states consistent for variants */
+html[data-theme="light"] .btn.ok:hover{
+  background: #c8f1e2 !important;
+}
+
+html[data-theme="light"] .btn.warn:hover{
+  background: #ffe7bf !important;
+}
+
+html[data-theme="light"] .btn.danger:hover{
+  background: #ffd0d0 !important;
+}
+
   </style>
   
   <!-- ===== App Version ===== -->
