@@ -7,6 +7,21 @@
   <meta name="theme-color" content="#0b1220" />
   <meta name="app-version" content="1.0.0">
 
+<!-- ===== Theme bootstrap (no flash, safe) ===== -->
+<script>
+  (function () {
+    const saved = localStorage.getItem('HT_THEME');
+
+    const systemPrefersDark =
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    const theme = saved || (systemPrefersDark ? 'dark' : 'light');
+
+    document.documentElement.setAttribute('data-theme', theme);
+    window.APP_THEME = theme;
+  })();
+</script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -127,6 +142,37 @@ textarea{
 
     /* Full-width sections (Entries + Chart stacked vertically) */
     .full-width { width: 100%; margin-top: 12px; }
+	
+	
+/* ===== Light theme overrides ===== */
+html[data-theme="light"] {
+  --bg: #f6f8fc;
+  --panel: #ffffff;
+  --muted: #5b6b85;
+  --text: #0b1220;
+
+  --accent: #1565ff;
+  --danger: #c62828;
+  --warn: #ff9800;
+  --ok: #1b8f6a;
+
+  --ring: #d7deea;
+  --chip: #eef2fa;
+  --btn: #ffffff;
+  --btn-hover: #eef3ff;
+  --card: #ffffff;
+}
+
+html[data-theme="light"] body {
+  background: linear-gradient(
+    180deg,
+    #f8faff 0%,
+    #eef3fb 60%,
+    #e7edf7 100%
+  );
+}	
+	
+	
 	/* ==================== Select Fields: align checkbox + label ==================== */
 #fieldsGrid > div{
   display:flex;
@@ -456,6 +502,17 @@ textarea{
   </div>
 
   <!-- Options Modal -->
+  
+  
+  <div>
+  <label>Theme</label>
+  <select id="optTheme">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+  </select>
+</div>
+  
+  
   <div class="modal-backdrop" id="optModal">
     <div class="modal">
       <div class="modal-header">
@@ -515,6 +572,28 @@ textarea{
     localStorage.setItem('LAST_SEEN_VERSION', APP_VERSION);
   });
 </script>
+
+
+<!-- ===== Theme toggle logic ===== -->
+<script>
+  window.addEventListener('load', function () {
+    const select = document.getElementById('optTheme');
+    if (!select) return;
+
+    // Initialize selector
+    select.value = document.documentElement.getAttribute('data-theme');
+
+    // Handle change
+    select.addEventListener('change', function () {
+      const theme = this.value;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('HT_THEME', theme);
+      window.APP_THEME = theme;
+    });
+  });
+</script>
+``
+
  
 </body>
 </html>
