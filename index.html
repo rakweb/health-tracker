@@ -1371,8 +1371,126 @@ html[data-theme="light"] .toolbar .small{
 
 })();
 </script>
-``
 
+
+<script>
+(function () {
+  window.addEventListener('load', () => {
+    const chartCard = document.getElementById('chartCard');
+    const vm = document.getElementById('viewMode');
+    const tc = document.getElementById('toggleChart');
+    if (!chartCard || !vm || !tc) return;
+
+    // If chart is hidden, force defaults once
+    const cs = getComputedStyle(chartCard);
+    if (cs.display === 'none' || cs.visibility === 'hidden') {
+      vm.value = 'both';
+      vm.dispatchEvent(new Event('change', { bubbles: true }));
+      tc.value = 'on';
+      tc.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // If something still hides it, at least ensure the element is visible
+      setTimeout(() => {
+        chartCard.style.setProperty('display', 'block', 'important');
+      }, 50);
+    }
+  });
+})();
+</script>
+
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantLightChart() {
+    // Light theme OR PDF export force-light mode
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyChartTextColors(chart) {
+    if (!chart?.options) return;
+
+    const light = wantLightChart();
+
+    // Make legend and axis titles dark like the card title
+    const legendAndTitles = light ? '#0a1220' : '#e6eefc';
+    // Make tick labels dark as requested
+    const ticks = light ? '#0a1220' : '#e6eefc';
+    // Gridlines subtle but visible
+    const grid = light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)';
+
+    // Legend
+    chart.options.plugins = chart.options.plugins || {};
+    chart.options.plugins.legend = chart.options.plugins.legend || {};
+    chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+    chart.options.plugins.legend.labels.color = legendAndTitles;
+
+    // Tooltip (optional readability)
+    chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+    chart.options.plugins.tooltip.titleColor = legendAndTitles;
+    chart.options.plugins.tooltip.bodyColor  = legendAndTitles;
+
+    // Scales (ticks + axis titles + grid)
+    if (chart.options.scales) {
+      for (const key of Object.keys(chart.options.scales)) {
+        const s = chart.options.scales[key];
+        if (!s) continue;
+
+        s.ticks = s.ticks || {};
+        s.title = s.title || {};
+        s.grid  = s.grid  || {};
+
+        s.ticks.color = ticks;                 // tick labels (dates/numbers)
+        s.title.color = legendAndTitles;       // axis title labels
+        s.grid.color  = grid;                  // grid lines
+        // Intentionally not touching s.border (can be version/config sensitive)
+      }
+    }
+  }
+
+  // Debounced updater (prevents thrashing)
+  let pending = false;
+  function requestUpdate() {
+    if (pending) return;
+    pending = true;
+    setTimeout(() => {
+      pending = false;
+      if (!window.Chart?.getChart) return;
+
+      const chart = Chart.getChart('metricsChart');
+      if (chart) {
+        applyChartTextColors(chart);
+        chart.update();
+      }
+    }, 80);
+  }
+
+  // Watch for theme changes
+  new MutationObserver(requestUpdate).observe(root, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'data-pdf-export']
+  });
+
+  // Apply after chart exists; also handle chart recreation
+  window.addEventListener('load', () => {
+    let last = null;
+    let tries = 0;
+
+    const timer = setInterval(() => {
+      tries++;
+      const chart = window.Chart?.getChart?.('metricsChart') || null;
+
+      if (chart && chart !== last) {
+        last = chart;
+        requestUpdate();
+      }
+
+      if (tries > 200) clearInterval(timer); // stop after ~20s
+    }, 100);
+  });
+})();
+</script>
 
 </body>
 </html>
