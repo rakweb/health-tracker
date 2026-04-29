@@ -1,37 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>Health Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#0b1220" />
-<meta name="app-version" content="1.0.0" />
-
-<!-- ===== Theme bootstrap (NO FLASH) ===== -->
+<!-- ================= UNIFIED UI LOGIC (single source of truth) ================= -->
 <script>
 (() => {
-  const saved = localStorage.getItem('HT_THEME');
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  const theme = saved || (prefersDark ? 'dark' : 'light');
-  document.documentElement.dataset.theme = theme;
-})();
-</script>
+  const root = document.documentElement;
 
+  /* ---------------- Version display ---------------- */
+  window.addEventListener('load', () => {
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = `Version ${window.APP_VERSION} (build ${window.APP_BUILD})`;
+  });
 
-<script>
-(() => {
-  const PALETTE = [
-    '#2563eb', // blue
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#ef4444', // red
-    '#8b5cf6', // purple
-    '#06b6d4', // cyan
-    '#f472b6', // pink
-    '#22c55e', // lime
-  ];
+  /* ---------------- Theme toggle button ---------------- */
+  function setTheme(t) {
+    root.dataset.theme = t;
+    localStorage.setItem('HT_THEME', t);
+    const btn = document.getElementById('btnTheme');
+    if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+    applyChartThemeAndPalette(); // re-apply chart text/colors after theme switch
+  }
 
-  // Optional: explicit mapping for known metrics (best for consistency)
+  window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+    // set icon for current theme
+    btn.textContent = (root.dataset.theme === 'dark') ? '☀️' : '🌙';
+
+    btn.addEventListener('click', () => {
+      const next = (root.dataset.theme === 'dark') ? 'light' : 'dark';
+      setTheme(next);
+    });
+  });
+
+  /* ---------------- PDF export always LIGHT (HTML-only hook) ---------------- */
+  window.addEventListener('load', () => {
+    const btn = document.getElementById('btnSavePDF');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      root.setAttribute('data-pdf-export', '1');
+      applyChartThemeAndPalette();
+
+      setTimeout(() => {
+        root.removeAttribute('data-pdf-export');
+        applyChartThemeAndPalette();
+      }, 2500); // adjust if PDF takes longer
+    }, true); // capture phase so it happens before app.js PDF handler
+  });
+
+  /* ---------------- Chart legend/axes text + per-metric palette ---------------- */
+  const PALETTE = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f472b6','#22c55e'];
   const METRIC_COLORS = {
     'Glucose (mg/dL)': '#2563eb',
     'Weight (lbs)': '#10b981',
@@ -39,212 +55,20 @@
     'Diastolic (mmHg)': '#f59e0b',
     'SpO₂ (%)': '#8b5cf6',
     'Heart Rate (bpm)': '#06b6d4',
-    'Temperature (°F)': '#f472b6',
+    'Temperature (°F)': '#f472b6'
   };
 
-  function applyMetricColors() {
+  function wantLightChart() {
+    return root.dataset.theme === 'light' || root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyChartThemeAndPalette() {
     const ch = window.Chart?.getChart?.('metricsChart');
     if (!ch) return;
 
-    let i = 0;
-    for (const ds of ch.data.datasets || []) {
-      const label = String(ds.label || '');
-      const c = METRIC_COLORS[label] || PALETTE[i++ % PALETTE.length];
-
-      ds.borderColor = c;
-      ds.backgroundColor = c;
-      ds.pointBackgroundColor = c;
-      ds.pointBorderColor = c;
-
-      // optional polish
-      ds.borderWidth = ds.borderWidth ?? 2;
-      ds.pointRadius = ds.pointRadius ?? 2;
-      ds.tension = ds.tension ?? 0.25;
-    }
-
-    ch.update();
-  }
-
-  window.addEventListener('load', () => {
-    let tries = 0;
-    const t = setInterval(() => {
-      if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        applyMetricColors();
-      }
-      if (++tries > 200) clearInterval(t);
-    }, 100);
-  });
-})();
-</script>
-
-
-<!-- ===== PWA ===== -->
-<link rel="manifest" href="./manifest.json" />
-<link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
-<link rel="apple-touch-icon" href="./icons/icon-192.png" />
-
-<!-- ===== CSS ===== -->
-<link rel="stylesheet" href="./css/base.css" />
-<link rel="stylesheet" href="./css/theme-dark.css" />
-<link rel="stylesheet" href="./css/theme-light.css" />
-
-<!-- ===== Libraries (FIXED) ===== -->
-https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js</script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
-
-<!-- ===== Version + Build ===== -->
-<script>
-(() => {
-  const v = document.querySelector('meta[name="app-version"]').content;
-  const last = localStorage.getItem('HT_VERSION');
-  const build = last === v ? (Number(localStorage.getItem('HT_BUILD')) + 1) : 1;
-  localStorage.setItem('HT_VERSION', v);
-  localStorage.setItem('HT_BUILD', build);
-  window.APP_VERSION = v;
-  window.APP_BUILD = build;
-})();
-</script>
-</head>
-
-<body>
-
-<header>
-  <div class="wrap headbar">
-    <div>
-      <h1>Health Tracker</h1>
-      <div class="small" id="appVersion"></div>
-    </div>
-    <div class="install">
-      <button id="btnTheme" class="btn">🌙</button>
-      <button id="btnInstall" class="btn" style="display:none">Install</button>
-      <button id="btnCheckUpdates" class="btn">Check for updates</button>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-
-<!-- ================= TOOLBAR ================= -->
-<div class="toolbar card">
-  <div class="row">
-    <div><label>From Date</label><input type="date" id="filterStart"></div>
-    <div><label>To Date</label><input type="date" id="filterEnd"></div>
-    <div>
-      <label>Chart Metrics</label>
-      <select id="chartMetrics" multiple size="4"></select>
-      <div class="small">Ctrl/Cmd for multi‑select</div>
-    </div>
-    <div>
-      <label>Axis Mode</label>
-      <select id="axisMode">
-        <option value="single">Single Y‑axis</option>
-        <option value="perMetric" selected>Per‑metric axes</option>
-      </select>
-    </div>
-    <div>
-      <label>Show Metrics Chart</label>
-      <select id="toggleChart">
-        <option value="on">On</option>
-        <option value="off">Off</option>
-      </select>
-    </div>
-    <div>
-      <label>View</label>
-      <select id="viewMode">
-        <option value="both">Both</option>
-        <option value="table">Table only</option>
-        <option value="chart">Chart only</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="row">
-    <button class="btn" id="btnRefresh">Refresh</button>
-    <button class="btn" id="btnFields">Select Fields</button>
-    <button class="btn" id="btnThresholds">Thresholds</button>
-    <button class="btn" id="btnSaveCSV">Save CSV</button>
-    <button class="btn" id="btnSavePDF">Save PDF</button>
-    <button class="btn" id="btnImportCSV">Import CSV</button>
-    <input type="file" id="importFile" hidden>
-    <button class="btn ok" id="btnAdd">Add Entry</button>
-    <button class="btn warn" id="btnOptions">Options</button>
-  </div>
-</div>
-
-<!-- ================= KPI ================= -->
-<div class="kpis">
-  <div class="kpi"><div class="label">Latest Glucose</div><div class="value" id="kpiGlucose">—</div></div>
-  <div class="kpi"><div class="label">Latest BP</div><div class="value" id="kpiBP">—</div></div>
-  <div class="kpi"><div class="label">Latest BMI</div><div class="value" id="kpiBMI">—</div></div>
-  <div class="kpi"><div class="label">Latest SpO₂</div><div class="value" id="kpiSpO2">—</div></div>
-</div>
-
-<!-- ================= RISK ================= -->
-<div class="card">
-  <div class="section-title"><h2>Risk Alerts</h2></div>
-  <div class="chips" id="riskChips"></div>
-</div>
-
-<!-- ================= ENTRIES ================= -->
-<div class="card full-width" id="entriesCard">
-  <div class="section-title"><h2>Entries</h2></div>
-  <div style="overflow:auto">
-    <table id="entriesTable">
-      <thead id="tableHead"></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ================= CHART ================= -->
-<div class="card full-width" id="chartCard">
-  <div class="section-title">
-    <h2>Metrics Chart</h2>
-    <button id="btnCollapseChart" class="btn">Collapse</button>
-  </div>
-  <div id="chartPanel" style="height:320px">
-    <canvas id="metricsChart"></canvas>
-  </div>
-</div>
-
-</main>
-
-<!-- ================= MODALS ================= -->
-<!-- (All modals unchanged — your existing HTML is valid and safe to keep) -->
-<!-- Entry Modal, Fields Modal, Thresholds Modal, Options Modal, Bulk Remove -->
-<!-- (You already validated these; no structural changes needed) -->
-
-<!-- ================= SCRIPTS ================= -->
-<script src="./range-slider.js"></script>
-<script src="./app.js" defer></script>
-
-<script>
-(() => {
-  const root = document.documentElement;
-
-  const COLORS = {
-    light: {
-      text: '#0a1220',
-      grid: 'rgba(10,18,32,0.14)',
-    },
-    dark: {
-      text: '#e6eefc',
-      grid: 'rgba(230,238,252,0.14)',
-    }
-  };
-
-  function currentChartTheme() {
-    const isLight = root.dataset.theme === 'light' || root.getAttribute('data-pdf-export') === '1';
-    return isLight ? COLORS.light : COLORS.dark;
-  }
-
-  function applyChartTheme() {
-    const ch = window.Chart?.getChart?.('metricsChart');
-    if (!ch) return;
-
-    const { text, grid } = currentChartTheme();
+    const light = wantLightChart();
+    const text = light ? '#0a1220' : '#e6eefc';
+    const grid = light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)';
 
     // Legend text
     ch.options.plugins = ch.options.plugins || {};
@@ -252,7 +76,7 @@ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js</script>
     ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
     ch.options.plugins.legend.labels.color = text;
 
-    // Scales: tick labels + axis titles + grid
+    // Scales text
     if (ch.options.scales) {
       for (const key of Object.keys(ch.options.scales)) {
         const s = ch.options.scales[key];
@@ -266,41 +90,40 @@ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js</script>
       }
     }
 
+    // Dataset palette (stable per label)
+    let i = 0;
+    for (const ds of (ch.data.datasets || [])) {
+      const label = String(ds.label || '');
+      const c = METRIC_COLORS[label] || PALETTE[i++ % PALETTE.length];
+
+      ds.borderColor = c;
+      ds.backgroundColor = c;
+      ds.pointBackgroundColor = c;
+      ds.pointBorderColor = c;
+
+      ds.borderWidth = ds.borderWidth ?? 2;
+      ds.pointRadius = ds.pointRadius ?? 2;
+      ds.tension = ds.tension ?? 0.25;
+    }
+
     ch.update();
   }
 
-  // Wait until chart exists (app.js may create it after load)
+  // Apply after chart exists (app.js creates it)
   window.addEventListener('load', () => {
     let tries = 0;
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        applyChartTheme();
+        clearInterval(timer);
+        applyChartThemeAndPalette();
       }
-      if (++tries > 200) clearInterval(t);
+      if (++tries > 200) clearInterval(timer);
     }, 100);
   });
 
-  // Re-apply on theme/PDF mode changes
-  new MutationObserver(applyChartTheme).observe(root, {
-    attributes: true,
-    attributeFilter: ['data-theme', 'data-pdf-export']
-  });
+  // Re-apply when theme / pdf-export attribute changes
+  new MutationObserver(() => applyChartThemeAndPalette())
+    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+
 })();
 </script>
-
-<!-- ================= UNIFIED UI LOGIC ================= -->
-<script>
-(() => {
-  const root = document.documentElement;
-
-  /* Version display */
-  window.addEventListener('load', () => {
-    document.getElementById('appVersion').textContent =
-      `Version ${APP_VERSION} (build ${APP_BUILD})`;
-  });
-
-</script>
-
-</body>
-</html>
