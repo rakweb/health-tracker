@@ -1,1 +1,11 @@
+html[data-theme="dark"]{
+  --bg:#0b1220;
+  --panel:#121a2a;
+  --card:#0e1628;
+  --text:#e6eefc;
+  --muted:#8aa0c3;
+  --ring:#2a3a58;
+  --btn:#1a2842;
+  --btn-hover:#223152;
+}
 
