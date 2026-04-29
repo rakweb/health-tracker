@@ -91,9 +91,9 @@
 
 <!-- ===== Libraries ===== -->
 
-https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.jsscript>
-https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.jsscript>
-https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.jsscript>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
 <!-- ===== Version + Build ===== -->
 <script>
@@ -311,49 +311,6 @@ https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.jsscript>
   document.getElementById('btnTheme').onclick =
     () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
 
-  /* ===== Chart color palettes per metric ===== */
-  const METRIC_COLORS = {
-    glucose:   '#4f8cff',
-    weight:    '#2dd4bf',
-    systolic:  '#f472b6',
-    diastolic: '#f59e0b',
-    spo2:      '#a78bfa',
-    hr:        '#38bdf8'
-  };
-
-  function updateChartColors() {
-    const ch = Chart.getChart('metricsChart');
-    if (!ch) return;
-
-    const light = root.dataset.theme === 'light';
-    const text = light ? '#0a1220' : '#e6eefc';
-    const grid = light ? 'rgba(10,18,32,.14)' : 'rgba(230,238,252,.14)';
-
-    ch.options.plugins.legend.labels.color = text;
-
-    Object.values(ch.options.scales).forEach(s => {
-      s.ticks.color = text;
-      s.title.color = text;
-      s.grid.color = grid;
-    });
-
-    ch.update();
-  }
-
-  /* Wait for chart creation */
-  window.addEventListener('load', () => {
-    const t = setInterval(() => {
-      if (Chart.getChart('metricsChart')) {
-        clearInterval(t);
-        updateChartColors();
-      }
-    }, 100);
-  });
-})();
-</script>
-
-./range-slider.jsscript>
-./app.js>
-
+/script>
 </body>
 </html>
