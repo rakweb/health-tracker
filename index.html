@@ -1,112 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Health Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#0b1220" />
-<meta name="app-version" content="1.0.0" />
+  <meta charset="utf-8" />
+  <title>Health Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="app-version" content="1.0.0" />
 
-<!-- ===== Theme bootstrap (NO FLASH) ===== -->
-<script>
-(() => {
-  const saved = localStorage.getItem('HT_THEME');
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  const theme = saved || (prefersDark ? 'dark' : 'light');
-  document.documentElement.dataset.theme = theme;
-})();
-</script>
+  <!-- Theme bootstrap -->
+  <script>
+    (() => {
+      const saved = localStorage.getItem('HT_THEME');
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 
+  <!-- PWA -->
+  ./manifest.json
+  ./icons/icon-192.png
+  ./icons/icon-192.png
 
-<script>
-(() => {
-  const PALETTE = [
-    '#2563eb', // blue
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#ef4444', // red
-    '#8b5cf6', // purple
-    '#06b6d4', // cyan
-    '#f472b6', // pink
-    '#22c55e', // lime
-  ];
+  <!-- CSS -->
+  ./css/base.css
+  ./css/theme-dark.css
+  ./css/theme-light.css
 
-  // Optional: explicit mapping for known metrics (best for consistency)
-  const METRIC_COLORS = {
-    'Glucose (mg/dL)': '#2563eb',
-    'Weight (lbs)': '#10b981',
-    'Systolic (mmHg)': '#ef4444',
-    'Diastolic (mmHg)': '#f59e0b',
-    'SpO₂ (%)': '#8b5cf6',
-    'Heart Rate (bpm)': '#06b6d4',
-    'Temperature (°F)': '#f472b6',
-  };
+  <!-- Libraries (FIXED) -->
+  https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.jsscript>
+  https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.jsscript>
+  https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.jsscript>
 
-  function applyMetricColors() {
-    const ch = window.Chart?.getChart?.('metricsChart');
-    if (!ch) return;
-
-    let i = 0;
-    for (const ds of ch.data.datasets || []) {
-      const label = String(ds.label || '');
-      const c = METRIC_COLORS[label] || PALETTE[i++ % PALETTE.length];
-
-      ds.borderColor = c;
-      ds.backgroundColor = c;
-      ds.pointBackgroundColor = c;
-      ds.pointBorderColor = c;
-
-      // optional polish
-      ds.borderWidth = ds.borderWidth ?? 2;
-      ds.pointRadius = ds.pointRadius ?? 2;
-      ds.tension = ds.tension ?? 0.25;
-    }
-
-    ch.update();
-  }
-
-  window.addEventListener('load', () => {
-    let tries = 0;
-    const t = setInterval(() => {
-      if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        applyMetricColors();
-      }
-      if (++tries > 200) clearInterval(t);
-    }, 100);
-  });
-})();
-</script>
-
-
-<!-- ===== PWA ===== -->
-<link rel="manifest" href="./manifest.json" />
-<link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
-<link rel="apple-touch-icon" href="./icons/icon-192.png" />
-
-<!-- ===== CSS ===== -->
-<link rel="stylesheet" href="./css/base.css" />
-<link rel="stylesheet" href="./css/theme-dark.css" />
-<link rel="stylesheet" href="./css/theme-light.css" />
-
-<!-- ===== Libraries ===== -->
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
-
-<!-- ===== Version + Build ===== -->
-<script>
-(() => {
-  const v = document.querySelector('meta[name="app-version"]').content;
-  const last = localStorage.getItem('HT_VERSION');
-  const build = last === v ? (Number(localStorage.getItem('HT_BUILD')) + 1) : 1;
-  localStorage.setItem('HT_VERSION', v);
-  localStorage.setItem('HT_BUILD', build);
-  window.APP_VERSION = v;
-  window.APP_BUILD = build;
-})();
-</script>
+  <!-- Version + Build -->
+  <script>
+    (() => {
+      const v = document.querySelector('meta[name="app-version"]').content;
+      const last = localStorage.getItem('HT_VERSION');
+      const build = last === v ? (Number(localStorage.getItem('HT_BUILD')) + 1) : 1;
+      localStorage.setItem('HT_VERSION', v);
+      localStorage.setItem('HT_BUILD', build);
+      window.APP_VERSION = v;
+      window.APP_BUILD = build;
+    })();
+  </script>
 </head>
 
 <body>
