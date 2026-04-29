@@ -1172,6 +1172,7 @@ html[data-theme="light"] .toolbar .small{
     };
   }
 
+ <!--  */
   function ensurePluginRegistered() {
     if (!window.Chart || !Chart.register) return false;
 
@@ -1185,6 +1186,7 @@ html[data-theme="light"] .toolbar .small{
       // Runs before each update/draw
       beforeUpdate(chart) {
         const c = chartColors();
+		/* -->
 
         // Legend
         chart.options.plugins = chart.options.plugins || {};
@@ -1268,6 +1270,109 @@ html[data-theme="light"] .toolbar .small{
   }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
 })();
 </script>
+
+
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantLight() {
+    // If you force light for PDF export, keep charts light then too
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyToChart(ch) {
+    if (!ch || !ch.options) return;
+
+    const light = wantLight();
+
+    // Make legend + axis labels DARK like the card title
+    const text = light ? '#0a1220' : '#e6eefc';   // legend + axis titles
+    const ticks = light ? '#0a1220' : '#e6eefc';  // axis tick labels (numbers/dates)
+    const grid = light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)';
+
+    // Legend
+    ch.options.plugins = ch.options.plugins || {};
+    ch.options.plugins.legend = ch.options.plugins.legend || {};
+    ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
+    ch.options.plugins.legend.labels.color = text;
+
+    // Tooltip (optional consistency)
+    ch.options.plugins.tooltip = ch.options.plugins.tooltip || {};
+    ch.options.plugins.tooltip.titleColor = text;
+    ch.options.plugins.tooltip.bodyColor = text;
+
+    // Scales: ticks + titles + grid
+    if (ch.options.scales) {
+      for (const k of Object.keys(ch.options.scales)) {
+        const s = ch.options.scales[k];
+        if (!s) continue;
+
+        s.ticks = s.ticks || {};
+        s.grid = s.grid || {};
+        s.title = s.title || {};
+
+        s.ticks.color = ticks;     // tick labels
+        s.title.color = text;      // axis title labels
+        s.grid.color = grid;       // gridlines
+        // NOTE: intentionally NOT touching s.border to avoid breaking charts
+      }
+    }
+  }
+
+  // Debounce updates so we never thrash the chart
+  let pending = null;
+  function requestUpdate() {
+    if (pending) return;
+    pending = setTimeout(() => {
+      pending = null;
+      if (!window.Chart) return;
+
+      try {
+        // Prefer your metrics chart
+        const ch = Chart.getChart('metricsChart');
+        if (ch) {
+          applyToChart(ch);
+          ch.update();
+          return;
+        }
+
+        // Fallback: apply to any charts that exist
+        if (Chart.instances) {
+          for (const id of Object.keys(Chart.instances)) {
+            const inst = Chart.instances[id];
+            applyToChart(inst);
+            inst && inst.update && inst.update();
+          }
+        }
+      } catch (e) {
+        // no-op (safety)
+      }
+    }, 80);
+  }
+
+  // Wait until chart exists, then apply once
+  window.addEventListener('load', () => {
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries++;
+      if (window.Chart && Chart.getChart('metricsChart')) {
+        clearInterval(timer);
+        requestUpdate();
+      }
+      if (tries > 120) clearInterval(timer); // ~12s max
+    }, 100);
+  });
+
+  // Re-apply on theme changes and on PDF export mode changes
+  new MutationObserver(requestUpdate)
+    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+
+})();
+</script>
 ``
+
+
 </body>
 </html>
