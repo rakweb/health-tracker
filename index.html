@@ -808,18 +808,7 @@ html[data-theme="light"] .toolbar .small{
     const tickText   = light ? '#2b3d57' : '#8aa0c3';   // keep ticks slightly muted
     const grid       = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
 
-    // Apply to global defaults (for any charts created later)
-    Chart.defaults.plugins = Chart.defaults.plugins || {};
-    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
-    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
-    Chart.defaults.plugins.legend.labels.color = legendText;
-
-    Chart.defaults.scale = Chart.defaults.scale || {};
-    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
-    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
-    Chart.defaults.scale.ticks.color = tickText;
-    Chart.defaults.scale.grid.color  = grid;
-
+   
     // Force-update the existing metrics chart instance
     try {
       const ch = Chart.getChart('metricsChart');
@@ -828,8 +817,7 @@ html[data-theme="light"] .toolbar .small{
       ch.options.plugins = ch.options.plugins || {};
       ch.options.plugins.legend = ch.options.plugins.legend || {};
       ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
-      ch.options.plugins.legend.labels.color = legendText;
-
+      
       // Also ensure scales use the intended colors (optional, but helps consistency)
       if (ch.options.scales) {
         for (const k of Object.keys(ch.options.scales)) {
@@ -857,10 +845,6 @@ html[data-theme="light"] .toolbar .small{
     }, 100);
   });
 
-  // Re-apply when light/dark changes or PDF mode toggles
-  new MutationObserver(applyLegendColor)
-    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
-})();
 </script>
 
  <!-- ===== Show App Version ===== -->
@@ -971,8 +955,7 @@ html[data-theme="light"] .toolbar .small{
     return root.getAttribute('data-theme') === 'light';
   }
 
-  function applyChartTheme() {
-    // Chart may not be ready yet on first tick; handle safely.
+     // Chart may not be ready yet on first tick; handle safely.
     if (!window.Chart) return;
 
     const light = isLightModeForChart();
@@ -983,32 +966,7 @@ html[data-theme="light"] .toolbar .small{
     const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
     const axis  = light ? 'rgba(10,18,32,0.30)' : 'rgba(230,238,252,0.22)';
 
-    // Global defaults (affects new charts)
-    Chart.defaults.color = text;
-    Chart.defaults.borderColor = axis;
-
-    // Scale defaults (ticks/grid)
-    Chart.defaults.scale = Chart.defaults.scale || {};
-    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
-    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
-    Chart.defaults.scale.ticks.color = muted;
-    Chart.defaults.scale.grid.color  = grid;
-    Chart.defaults.scale.grid.borderColor = axis;
-
-    // Plugin defaults (legend/title/tooltip)
-    Chart.defaults.plugins = Chart.defaults.plugins || {};
-    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
-    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
-    Chart.defaults.plugins.legend.labels.color = muted;
-
-    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
-    Chart.defaults.plugins.title.color = text;
-
-    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
-    Chart.defaults.plugins.tooltip.titleColor = text;
-    Chart.defaults.plugins.tooltip.bodyColor  = text;
-
-    // Update any charts already created (important if app.js built the chart already)
+       // Update any charts already created (important if app.js built the chart already)
     try {
       const instances = Chart.instances || {};
       for (const key of Object.keys(instances)) {
@@ -1018,7 +976,6 @@ html[data-theme="light"] .toolbar .small{
         // Force per-chart options where they exist
         ch.options.color = text;
 
-        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
         if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
         if (ch.options.plugins?.tooltip) {
           ch.options.plugins.tooltip.titleColor = text;
@@ -1044,21 +1001,7 @@ html[data-theme="light"] .toolbar .small{
     }
   }
 
-  // Apply once after deferred scripts run
-  // (module runs after parse; Chart defer scripts should execute before this if ordered above it)
-  applyChartTheme();
-
-  // Re-apply when theme toggles / PDF export toggles
-  const obs = new MutationObserver(() => applyChartTheme());
-  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
-
-  // As a fallback (in case Chart loads slightly later), retry a few times
-  let tries = 0;
-  const t = setInterval(() => {
-    applyChartTheme();
-    if (window.Chart || ++tries > 20) clearInterval(t);
-  }, 50);
-</script>
+ </script>
  
 <script>
 (function () {
@@ -1070,10 +1013,7 @@ html[data-theme="light"] .toolbar .small{
            root.getAttribute('data-theme') === 'light';
   }
 
-  function applyChartTheme() {
-    if (!window.Chart) return;
-
-    const light = wantsLightChart();
+     const light = wantsLightChart();
 
     // High-contrast chart colors
     const text = light ? '#0a1220' : '#e6eefc';
@@ -1081,37 +1021,13 @@ html[data-theme="light"] .toolbar .small{
     const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
     const axis  = light ? 'rgba(10,18,32,0.28)' : 'rgba(230,238,252,0.22)';
 
-    // Global defaults affect any charts created after this runs
-    Chart.defaults.color = text;
-    Chart.defaults.borderColor = axis;
-
-    Chart.defaults.scale = Chart.defaults.scale || {};
-    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
-    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
-    Chart.defaults.scale.ticks.color = muted;
-    Chart.defaults.scale.grid.color  = grid;
-    Chart.defaults.scale.grid.borderColor = axis;
-
-    Chart.defaults.plugins = Chart.defaults.plugins || {};
-    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
-    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
-    Chart.defaults.plugins.legend.labels.color = muted;
-
-    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
-    Chart.defaults.plugins.title.color = text;
-
-    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
-    Chart.defaults.plugins.tooltip.titleColor = text;
-    Chart.defaults.plugins.tooltip.bodyColor  = text;
-
-    // Update the existing metrics chart if it already exists
+       // Update the existing metrics chart if it already exists
     try {
       const ch = Chart.getChart('metricsChart');
       if (ch) {
         // Apply per-chart overrides to ensure it picks up the theme immediately
         ch.options.color = text;
 
-        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
         if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
         if (ch.options.plugins?.tooltip) {
           ch.options.plugins.tooltip.titleColor = text;
@@ -1137,21 +1053,6 @@ html[data-theme="light"] .toolbar .small{
     }
   }
 
-  // Apply after load (ensures Chart.js + app.js have had time to create the chart)
-  window.addEventListener('load', () => {
-    // Retry a few times in case the chart is created shortly after load
-    let tries = 0;
-    const t = setInterval(() => {
-      applyChartTheme();
-      if (window.Chart && Chart.getChart('metricsChart')) clearInterval(t);
-      if (++tries > 40) clearInterval(t);
-    }, 50);
-  });
-
-  // Re-apply when theme changes or when PDF export mode toggles
-  const obs = new MutationObserver(() => applyChartTheme());
-  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
-})();
 </script>
 
  <script>
@@ -1181,24 +1082,11 @@ html[data-theme="light"] .toolbar .small{
   function ensurePluginRegistered() {
     if (!window.Chart || !Chart.register) return false;
 
-    // Register once
-    if (Chart.registry && Chart.registry.plugins && Chart.registry.plugins.get('themeEnforcer')) {
-      return true;
-    }
-
-    const plugin = {
-      id: 'themeEnforcer',
-      // Runs before each update/draw
-      beforeUpdate(chart) {
-        const c = chartColors();
-		/* -->
-
-        // Legend
+         // Legend
         chart.options.plugins = chart.options.plugins || {};
         chart.options.plugins.legend = chart.options.plugins.legend || {};
         chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
-        chart.options.plugins.legend.labels.color = c.text;
-
+        
         // Title (if used)
         if (chart.options.plugins.title) {
           chart.options.plugins.title.color = c.text;
@@ -1227,12 +1115,7 @@ html[data-theme="light"] .toolbar .small{
           s.border.color = c.axis;
         }
 
-        // Also set global default color for any plugin text that uses Chart.defaults.color
-        chart.options.color = c.text;
-      }
-    };
-
-    Chart.register(plugin);
+        Chart.register(plugin);
     return true;
   }
 
@@ -1269,11 +1152,6 @@ html[data-theme="light"] .toolbar .small{
   // Start immediately
   boot();
 
-  // Re-apply whenever theme changes (light/dark) or PDF export mode toggles
-  new MutationObserver(() => {
-    if (ensurePluginRegistered()) applyToExistingCharts();
-  }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
-})();
 </script>
 
 
@@ -1301,8 +1179,7 @@ html[data-theme="light"] .toolbar .small{
     ch.options.plugins = ch.options.plugins || {};
     ch.options.plugins.legend = ch.options.plugins.legend || {};
     ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
-    ch.options.plugins.legend.labels.color = text;
-
+    
     // Tooltip (optional consistency)
     ch.options.plugins.tooltip = ch.options.plugins.tooltip || {};
     ch.options.plugins.tooltip.titleColor = text;
@@ -1370,10 +1247,6 @@ html[data-theme="light"] .toolbar .small{
     }, 100);
   });
 
-  // Re-apply on theme changes and on PDF export mode changes
-  new MutationObserver(requestUpdate)
-    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
-
 })();
 </script>
 
@@ -1429,8 +1302,7 @@ html[data-theme="light"] .toolbar .small{
     chart.options.plugins = chart.options.plugins || {};
     chart.options.plugins.legend = chart.options.plugins.legend || {};
     chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
-    chart.options.plugins.legend.labels.color = legendAndTitles;
-
+    
     // Tooltip (optional readability)
     chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
     chart.options.plugins.tooltip.titleColor = legendAndTitles;
@@ -1470,12 +1342,6 @@ html[data-theme="light"] .toolbar .small{
       }
     }, 80);
   }
-
-  // Watch for theme changes
-  new MutationObserver(requestUpdate).observe(root, {
-    attributes: true,
-    attributeFilter: ['data-theme', 'data-pdf-export']
-  });
 
   // Apply after chart exists; also handle chart recreation
   window.addEventListener('load', () => {
