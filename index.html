@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Health Tracker</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -13,36 +12,54 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
+:root {
+  --bg: #ffffff;
+  --fg: #000000;
+  --panel: #f2f2f2;
+  --btn: #e0e0e0;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --fg: #eaeaea;
+  --panel: #1f1f1f;
+  --btn: #2a2a2a;
+}
+
 body {
-    font-family: system-ui, sans-serif;
-    margin: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, sans-serif;
+  margin: 10px;
 }
+h2 { margin-top: 0 }
 button {
-    margin: 4px;
-}
-canvas {
-    max-width: 100%;
-}
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-.modal-content {
-    background: white;
-    padding: 16px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow: auto;
+  background: var(--btn);
+  color: var(--fg);
+  border: 1px solid #888;
+  padding: 4px 10px;
+  cursor: pointer;
 }
 .row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+canvas { max-width: 100% }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0,0,0,.55);
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: var(--panel);
+  padding: 16px;
+  max-width: 480px;
+  width: 90%;
 }
 hr { margin: 10px 0 }
 </style>
@@ -54,52 +71,53 @@ hr { margin: 10px 0 }
 
 <!-- ROW 1 -->
 <div class="row">
-    <button id="btnRefresh">Refresh</button>
-    <button id="btnFields">Select Fields</button>
-    <button id="btnThresholds">Thresholds</button>
-    <button id="btnAdd">Add Entry</button>
-    <button id="btnOptions">Options</button>
+  <button id="btnRefresh">Refresh</button>
+  <button id="btnFields">Select Fields</button>
+  <button id="btnThresholds">Thresholds</button>
+  <button id="btnAdd">Add Entry</button>
+  <button id="btnOptions">Options</button>
 </div>
 
 <!-- ROW 2 -->
 <div class="row">
-    <button id="btnSaveCSV">Save CSV</button>
-    <button id="btnSavePDF">Save PDF</button>
-    <button id="btnImportCSV">Import CSV</button>
+  <button id="btnSaveCSV">Save CSV</button>
+  <button id="btnSavePDF">Save PDF</button>
+  <button id="btnImportCSV">Import CSV</button>
+  <button id="btnTheme">Toggle Theme</button>
 </div>
 
 <canvas id="chart" height="120"></canvas>
 
 <!-- ADD ENTRY -->
-<div class="modal" id="addModal">
+<div id="addModal" class="modal">
 <div class="modal-content">
 <h3>Add Entry</h3>
-<label>Date <input type="date" id="entryDate"></label><br>
-<label>Field <input id="entryField"></label><br>
-<label>Value <input type="number" id="entryValue"></label><br><br>
+<label>Date <input type="date" id="eDate"></label><br>
+<label>Field <input id="eField"></label><br>
+<label>Value <input type="number" id="eValue"></label><br><br>
 <button onclick="addEntry()">Save</button>
 <button onclick="closeModal('addModal')">Close</button>
 </div>
 </div>
 
 <!-- FIELD SELECT -->
-<div class="modal" id="fieldModal">
+<div id="fieldModal" class="modal">
 <div class="modal-content">
-<h3>Fields</h3>
+<h3>Select Fields</h3>
 <div id="fieldList"></div>
 <hr>
-<button onclick="deleteSelectedFields()">Delete Selected</button>
+<button onclick="deleteFields()">Delete Selected</button>
 <button onclick="closeModal('fieldModal')">Close</button>
 </div>
 </div>
 
 <!-- THRESHOLDS -->
-<div class="modal" id="thresholdModal">
+<div id="thresholdModal" class="modal">
 <div class="modal-content">
 <h3>Thresholds</h3>
-<label>Field <input id="thField"></label><br>
-<label>Min <input type="number" id="thMin"></label><br>
-<label>Max <input type="number" id="thMax"></label><br><br>
+<label>Field <input id="tField"></label><br>
+<label>Min <input type="number" id="tMin"></label><br>
+<label>Max <input type="number" id="tMax"></label><br><br>
 <button onclick="saveThreshold()">Save</button>
 <hr>
 <div id="thresholdList"></div>
@@ -108,10 +126,10 @@ hr { margin: 10px 0 }
 </div>
 
 <!-- OPTIONS -->
-<div class="modal" id="optionsModal">
+<div id="optionsModal" class="modal">
 <div class="modal-content">
 <h3>Options</h3>
-<p>Reserved for future settings.</p>
+<p>UI, storage, and export options reserved.</p>
 <button onclick="closeModal('optionsModal')">Close</button>
 </div>
 </div>
@@ -119,195 +137,170 @@ hr { margin: 10px 0 }
 <input type="file" id="csvFile" accept=".csv" hidden>
 
 <script>
-/* ===============================
+/* =====================
    IndexedDB
-================================ */
-let db;
-const DB_NAME = 'healthTrackerDB';
-const DB_VER = 1;
+===================== */
+let db, chart;
+const DB_NAME="healthTrackerDB", DB_VER=1;
 
-const openDB = () => new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, DB_VER);
-    r.onupgradeneeded = e => {
-        db = e.target.result;
-        db.createObjectStore('entries', {keyPath:'id', autoIncrement:true});
-        db.createObjectStore('thresholds', {keyPath:'field'});
-    };
-    r.onsuccess = e => (db = e.target.result, res());
-    r.onerror = () => rej();
+indexedDB.open(DB_NAME,DB_VER).onupgradeneeded=e=>{
+  db=e.target.result;
+  db.createObjectStore("entries",{keyPath:"id",autoIncrement:true});
+  db.createObjectStore("thresholds",{keyPath:"field"});
+};
+indexedDB.open(DB_NAME,DB_VER).onsuccess=e=>{
+  db=e.target.result;
+  refresh();
+};
+
+/* =====================
+   Helpers
+===================== */
+const getAll = s => new Promise(r=>{
+  const tx=db.transaction(s,"readonly").objectStore(s).getAll();
+  tx.onsuccess=()=>r(tx.result);
 });
+const showModal=id=>document.getElementById(id).style.display="flex";
+const closeModal=id=>document.getElementById(id).style.display="none";
 
-/* ===============================
+/* =====================
    Chart
-================================ */
-let chart;
+===================== */
+function buildChart(data){
+  const dates=[...new Set(data.map(x=>x.date))].sort();
+  const fields=[...new Set(data.map(x=>x.field))];
 
-function buildChart(entries, thresholds) {
-    const fields = [...new Set(entries.map(e=>e.field))];
-    const dates = [...new Set(entries.map(e=>e.date))].sort();
+  const sets=fields.map(f=>({
+    label:f,
+    data:dates.map(d=>{
+      const e=data.find(x=>x.field===f && x.date===d);
+      return e?e.value:null;
+    }),
+    borderWidth:2
+  }));
 
-    const datasets = fields.map(f => ({
-        label: f,
-        data: dates.map(d=>{
-            const e = entries.find(x=>x.field===f && x.date===d);
-            return e ? e.value : null;
-        }),
-        borderWidth: 2
-    }));
-
-    chart && chart.destroy();
-    chart = new Chart(document.getElementById('chart'), {
-        type:'line',
-        data:{ labels:dates, datasets },
-        options:{
-            responsive:true,
-            scales:{
-                x:{ ticks:{ color:'black' }},
-                y:{ ticks:{ color:'black' }}
-            },
-            plugins:{
-                legend:{ labels:{ color:'black' }}
-            }
-        }
-    });
+  chart && chart.destroy();
+  chart=new Chart(chartEl,{
+    type:"line",
+    data:{labels:dates,datasets:sets},
+    options:{
+      plugins:{ legend:{labels:{color:"black"}}},
+      scales:{
+        x:{ticks:{color:"black"}},
+        y:{ticks:{color:"black"}}
+      }
+    }
+  });
 }
 
-/* ===============================
-   Data helpers
-================================ */
-function getAll(store){
-    return new Promise(r=>{
-        const tx=db.transaction(store,'readonly')
-            .objectStore(store)
-            .getAll();
-        tx.onsuccess=()=>r(tx.result);
-    });
-}
-
-/* ===============================
+/* =====================
    Actions
-================================ */
-async function refresh() {
-    const e = await getAll('entries');
-    const t = await getAll('thresholds');
-    buildChart(e,t);
+===================== */
+async function refresh(){
+  buildChart(await getAll("entries"));
 }
 
 async function addEntry(){
-    const date=entryDate.value;
-    const field=entryField.value.trim();
-    const value=Number(entryValue.value);
-    if(!date||!field) return;
-    const tx=db.transaction('entries','readwrite')
-        .objectStore('entries')
-        .add({date,field,value});
-    tx.onsuccess=()=>{closeModal('addModal');refresh();}
+  db.transaction("entries","readwrite")
+    .objectStore("entries")
+    .add({date:eDate.value,field:eField.value,value:+eValue.value});
+  closeModal("addModal");
+  refresh();
 }
 
 async function openFields(){
-    const e = await getAll('entries');
-    const fields=[...new Set(e.map(x=>x.field))];
-    fieldList.innerHTML='';
-    fields.forEach(f=>{
-        fieldList.innerHTML+=
-        `<label><input type="checkbox" value="${f}">${f}</label><br>`;
-    });
-    showModal('fieldModal');
+  const e=await getAll("entries");
+  fieldList.innerHTML="";
+  [...new Set(e.map(x=>x.field))].forEach(f=>{
+    fieldList.innerHTML+=`<label>
+      <input type="checkbox" value="${f}">${f}</label><br>`;
+  });
+  showModal("fieldModal");
 }
 
-async function deleteSelectedFields(){
-    const boxes=[...fieldList.querySelectorAll('input:checked')];
-    const tx=db.transaction('entries','readwrite').objectStore('entries');
-    boxes.forEach(b=>{
-        tx.openCursor().onsuccess=e=>{
-            const c=e.target.result;
-            if(c){ if(c.value.field===b.value) c.delete(); c.continue(); }
-        };
-    });
-    closeModal('fieldModal');
-    setTimeout(refresh,300);
+function deleteFields(){
+  const boxes=[...fieldList.querySelectorAll("input:checked")];
+  const os=db.transaction("entries","readwrite").objectStore("entries");
+  os.openCursor().onsuccess=e=>{
+    const c=e.target.result;
+    if(c){
+      if(boxes.some(b=>b.value===c.value.field)) c.delete();
+      c.continue();
+    }
+  };
+  closeModal("fieldModal");
+  setTimeout(refresh,300);
 }
 
 async function saveThreshold(){
-    const field=thField.value.trim();
-    const min=Number(thMin.value);
-    const max=Number(thMax.value);
-    const tx=db.transaction('thresholds','readwrite')
-        .objectStore('thresholds')
-        .put({field,min,max});
-    tx.onsuccess=loadThresholdList;
+  db.transaction("thresholds","readwrite")
+    .objectStore("thresholds")
+    .put({field:tField.value,min:+tMin.value,max:+tMax.value});
+  loadThresholds();
 }
-
-async function loadThresholdList(){
-    const t=await getAll('thresholds');
-    thresholdList.innerHTML='';
-    t.forEach(x=>{
-        thresholdList.innerHTML+=
-        `<div>${x.field}: ${x.min}–${x.max}
-         <button onclick="delTh('${x.field}')">❌</button></div>`;
-    });
+async function loadThresholds(){
+  const t=await getAll("thresholds");
+  thresholdList.innerHTML="";
+  t.forEach(x=>{
+    thresholdList.innerHTML+=`${x.field}: ${x.min}–${x.max}
+    <button onclick="delTh('${x.field}')">✕</button><br>`;
+  });
 }
-
 function delTh(f){
-    db.transaction('thresholds','readwrite')
-      .objectStore('thresholds').delete(f);
-    loadThresholdList();
-    refresh();
+  db.transaction("thresholds","readwrite").objectStore("thresholds").delete(f);
+  loadThresholds(); refresh();
 }
 
-/* ===============================
+/* =====================
    CSV / PDF
-================================ */
+===================== */
 async function saveCSV(){
-    const e=await getAll('entries');
-    let c='date,field,value\n'+
-    e.map(x=>`${x.date},${x.field},${x.value}`).join('\n');
-    download(c,'data.csv','text/csv');
+  const e=await getAll("entries");
+  const csv="date,field,value\n"+
+    e.map(x=>`${x.date},${x.field},${x.value}`).join("\n");
+  download(csv,"health-data.csv","text/csv");
 }
-
 function savePDF(){
-    const {jsPDF}=window.jspdf;
-    const pdf=new jsPDF();
-    pdf.text('Health Metrics',10,10);
-    pdf.addImage(chart.toBase64Image(),'PNG',10,20,180,80);
-    pdf.save('metrics.pdf');
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  pdf.text("Health Metrics",10,10);
+  pdf.addImage(chart.toBase64Image(),"PNG",10,20,180,80);
+  pdf.save("metrics.pdf");
 }
-
-function importCSV(){
-    csvFile.click();
+function download(c,n,t){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([c],{type:t}));
+  a.download=n; a.click();
 }
-
 csvFile.onchange=e=>{
-    const r=new FileReader();
-    r.onload=()=>{
-        const rows=r.result.split('\n').slice(1);
-        const os=db.transaction('entries','readwrite')
-            .objectStore('entries');
-        rows.forEach(l=>{
-            const [d,f,v]=l.split(',');
-            if(d&&f) os.add({date:d,field:f,value:Number(v)});
-        });
-        refresh();
-    };
-    r.readAsText(e.target.files[0]);
+  const r=new FileReader();
+  r.onload=()=>{
+    const os=db.transaction("entries","readwrite").objectStore("entries");
+    r.result.split("\n").slice(1).forEach(l=>{
+      const [d,f,v]=l.split(",");
+      if(d&&f) os.add({date:d,field:f,value:+v});
+    });
+    refresh();
+  };
+  r.readAsText(e.target.files[0]);
 };
 
-/* ===============================
-   UI
-================================ */
-const showModal=id=>document.getElementById(id).style.display='flex';
-const closeModal=id=>document.getElementById(id).style.display='none';
-
+/* =====================
+   Wiring
+===================== */
+const chartEl=document.getElementById("chart");
 btnRefresh.onclick=refresh;
 btnFields.onclick=openFields;
-btnThresholds.onclick=()=>{loadThresholdList();showModal('thresholdModal')};
-btnAdd.onclick=()=>showModal('addModal');
-btnOptions.onclick=()=>showModal('optionsModal');
+btnThresholds.onclick=()=>{loadThresholds();showModal("thresholdModal")};
+btnAdd.onclick=()=>showModal("addModal");
+btnOptions.onclick=()=>showModal("optionsModal");
 btnSaveCSV.onclick=saveCSV;
 btnSavePDF.onclick=savePDF;
-btnImportCSV.onclick=importCSV;
-
-openDB().then(refresh);
+btnImportCSV.onclick=()=>csvFile.click();
+btnTheme.onclick=()=>{
+  document.body.dataset.theme=
+   document.body.dataset.theme==="dark"?"":"dark";
+};
 </script>
 
 </body>
