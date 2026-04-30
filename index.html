@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,6 +147,46 @@
 
 <!-- ===== App logic (unchanged) ===== -->
 <script src="./app.js" defer></script>
+
+<script>
+(() => {
+  const root = document.documentElement;
+
+      // ✅ PURE BLACK for PDF + light mode
+    const text = light ? '#000000' : '#e6eefc';
+    const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
+
+    // Legend
+    ch.options.plugins.legend.labels.color = text;
+
+    // Axes
+    Object.values(ch.options.scales || {}).forEach(s => {
+      s.ticks.color = text;
+      s.title.color = text;
+      s.grid.color  = grid;
+    });
+
+    ch.update();
+  }
+
+   // ✅ CRITICAL: force light BEFORE PDF capture
+  window.addEventListener('load', () => {
+    const btn = document.getElementById('btnSavePDF');
+    if (!btn) return;
+
+       // allow one paint before jsPDF runs
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        setTimeout(() => {
+          root.removeAttribute('data-pdf-export');
+          patchChart();
+        }, 2500);
+      }));
+    }, true);
+  });
+
+})();
+</script>
+``
 
 <!-- ================= SINGLE helper script ================= -->
 <script>
