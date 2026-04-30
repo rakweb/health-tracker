@@ -1,232 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Health Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b1220" />
-  <meta name="app-version" content="1.0.0" />
+<meta charset="UTF-8" />
+<title>Health Tracker</title>
 
-  <!-- ===== Theme bootstrap (NO FLASH) ===== -->
-  <script>
-    (() => {
-      const saved = localStorage.getItem('HT_THEME');
-      const prefersDark = window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      window.APP_THEME = theme;
-    })();
-  </script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ===== CSS ===== -->
-  <link rel="stylesheet" href="./css/base.css" />
-  <link rel="stylesheet" href="./css/theme-dark.css" />
-  <link rel="stylesheet" href="./css/theme-light.css" />
-  <link rel="stylesheet" href="./range-slider.css" />
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- ===== PWA ===== -->
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<!-- jsPDF -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <!-- ===== Libraries ===== -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
-
-  <!-- ===== Deterministic version + build ===== -->
-  <script>
-    (() => {
-      const version = document.querySelector('meta[name="app-version"]').content;
-      const last = localStorage.getItem('HT_VERSION');
-      const build = last === version
-        ? Number(localStorage.getItem('HT_BUILD') || 0) + 1
-        : 1;
-      localStorage.setItem('HT_VERSION', version);
-      localStorage.setItem('HT_BUILD', build);
-      window.APP_VERSION = version;
-      window.APP_BUILD = build;
-    })();
-  </script>
+<style>
+body {
+    font-family: system-ui, sans-serif;
+    margin: 10px;
+}
+button {
+    margin: 4px;
+}
+canvas {
+    max-width: 100%;
+}
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: white;
+    padding: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: auto;
+}
+.row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+hr { margin: 10px 0 }
+</style>
 </head>
 
 <body>
 
-<header>
-  <div class="wrap headbar">
-    <div>
-      <h1>Health Tracker</h1>
-      <div class="small" id="appVersion"></div>
-    </div>
-    <div class="install">
-      <!-- ✅ SINGLE theme button -->
-      <button id="btnTheme" class="btn" title="Toggle light/dark">🌙</button>
-      <button id="btnInstall" class="btn" style="display:none">Install</button>
-      <button id="btnCheckUpdates" class="btn">Check for updates</button>
-    </div>
-  </div>
-</header>
+<h2>Health Tracker</h2>
 
-<main class="wrap">
+<!-- ROW 1 -->
+<div class="row">
+    <button id="btnRefresh">Refresh</button>
+    <button id="btnFields">Select Fields</button>
+    <button id="btnThresholds">Thresholds</button>
+    <button id="btnAdd">Add Entry</button>
+    <button id="btnOptions">Options</button>
+</div>
 
-  <!-- ================= TOOLBAR ================= -->
-  <div class="toolbar card">
-    <div class="row">
-      <div><label>From Date</label><input type="date" id="filterStart"></div>
-      <div><label>To Date</label><input type="date" id="filterEnd"></div>
+<!-- ROW 2 -->
+<div class="row">
+    <button id="btnSaveCSV">Save CSV</button>
+    <button id="btnSavePDF">Save PDF</button>
+    <button id="btnImportCSV">Import CSV</button>
+</div>
 
-      <div>
-        <label>Chart Metrics</label>
-        <select id="chartMetrics" multiple size="4"></select>
-        <div class="small">Hold Ctrl/Cmd for multi-select</div>
-      </div>
+<canvas id="chart" height="120"></canvas>
 
-      <div>
-        <label>Axis Mode</label>
-        <select id="axisMode">
-          <option value="single">Single Y-axis</option>
-          <option value="perMetric" selected>Per-metric axes</option>
-        </select>
-      </div>
+<!-- ADD ENTRY -->
+<div class="modal" id="addModal">
+<div class="modal-content">
+<h3>Add Entry</h3>
+<label>Date <input type="date" id="entryDate"></label><br>
+<label>Field <input id="entryField"></label><br>
+<label>Value <input type="number" id="entryValue"></label><br><br>
+<button onclick="addEntry()">Save</button>
+<button onclick="closeModal('addModal')">Close</button>
+</div>
+</div>
 
-      <div>
-        <label>Show Metrics Chart</label>
-        <select id="toggleChart">
-          <option value="on" selected>On</option>
-          <option value="off">Off</option>
-        </select>
-      </div>
+<!-- FIELD SELECT -->
+<div class="modal" id="fieldModal">
+<div class="modal-content">
+<h3>Fields</h3>
+<div id="fieldList"></div>
+<hr>
+<button onclick="deleteSelectedFields()">Delete Selected</button>
+<button onclick="closeModal('fieldModal')">Close</button>
+</div>
+</div>
 
-      <div>
-        <label>View</label>
-        <select id="viewMode">
-          <option value="both" selected>Both</option>
-          <option value="table">Table only</option>
-          <option value="chart">Chart only</option>
-        </select>
-      </div>
-    </div>
+<!-- THRESHOLDS -->
+<div class="modal" id="thresholdModal">
+<div class="modal-content">
+<h3>Thresholds</h3>
+<label>Field <input id="thField"></label><br>
+<label>Min <input type="number" id="thMin"></label><br>
+<label>Max <input type="number" id="thMax"></label><br><br>
+<button onclick="saveThreshold()">Save</button>
+<hr>
+<div id="thresholdList"></div>
+<button onclick="closeModal('thresholdModal')">Close</button>
+</div>
+</div>
 
-    <div class="row">
-      <button class="btn" id="btnRefresh">Refresh</button>
-      <button class="btn" id="btnFields">Select Fields</button>
-      <button class="btn" id="btnThresholds">Thresholds</button>
-      <button class="btn" id="btnSaveCSV">Save CSV</button>
-      <button class="btn" id="btnSavePDF">Save PDF</button>
+<!-- OPTIONS -->
+<div class="modal" id="optionsModal">
+<div class="modal-content">
+<h3>Options</h3>
+<p>Reserved for future settings.</p>
+<button onclick="closeModal('optionsModal')">Close</button>
+</div>
+</div>
 
-      <button class="btn" id="btnImportCSV">Import CSV</button>
-      <!-- ✅ FIXED CSV input -->
-      <input type="file"
-             id="importFile"
-             accept=".csv,text/csv"
-             style="display:none" />
+<input type="file" id="csvFile" accept=".csv" hidden>
 
-      <button class="btn ok" id="btnAdd">Add Entry</button>
-      <button class="btn warn" id="btnOptions">Options</button>
-    </div>
-  </div>
-
-  <!-- ================= KPIs / RISK / ENTRIES / CHART ================= -->
-  <!-- (unchanged markup from your existing file) -->
-
-  <div class="card full-width" id="chartCard">
-    <div class="section-title">
-      <h2>Metrics Chart</h2>
-      <button id="btnCollapseChart" class="btn">Collapse</button>
-    </div>
-    <div id="chartPanel" style="height:320px">
-      <canvas id="metricsChart"></canvas>
-    </div>
-  </div>
-
-</main>
-
-<!-- ===== Range slider helper ===== -->
-<script src="./range-slider.js"></script>
-
-<!-- ===== App logic (unchanged) ===== -->
-<script src="./app.js" defer></script>
-
-<!-- ================= SINGLE helper script ================= -->
 <script>
-(() => {
-  const root = document.documentElement;
+/* ===============================
+   IndexedDB
+================================ */
+let db;
+const DB_NAME = 'healthTrackerDB';
+const DB_VER = 1;
 
-  /* -------- Version label -------- */
-  window.addEventListener('load', () => {
-    const el = document.getElementById('appVersion');
-    if (el) el.textContent = `Version ${APP_VERSION} (build ${APP_BUILD})`;
-  });
+const openDB = () => new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, DB_VER);
+    r.onupgradeneeded = e => {
+        db = e.target.result;
+        db.createObjectStore('entries', {keyPath:'id', autoIncrement:true});
+        db.createObjectStore('thresholds', {keyPath:'field'});
+    };
+    r.onsuccess = e => (db = e.target.result, res());
+    r.onerror = () => rej();
+});
 
-  /* -------- Theme control (single source) -------- */
-  function getTheme() {
-    return root.getAttribute('data-theme') || 'dark';
-  }
-  function setTheme(t) {
-    root.setAttribute('data-theme', t);
-    localStorage.setItem('HT_THEME', t);
-    document.getElementById('btnTheme').textContent = t === 'dark' ? '☀️' : '🌙';
-    patchChart();
-  }
+/* ===============================
+   Chart
+================================ */
+let chart;
 
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btnTheme').onclick =
-      () => setTheme(getTheme() === 'dark' ? 'light' : 'dark');
-    document.getElementById('btnTheme').textContent =
-      getTheme() === 'dark' ? '☀️' : '🌙';
-  });
+function buildChart(entries, thresholds) {
+    const fields = [...new Set(entries.map(e=>e.field))];
+    const dates = [...new Set(entries.map(e=>e.date))].sort();
 
-  /* -------- PDF export forces light -------- */
-  window.addEventListener('load', () => {
-    document.getElementById('btnSavePDF')?.addEventListener('click', () => {
-      root.setAttribute('data-pdf-export', '1');
-      patchChart();
-      setTimeout(() => {
-        root.removeAttribute('data-pdf-export');
-        patchChart();
-      }, 2500);
-    }, true);
-  });
+    const datasets = fields.map(f => ({
+        label: f,
+        data: dates.map(d=>{
+            const e = entries.find(x=>x.field===f && x.date===d);
+            return e ? e.value : null;
+        }),
+        borderWidth: 2
+    }));
 
-  /* -------- Chart legend + axis text BLACK in light -------- */
-  function wantsLight() {
-    return root.getAttribute('data-pdf-export') === '1' ||
-           getTheme() === 'light';
-  }
+    chart && chart.destroy();
+    chart = new Chart(document.getElementById('chart'), {
+        type:'line',
+        data:{ labels:dates, datasets },
+        options:{
+            responsive:true,
+            scales:{
+                x:{ ticks:{ color:'black' }},
+                y:{ ticks:{ color:'black' }}
+            },
+            plugins:{
+                legend:{ labels:{ color:'black' }}
+            }
+        }
+    });
+}
 
-  function patchChart() {
-    const ch = window.Chart?.getChart?.('metricsChart');
-    if (!ch) return;
+/* ===============================
+   Data helpers
+================================ */
+function getAll(store){
+    return new Promise(r=>{
+        const tx=db.transaction(store,'readonly')
+            .objectStore(store)
+            .getAll();
+        tx.onsuccess=()=>r(tx.result);
+    });
+}
 
-    const light = wantsLight();
-    const text = light ? '#000000' : '#e6eefc';
-    const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
+/* ===============================
+   Actions
+================================ */
+async function refresh() {
+    const e = await getAll('entries');
+    const t = await getAll('thresholds');
+    buildChart(e,t);
+}
 
-    ch.options.plugins.legend.labels.color = text;
+async function addEntry(){
+    const date=entryDate.value;
+    const field=entryField.value.trim();
+    const value=Number(entryValue.value);
+    if(!date||!field) return;
+    const tx=db.transaction('entries','readwrite')
+        .objectStore('entries')
+        .add({date,field,value});
+    tx.onsuccess=()=>{closeModal('addModal');refresh();}
+}
 
-    for (const s of Object.values(ch.options.scales || {})) {
-      s.ticks.color = text;
-      s.title.color = text;
-      s.grid.color = grid;
-    }
+async function openFields(){
+    const e = await getAll('entries');
+    const fields=[...new Set(e.map(x=>x.field))];
+    fieldList.innerHTML='';
+    fields.forEach(f=>{
+        fieldList.innerHTML+=
+        `<label><input type="checkbox" value="${f}">${f}</label><br>`;
+    });
+    showModal('fieldModal');
+}
 
-    ch.update();
-  }
+async function deleteSelectedFields(){
+    const boxes=[...fieldList.querySelectorAll('input:checked')];
+    const tx=db.transaction('entries','readwrite').objectStore('entries');
+    boxes.forEach(b=>{
+        tx.openCursor().onsuccess=e=>{
+            const c=e.target.result;
+            if(c){ if(c.value.field===b.value) c.delete(); c.continue(); }
+        };
+    });
+    closeModal('fieldModal');
+    setTimeout(refresh,300);
+}
 
-  window.addEventListener('load', () => {
-    const t = setInterval(() => {
-      if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        patchChart();
-      }
-    }, 100);
-  });
+async function saveThreshold(){
+    const field=thField.value.trim();
+    const min=Number(thMin.value);
+    const max=Number(thMax.value);
+    const tx=db.transaction('thresholds','readwrite')
+        .objectStore('thresholds')
+        .put({field,min,max});
+    tx.onsuccess=loadThresholdList;
+}
 
-  new MutationObserver(patchChart)
-    .observe(root, { attributes: true, attributeFilter: ['data-theme','data-pdf-export'] });
+async function loadThresholdList(){
+    const t=await getAll('thresholds');
+    thresholdList.innerHTML='';
+    t.forEach(x=>{
+        thresholdList.innerHTML+=
+        `<div>${x.field}: ${x.min}–${x.max}
+         <button onclick="delTh('${x.field}')">❌</button></div>`;
+    });
+}
 
-})();
+function delTh(f){
+    db.transaction('thresholds','readwrite')
+      .objectStore('thresholds').delete(f);
+    loadThresholdList();
+    refresh();
+}
+
+/* ===============================
+   CSV / PDF
+================================ */
+async function saveCSV(){
+    const e=await getAll('entries');
+    let c='date,field,value\n'+
+    e.map(x=>`${x.date},${x.field},${x.value}`).join('\n');
+    download(c,'data.csv','text/csv');
+}
+
+function savePDF(){
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF();
+    pdf.text('Health Metrics',10,10);
+    pdf.addImage(chart.toBase64Image(),'PNG',10,20,180,80);
+    pdf.save('metrics.pdf');
+}
+
+function importCSV(){
+    csvFile.click();
+}
+
+csvFile.onchange=e=>{
+    const r=new FileReader();
+    r.onload=()=>{
+        const rows=r.result.split('\n').slice(1);
+        const os=db.transaction('entries','readwrite')
+            .objectStore('entries');
+        rows.forEach(l=>{
+            const [d,f,v]=l.split(',');
+            if(d&&f) os.add({date:d,field:f,value:Number(v)});
+        });
+        refresh();
+    };
+    r.readAsText(e.target.files[0]);
+};
+
+/* ===============================
+   UI
+================================ */
+const showModal=id=>document.getElementById(id).style.display='flex';
+const closeModal=id=>document.getElementById(id).style.display='none';
+
+btnRefresh.onclick=refresh;
+btnFields.onclick=openFields;
+btnThresholds.onclick=()=>{loadThresholdList();showModal('thresholdModal')};
+btnAdd.onclick=()=>showModal('addModal');
+btnOptions.onclick=()=>showModal('optionsModal');
+btnSaveCSV.onclick=saveCSV;
+btnSavePDF.onclick=savePDF;
+btnImportCSV.onclick=importCSV;
+
+openDB().then(refresh);
 </script>
 
 </body>
