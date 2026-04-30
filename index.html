@@ -1,240 +1,465 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Health Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1220">
-<meta name="app-version" content="1.0.0">
+  <meta charset="utf-8" />
+  <title>Health Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="app-version" content="1.0.0" />
 
-<!-- ===== Theme bootstrap (NO FLASH) ===== -->
-<script>
-(() => {
-  const saved = localStorage.getItem('HT_THEME');
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  const theme = saved || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-})();
-</script>
+  <!-- ===== Theme bootstrap (NO FLASH) ===== -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem('HT_THEME');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      window.APP_THEME = theme;
+    })();
+  </script>
 
-<!-- ===== CSS ===== -->
-<link rel="stylesheet" href="./css/base.css">
-<link rel="stylesheet" href="./css/theme-dark.css">
-<link rel="stylesheet" href="./css/theme-light.css">
-<link rel="stylesheet" href="./range-slider.css">
+  <!-- ===== CSS ===== -->
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/theme-dark.css" />
+  <link rel="stylesheet" href="./css/theme-light.css" />
+  <link rel="stylesheet" href="./range-slider.css" />
 
-<!-- ===== PWA ===== -->
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icons/icon-192.png">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <!-- ===== PWA ===== -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
-<!-- ===== Libraries ===== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <!-- ===== Libraries (must be real script tags) ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-<!-- ===== Version + Build ===== -->
-<script>
-(() => {
-  const v = document.querySelector('meta[name="app-version"]').content;
-  const last = localStorage.getItem('HT_VERSION');
-  const build = last === v ? (Number(localStorage.getItem('HT_BUILD')||0)+1) : 1;
-  localStorage.setItem('HT_VERSION', v);
-  localStorage.setItem('HT_BUILD', build);
-  window.APP_VERSION = v;
-  window.APP_BUILD = build;
-})();
-</script>
+  <!-- ===== Deterministic version + build ===== -->
+  <script>
+    (function () {
+      const v = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
+      const last = localStorage.getItem('HT_VERSION');
+      const build = (last === v) ? (Number(localStorage.getItem('HT_BUILD') || 0) + 1) : 1;
+      localStorage.setItem('HT_VERSION', v);
+      localStorage.setItem('HT_BUILD', build);
+      window.APP_VERSION = v;
+      window.APP_BUILD = build;
+    })();
+  </script>
 </head>
 
 <body>
 
-<header>
-  <div class="wrap headbar">
-    <div>
-      <h1>Health Tracker</h1>
-      <div class="small" id="appVersion"></div>
+  <!-- ================= HEADER ================= -->
+  <header>
+    <div class="wrap headbar">
+      <div>
+        <h1>Health Tracker</h1>
+        <div class="small" id="appVersion"></div>
+      </div>
+
+      <div class="install">
+        <!-- ✅ SINGLE Theme button -->
+        <button id="btnTheme" class="btn" title="Toggle light/dark theme" type="button">🌙</button>
+
+        <button id="btnInstall" class="btn" style="display:none" type="button">Install</button>
+        <button id="btnCheckUpdates" class="btn" type="button">Check for updates</button>
+        <span id="installHint" class="small"></span>
+      </div>
     </div>
-    <div class="install">
-      <!-- ✅ SINGLE theme button -->
-      <button id="btnTheme" class="btn">🌙</button>
-      <button id="btnInstall" class="btn" style="display:none">Install</button>
-      <button id="btnCheckUpdates" class="btn">Check for updates</button>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ================= TOOLBAR ================= -->
+    <div class="toolbar card">
+      <div class="row">
+        <div><label>From Date</label><input type="date" id="filterStart"></div>
+        <div><label>To Date</label><input type="date" id="filterEnd"></div>
+
+        <div>
+          <label>Chart Metrics</label>
+          <select id="chartMetrics" multiple size="4"></select>
+          <div class="small">Hold Ctrl/Cmd for multi-select</div>
+        </div>
+
+        <div>
+          <label>Axis Mode</label>
+          <select id="axisMode">
+            <option value="single">Single Y-axis</option>
+            <option value="perMetric" selected>Per-metric axes</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Show Metrics Chart</label>
+          <select id="toggleChart">
+            <option value="on" selected>On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+
+        <div>
+          <label>View</label>
+          <select id="viewMode" title="Choose which sections are visible">
+            <option value="both" selected>Both (Table + Chart)</option>
+            <option value="table">Table only</option>
+            <option value="chart">Chart only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="btnRefresh" type="button">Refresh</button>
+        <button class="btn" id="btnFields" type="button">Select Fields</button>
+        <button class="btn" id="btnThresholds" type="button">Thresholds</button>
+        <button class="btn" id="btnSaveCSV" type="button">Save CSV</button>
+        <button class="btn" id="btnSavePDF" type="button">Save PDF</button>
+
+        <button class="btn" id="btnImportCSV" type="button">Import CSV</button>
+
+        <!-- ✅ CSV input: Safari-safe for programmatic click -->
+        <input
+          type="file"
+          id="importFile"
+          accept=".csv,text/csv"
+          style="display:none"
+        />
+
+        <button class="btn ok" id="btnAdd" type="button">Add Entry</button>
+        <button class="btn warn" id="btnOptions" type="button">Options</button>
+      </div>
+    </div>
+
+    <!-- ================= KPIs ================= -->
+    <div class="kpis">
+      <div class="kpi"><div class="label">Latest Glucose (mg/dL)</div><div class="value" id="kpiGlucose">—</div><div class="trend" id="kpiGlucoseTrend"></div></div>
+      <div class="kpi"><div class="label">Latest BP (Sys/Dia)</div><div class="value" id="kpiBP">—</div><div class="trend" id="kpiBPTrend"></div></div>
+      <div class="kpi"><div class="label">Latest BMI / WHtR</div><div class="value"><span id="kpiBMI">—</span> <span class="small">/</span> <span id="kpiWHtR">—</span></div><div class="trend" id="kpiBMITrend"></div></div>
+      <div class="kpi"><div class="label">Latest SpO₂ / HR</div><div class="value"><span id="kpiSpO2">—</span> <span class="small">/</span> <span id="kpiHR">—</span></div><div class="trend" id="kpiVitalsTrend"></div></div>
+    </div>
+
+    <!-- ================= RISK ================= -->
+    <div class="card">
+      <div class="section-title"><h2>Risk Alerts</h2></div>
+      <div class="chips" id="riskChips"></div>
+    </div>
+
+    <!-- ================= ENTRIES ================= -->
+    <div class="card full-width" id="entriesCard">
+      <div class="section-title">
+        <h2>Entries</h2>
+        <div class="small">Modify or delete entries. Exports respect date range and selected fields.</div>
+      </div>
+      <div style="overflow:auto;">
+        <table id="entriesTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= CHART ================= -->
+    <div class="card full-width" id="chartCard">
+      <div class="section-title">
+        <h2>Metrics Chart</h2>
+        <div class="actions">
+          <button id="btnCollapseChart" class="btn" title="Collapse or expand chart area" type="button">Collapse</button>
+        </div>
+      </div>
+      <div id="chartPanel" style="height:320px">
+        <canvas id="metricsChart"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= UPDATE TOAST ================= -->
+  <div id="updateToast" class="toast">
+    <span>New version available.</span>
+    <button id="btnReloadNow" class="btn ok" type="button">Reload now</button>
+    <button id="btnDismissToast" class="btn" type="button">Later</button>
+  </div>
+
+  <!-- ================= MODALS (keep your existing full modal bodies) ================= -->
+
+  <!-- Add/Edit Entry Modal -->
+  <div class="modal-backdrop" id="entryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="entryModalTitle">Add Entry</h2>
+        <button class="btn" onclick="UI.closeEntry()" type="button">Close</button>
+      </div>
+
+      <!-- NOTE: Paste your full existing entry form fields here exactly as-is (IDs must match app.js) -->
+
+      <div class="modal-actions">
+        <button class="btn danger" id="btnDeleteEntry" style="display:none" type="button">Delete</button>
+        <button class="btn" id="btnSaveEntry" type="button">Save Entry</button>
+      </div>
     </div>
   </div>
-</header>
 
-<main class="wrap">
-
-<!-- ================= TOOLBAR ================= -->
-<div class="toolbar card">
-  <div class="row">
-    <div><label>From Date</label><input type="date" id="filterStart"></div>
-    <div><label>To Date</label><input type="date" id="filterEnd"></div>
-
-    <div>
-      <label>Chart Metrics</label>
-      <select id="chartMetrics" multiple size="4"></select>
-      <div class="small">Ctrl/Cmd for multi-select</div>
-    </div>
-
-    <div>
-      <label>Axis Mode</label>
-      <select id="axisMode">
-        <option value="single">Single Y-axis</option>
-        <option value="perMetric" selected>Per-metric axes</option>
-      </select>
-    </div>
-
-    <div>
-      <label>Show Metrics Chart</label>
-      <select id="toggleChart">
-        <option value="on" selected>On</option>
-        <option value="off">Off</option>
-      </select>
-    </div>
-
-    <div>
-      <label>View</label>
-      <select id="viewMode">
-        <option value="both" selected>Both</option>
-        <option value="table">Table only</option>
-        <option value="chart">Chart only</option>
-      </select>
+  <!-- Field Selection Modal -->
+  <div class="modal-backdrop" id="fieldsModal">
+    <div class="modal">
+      <div class="modal-header" style="gap:8px; align-items:center;">
+        <h2 style="flex:1">Select Fields</h2>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn ok" id="btnQuickAdd" title="Add a new entry" type="button">Add Entry</button>
+          <button class="btn danger" id="btnBulkDelete" title="Bulk remove entries" type="button">Remove Entries…</button>
+          <button class="btn" onclick="UI.closeFields()" type="button">Close</button>
+        </div>
+      </div>
+      <div class="field-grid" id="fieldsGrid"></div>
+      <div class="modal-actions">
+        <button class="btn" id="btnSaveFields" type="button">Save Fields</button>
+      </div>
     </div>
   </div>
 
-  <div class="row">
-    <button class="btn" id="btnRefresh">Refresh</button>
-    <button class="btn" id="btnFields">Select Fields</button>
-    <button class="btn" id="btnThresholds">Thresholds</button>
-    <button class="btn" id="btnSaveCSV">Save CSV</button>
-    <button class="btn" id="btnSavePDF">Save PDF</button>
-
-    <button class="btn" id="btnImportCSV">Import CSV</button>
-    <!-- ✅ Correct CSV input -->
-    <input type="file" id="importFile" accept=".csv,text/csv" style="display:none">
-
-    <button class="btn ok" id="btnAdd">Add Entry</button>
-    <button class="btn warn" id="btnOptions">Options</button>
+  <!-- Threshold Editor Modal -->
+  <div class="modal-backdrop" id="thModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Per‑Metric Thresholds &amp; Bands</h2>
+        <button class="btn" onclick="UI.closeThresholds()" type="button">Close</button>
+      </div>
+      <div id="thEditor"></div>
+      <div class="modal-actions">
+        <button class="btn ok" id="btnSaveThresholds" type="button">Save Thresholds</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- ================= CHART ================= -->
-<div class="card full-width" id="chartCard">
-  <div class="section-title">
-    <h2>Metrics Chart</h2>
-    <button id="btnCollapseChart" class="btn">Collapse</button>
+  <!-- Options Modal (✅ ONLY optTheme here) -->
+  <div class="modal-backdrop" id="optModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Options</h2>
+        <button class="btn" onclick="UI.closeOptions()" type="button">Close</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Theme</label>
+          <select id="optTheme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Autosave (IndexedDB)</label>
+          <select id="optAutosave">
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+
+        <div>
+          <label>CSV Export → Use selected fields only</label>
+          <select id="optCsvSelected">
+            <option value="yes">Yes</option>
+            <option value="no">No (export all)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>PDF Export → Include chart</label>
+          <select id="optPdfChart">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" id="btnSaveOptions" type="button">Save Options</button>
+      </div>
+    </div>
   </div>
-  <div id="chartPanel" style="height:320px">
-    <canvas id="metricsChart"></canvas>
-  </div>
-</div>
 
-</main>
+  <!-- ===== Range slider helper ===== -->
+  <script src="./range-slider.js"></script>
 
-<!-- ================= MODALS (unchanged markup OK) ================= -->
-<div class="modal-backdrop" id="fieldsModal"></div>
-<div class="modal-backdrop" id="thModal"></div>
+  <!-- ===== App (unchanged) ===== -->
+  <script src="./app.js" defer></script>
 
-<!-- ===== Scripts ===== -->
-<script src="./range-slider.js"></script>
-<script src="./app.js" defer></script>
+  <!-- ================= SINGLE helper layer (no duplicates) ================= -->
+  <script>
+    (function () {
+      const root = document.documentElement;
 
-<!-- ================= SINGLE FIX SCRIPT ================= -->
-<script>
-(() => {
-  const root = document.documentElement;
+      /* ---------- Version label + toast ---------- */
+      window.addEventListener('load', () => {
+        const el = document.getElementById('appVersion');
+        if (el) el.textContent = `Version ${window.APP_VERSION} (build ${window.APP_BUILD})`;
 
-  /* ---------- Version label ---------- */
-  window.addEventListener('load', () => {
-    document.getElementById('appVersion').textContent =
-      `Version ${APP_VERSION} (build ${APP_BUILD})`;
-  });
+        document.getElementById('btnReloadNow')?.addEventListener('click', () => location.reload());
+        document.getElementById('btnDismissToast')?.addEventListener('click', () =>
+          document.getElementById('updateToast')?.classList.remove('show')
+        );
+      });
 
-  /* ---------- Theme (single source) ---------- */
-  function getTheme() {
-    return root.getAttribute('data-theme') || 'dark';
-  }
-  function setTheme(t) {
-    root.setAttribute('data-theme', t);
-    localStorage.setItem('HT_THEME', t);
-    document.getElementById('btnTheme').textContent = t === 'dark' ? '☀️' : '🌙';
-    patchChart();
-  }
-
-  document.getElementById('btnTheme').addEventListener('click', () => {
-    setTheme(getTheme() === 'dark' ? 'light' : 'dark');
-  });
-
-  /* ---------- Import CSV fallback ---------- */
-  document.getElementById('btnImportCSV').addEventListener('click', () => {
-    document.getElementById('importFile').click();
-  });
-
-  /* ---------- Select Fields / Thresholds fallback ---------- */
-  document.getElementById('btnFields').addEventListener('click', () => {
-    window.UI?.openFields?.() ||
-    document.getElementById('fieldsModal')?.classList.add('show');
-  });
-
-  document.getElementById('btnThresholds').addEventListener('click', () => {
-    window.UI?.openThresholds?.() ||
-    document.getElementById('thModal')?.classList.add('show');
-  });
-
-  /* ---------- PDF forces light BEFORE capture ---------- */
-  document.getElementById('btnSavePDF').addEventListener('click', () => {
-    root.setAttribute('data-pdf-export', '1');
-    patchChart();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      setTimeout(() => {
-        root.removeAttribute('data-pdf-export');
-        patchChart();
-      }, 2500);
-    }));
-  }, true);
-
-  /* ---------- Chart patch: BLACK legend text ---------- */
-  function chartWantsLight() {
-    return root.getAttribute('data-pdf-export') === '1' ||
-           getTheme() === 'light';
-  }
-
-  function patchChart() {
-    const ch = window.Chart?.getChart?.('metricsChart');
-    if (!ch) return;
-
-    const light = chartWantsLight();
-    const text = light ? '#000000' : '#e6eefc';
-    const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
-
-    ch.options.plugins.legend.labels.color = text;
-
-    Object.values(ch.options.scales || {}).forEach(s => {
-      s.ticks.color = text;
-      s.title.color = text;
-      s.grid.color = grid;
-    });
-
-    ch.update();
-  }
-
-  /* ---------- Wait for chart creation ---------- */
-  window.addEventListener('load', () => {
-    const t = setInterval(() => {
-      if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        patchChart();
+      /* ---------- Theme single source (button + optTheme) ---------- */
+      function getTheme() {
+        return root.getAttribute('data-theme') || 'dark';
       }
-    }, 100);
-  });
 
-  new MutationObserver(patchChart)
-    .observe(root, { attributes:true, attributeFilter:['data-theme','data-pdf-export'] });
+      function syncThemeUI() {
+        const btn = document.getElementById('btnTheme');
+        if (btn) btn.textContent = (getTheme() === 'dark') ? '☀️' : '🌙';
+        const sel = document.getElementById('optTheme');
+        if (sel) sel.value = getTheme();
+      }
 
-})();
-</script>
+      function setTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        localStorage.setItem('HT_THEME', theme);
+        window.APP_THEME = theme;
+        syncThemeUI();
+        requestChartPatch();
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        syncThemeUI();
+
+        document.getElementById('btnTheme')?.addEventListener('click', () => {
+          setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+        });
+
+        document.getElementById('optTheme')?.addEventListener('change', (e) => {
+          setTheme(e.target.value);
+        });
+      });
+
+      /* ---------- Import CSV: guarantee picker opens ---------- */
+      window.addEventListener('load', () => {
+        const btn = document.getElementById('btnImportCSV');
+        const file = document.getElementById('importFile');
+        if (btn && file) btn.addEventListener('click', () => file.click());
+      });
+
+      /* ---------- Select Fields + Thresholds: guarantee open ---------- */
+      window.addEventListener('load', () => {
+        const btnFields = document.getElementById('btnFields');
+        const btnThresh = document.getElementById('btnThresholds');
+
+        btnFields?.addEventListener('click', () => {
+          // If app.js opens it, we won't double-open because show will already be present
+          setTimeout(() => {
+            const modal = document.getElementById('fieldsModal');
+            if (modal?.classList.contains('show')) return;
+            if (window.UI?.openFields) window.UI.openFields();
+            else modal?.classList.add('show');
+          }, 0);
+        });
+
+        btnThresh?.addEventListener('click', () => {
+          setTimeout(() => {
+            const modal = document.getElementById('thModal');
+            if (modal?.classList.contains('show')) return;
+            if (window.UI?.openThresholds) window.UI.openThresholds();
+            else modal?.classList.add('show');
+          }, 0);
+        });
+      });
+
+      /* ---------- PDF export: force chart legend/axes BLACK (even in dark theme) ---------- */
+      function chartWantsPdf() {
+        return root.getAttribute('data-pdf-export') === '1';
+      }
+
+      function patchChartNow() {
+        const ch = window.Chart?.getChart?.('metricsChart');
+        if (!ch) return;
+
+        const pdf = chartWantsPdf();
+        const lightTheme = getTheme() === 'light';
+
+        // Requirement: PDF text black even in dark theme
+        const text = pdf ? '#000000' : (lightTheme ? '#000000' : '#e6eefc');
+        const grid = pdf ? 'rgba(0,0,0,0.12)' : (lightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)');
+
+        ch.options.plugins = ch.options.plugins || {};
+        ch.options.plugins.legend = ch.options.plugins.legend || {};
+        ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
+        ch.options.plugins.legend.labels.color = text;
+
+        if (ch.options.scales) {
+          for (const key of Object.keys(ch.options.scales)) {
+            const s = ch.options.scales[key];
+            if (!s) continue;
+            s.ticks = s.ticks || {};
+            s.title = s.title || {};
+            s.grid  = s.grid  || {};
+            s.ticks.color = text;
+            s.title.color = text;
+            s.grid.color  = grid;
+          }
+        }
+
+        // Force a redraw immediately (helps PDF capture timing)
+        try {
+          ch.update('none');
+          ch.render();
+        } catch {
+          ch.update();
+        }
+      }
+
+      let pending = false;
+      function requestChartPatch() {
+        if (pending) return;
+        pending = true;
+        setTimeout(() => {
+          pending = false;
+          patchChartNow();
+        }, 50);
+      }
+
+      // Patch once chart exists
+      window.addEventListener('load', () => {
+        let tries = 0;
+        const t = setInterval(() => {
+          tries++;
+          if (window.Chart?.getChart?.('metricsChart')) {
+            clearInterval(t);
+            patchChartNow();
+          }
+          if (tries > 250) clearInterval(t);
+        }, 100);
+      });
+
+      // Patch on theme changes / pdf-export toggles
+      new MutationObserver(requestChartPatch).observe(root, {
+        attributes: true,
+        attributeFilter: ['data-theme', 'data-pdf-export']
+      });
+
+      // Capture-phase hook BEFORE app.js PDF handler
+      window.addEventListener('load', () => {
+        const btn = document.getElementById('btnSavePDF');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+          root.setAttribute('data-pdf-export', '1');
+          patchChartNow();
+
+          // ensure at least one paint before capture
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            setTimeout(() => {
+              root.removeAttribute('data-pdf-export');
+              patchChartNow();
+            }, 3000);
+          }));
+        }, true);
+      });
+
+    })();
+  </script>
 
 </body>
 </html>
+``
