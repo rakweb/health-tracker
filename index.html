@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1220" />
   <meta name="app-version" content="1.0.0" />
 
-  <!-- ===== Theme bootstrap (NO FLASH) ===== -->
+  <!-- ===== Theme bootstrap (no flash) ===== -->
   <script>
     (function () {
       const saved = localStorage.getItem('HT_THEME');
@@ -16,7 +16,6 @@
         window.matchMedia('(prefers-color-scheme: dark)').matches;
       const theme = saved || (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
-      window.APP_THEME = theme;
     })();
   </script>
 
@@ -36,14 +35,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <!-- ===== Version + Build ===== -->
+  <!-- ===== Version + build ===== -->
   <script>
     (function () {
       const v = document.querySelector('meta[name="app-version"]').content;
       const last = localStorage.getItem('HT_VERSION');
-      const build = last === v
-        ? Number(localStorage.getItem('HT_BUILD') || 0) + 1
-        : 1;
+      const build = last === v ? (Number(localStorage.getItem('HT_BUILD') || 0) + 1) : 1;
       localStorage.setItem('HT_VERSION', v);
       localStorage.setItem('HT_BUILD', build);
       window.APP_VERSION = v;
@@ -61,9 +58,7 @@
       <div class="small" id="appVersion"></div>
     </div>
     <div class="install">
-      <!-- ✅ SINGLE theme button -->
       <button id="btnTheme" class="btn" type="button">🌙</button>
-      <button id="btnInstall" class="btn" style="display:none" type="button">Install</button>
       <button id="btnCheckUpdates" class="btn" type="button">Check for updates</button>
     </div>
   </div>
@@ -74,102 +69,120 @@
   <!-- ================= TOOLBAR ================= -->
   <div class="toolbar card">
     <div class="row">
-      <div><label>From Date</label><input type="date" id="filterStart" /></div>
-      <div><label>To Date</label><input type="date" id="filterEnd" /></div>
-
-      <div>
-        <label>Chart Metrics</label>
-        <select id="chartMetrics" multiple size="4"></select>
-        <div class="small">Hold Ctrl/Cmd for multi‑select</div>
-      </div>
-
-      <div>
-        <label>Axis Mode</label>
-        <select id="axisMode">
-          <option value="single">Single Y‑axis</option>
-          <option value="perMetric" selected>Per‑metric axes</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Show Metrics Chart</label>
-        <select id="toggleChart">
-          <option value="on" selected>On</option>
-          <option value="off">Off</option>
-        </select>
-      </div>
-
-      <div>
-        <label>View</label>
-        <select id="viewMode">
-          <option value="both" selected>Both</option>
-          <option value="table">Table only</option>
-          <option value="chart">Chart only</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="row">
-      <button class="btn" id="btnRefresh" type="button">Refresh</button>
       <button class="btn" id="btnFields" type="button">Select Fields</button>
       <button class="btn" id="btnThresholds" type="button">Thresholds</button>
-      <button class="btn" id="btnSaveCSV" type="button">Save CSV</button>
-      <button class="btn" id="btnSavePDF" type="button">Save PDF</button>
-
-      <button class="btn" id="btnImportCSV" type="button">Import CSV</button>
-      <input
-        type="file"
-        id="importFile"
-        accept=".csv,text/csv"
-        style="display:none"
-      />
-
       <button class="btn ok" id="btnAdd" type="button">Add Entry</button>
       <button class="btn warn" id="btnOptions" type="button">Options</button>
     </div>
   </div>
 
-  <!-- ================= CHART ================= -->
-  <div class="card full-width" id="chartCard">
+  <!-- ================= ENTRIES TABLE (CREATED IN HTML) ================= -->
+  <div class="card full-width">
     <div class="section-title">
-      <h2>Metrics Chart</h2>
-      <button id="btnCollapseChart" class="btn" type="button">Collapse</button>
+      <h2>Entries</h2>
     </div>
-    <div id="chartPanel" style="height:320px">
-      <canvas id="metricsChart"></canvas>
+
+    <div style="overflow:auto;">
+      <table id="entriesTable">
+        <thead id="tableHead">
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="5" class="small">No entries yet</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
 </main>
 
 <!-- ================= MODALS ================= -->
-<div class="modal-backdrop" id="fieldsModal"></div>
-<div class="modal-backdrop" id="thModal"></div>
-<div class="modal-backdrop" id="optModal"></div>
 
-<!-- ===== Scripts ===== -->
-<script src="./range-slider.js"></script>
+<div class="modal-backdrop" id="entryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Entry</h2>
+      <button class="btn" data-close="entryModal">Close</button>
+    </div>
+    <div class="small">Entry form will be provided by app.js</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="fieldsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Select Fields</h2>
+      <button class="btn" data-close="fieldsModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="thModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Thresholds</h2>
+      <button class="btn" data-close="thModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="optModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Options</h2>
+      <button class="btn" data-close="optModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== App script (will be fixed later) ===== -->
 <script src="./app.js" defer></script>
 
-<!-- ===== Minimal glue (safe only) ===== -->
+<!-- =====================================================
+     UI SHIM — enables UI BEFORE app.js is fixed
+     ===================================================== -->
 <script>
+(function () {
+  function show(id) {
+    document.getElementById(id)?.classList.add('show');
+  }
+  function hide(id) {
+    document.getElementById(id)?.classList.remove('show');
+  }
+
   window.addEventListener('load', () => {
-    const el = document.getElementById('appVersion');
-    if (el) el.textContent = `Version ${APP_VERSION} (build ${APP_BUILD})`;
+    // Version label
+    const v = document.getElementById('appVersion');
+    if (v) v.textContent = `Version ${APP_VERSION} (build ${APP_BUILD})`;
 
-    // Import CSV fallback (safe)
-    document.getElementById('btnImportCSV')?.addEventListener('click', () => {
-      document.getElementById('importFile')?.click();
-    });
-
-    // Theme toggle (simple, no chart hacks)
+    // Theme toggle
     document.getElementById('btnTheme')?.addEventListener('click', () => {
       const root = document.documentElement;
       const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       localStorage.setItem('HT_THEME', next);
     });
+
+    // Button wiring (independent of app.js)
+    document.getElementById('btnFields')?.addEventListener('click', () => show('fieldsModal'));
+    document.getElementById('btnThresholds')?.addEventListener('click', () => show('thModal'));
+    document.getElementById('btnAdd')?.addEventListener('click', () => show('entryModal'));
+    document.getElementById('btnOptions')?.addEventListener('click', () => show('optModal'));
+
+    // Close buttons
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => hide(btn.getAttribute('data-close')));
+    });
   });
+})();
 </script>
 
 </body>
