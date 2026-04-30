@@ -1,54 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Health Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b1220" />
-  <meta name="app-version" content="1.0.0" />
+<meta charset="utf-8">
+<title>Health Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<meta name="app-version" content="1.0.0">
 
-  <!-- ===== Theme bootstrap (NO FLASH) ===== -->
-  <script>
-    (() => {
-      const saved = localStorage.getItem('HT_THEME');
-      const prefersDark = window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      window.APP_THEME = theme;
-    })();
-  </script>
+<!-- ===== Theme bootstrap (NO FLASH) ===== -->
+<script>
+(() => {
+  const saved = localStorage.getItem('HT_THEME');
+  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 
-  <!-- ===== CSS ===== -->
-  <link rel="stylesheet" href="./css/base.css" />
-  <link rel="stylesheet" href="./css/theme-dark.css" />
-  <link rel="stylesheet" href="./css/theme-light.css" />
-  <link rel="stylesheet" href="./range-slider.css" />
+<!-- ===== CSS ===== -->
+<link rel="stylesheet" href="./css/base.css">
+<link rel="stylesheet" href="./css/theme-dark.css">
+<link rel="stylesheet" href="./css/theme-light.css">
+<link rel="stylesheet" href="./range-slider.css">
 
-  <!-- ===== PWA ===== -->
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<!-- ===== PWA ===== -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 
-  <!-- ===== Libraries ===== -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+<!-- ===== Libraries ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <!-- ===== Deterministic version + build ===== -->
-  <script>
-    (() => {
-      const version = document.querySelector('meta[name="app-version"]').content;
-      const last = localStorage.getItem('HT_VERSION');
-      const build = last === version
-        ? Number(localStorage.getItem('HT_BUILD') || 0) + 1
-        : 1;
-      localStorage.setItem('HT_VERSION', version);
-      localStorage.setItem('HT_BUILD', build);
-      window.APP_VERSION = version;
-      window.APP_BUILD = build;
-    })();
-  </script>
+<!-- ===== Version + Build ===== -->
+<script>
+(() => {
+  const v = document.querySelector('meta[name="app-version"]').content;
+  const last = localStorage.getItem('HT_VERSION');
+  const build = last === v ? (Number(localStorage.getItem('HT_BUILD')||0)+1) : 1;
+  localStorage.setItem('HT_VERSION', v);
+  localStorage.setItem('HT_BUILD', build);
+  window.APP_VERSION = v;
+  window.APP_BUILD = build;
+})();
+</script>
 </head>
 
 <body>
@@ -61,7 +57,7 @@
     </div>
     <div class="install">
       <!-- ✅ SINGLE theme button -->
-      <button id="btnTheme" class="btn" title="Toggle light/dark">🌙</button>
+      <button id="btnTheme" class="btn">🌙</button>
       <button id="btnInstall" class="btn" style="display:none">Install</button>
       <button id="btnCheckUpdates" class="btn">Check for updates</button>
     </div>
@@ -70,136 +66,93 @@
 
 <main class="wrap">
 
-  <!-- ================= TOOLBAR ================= -->
-  <div class="toolbar card">
-    <div class="row">
-      <div><label>From Date</label><input type="date" id="filterStart"></div>
-      <div><label>To Date</label><input type="date" id="filterEnd"></div>
+<!-- ================= TOOLBAR ================= -->
+<div class="toolbar card">
+  <div class="row">
+    <div><label>From Date</label><input type="date" id="filterStart"></div>
+    <div><label>To Date</label><input type="date" id="filterEnd"></div>
 
-      <div>
-        <label>Chart Metrics</label>
-        <select id="chartMetrics" multiple size="4"></select>
-        <div class="small">Hold Ctrl/Cmd for multi-select</div>
-      </div>
-
-      <div>
-        <label>Axis Mode</label>
-        <select id="axisMode">
-          <option value="single">Single Y-axis</option>
-          <option value="perMetric" selected>Per-metric axes</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Show Metrics Chart</label>
-        <select id="toggleChart">
-          <option value="on" selected>On</option>
-          <option value="off">Off</option>
-        </select>
-      </div>
-
-      <div>
-        <label>View</label>
-        <select id="viewMode">
-          <option value="both" selected>Both</option>
-          <option value="table">Table only</option>
-          <option value="chart">Chart only</option>
-        </select>
-      </div>
+    <div>
+      <label>Chart Metrics</label>
+      <select id="chartMetrics" multiple size="4"></select>
+      <div class="small">Ctrl/Cmd for multi-select</div>
     </div>
 
-    <div class="row">
-      <button class="btn" id="btnRefresh">Refresh</button>
-      <button class="btn" id="btnFields">Select Fields</button>
-      <button class="btn" id="btnThresholds">Thresholds</button>
-      <button class="btn" id="btnSaveCSV">Save CSV</button>
-      <button class="btn" id="btnSavePDF">Save PDF</button>
+    <div>
+      <label>Axis Mode</label>
+      <select id="axisMode">
+        <option value="single">Single Y-axis</option>
+        <option value="perMetric" selected>Per-metric axes</option>
+      </select>
+    </div>
 
-      <button class="btn" id="btnImportCSV">Import CSV</button>
-      <!-- ✅ FIXED CSV input -->
-      <input type="file"
-             id="importFile"
-             accept=".csv,text/csv"
-             style="display:none" />
+    <div>
+      <label>Show Metrics Chart</label>
+      <select id="toggleChart">
+        <option value="on" selected>On</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
 
-      <button class="btn ok" id="btnAdd">Add Entry</button>
-      <button class="btn warn" id="btnOptions">Options</button>
+    <div>
+      <label>View</label>
+      <select id="viewMode">
+        <option value="both" selected>Both</option>
+        <option value="table">Table only</option>
+        <option value="chart">Chart only</option>
+      </select>
     </div>
   </div>
 
-  <!-- ================= KPIs / RISK / ENTRIES / CHART ================= -->
-  <!-- (unchanged markup from your existing file) -->
+  <div class="row">
+    <button class="btn" id="btnRefresh">Refresh</button>
+    <button class="btn" id="btnFields">Select Fields</button>
+    <button class="btn" id="btnThresholds">Thresholds</button>
+    <button class="btn" id="btnSaveCSV">Save CSV</button>
+    <button class="btn" id="btnSavePDF">Save PDF</button>
 
-  <div class="card full-width" id="chartCard">
-    <div class="section-title">
-      <h2>Metrics Chart</h2>
-      <button id="btnCollapseChart" class="btn">Collapse</button>
-    </div>
-    <div id="chartPanel" style="height:320px">
-      <canvas id="metricsChart"></canvas>
-    </div>
+    <button class="btn" id="btnImportCSV">Import CSV</button>
+    <!-- ✅ Correct CSV input -->
+    <input type="file" id="importFile" accept=".csv,text/csv" style="display:none">
+
+    <button class="btn ok" id="btnAdd">Add Entry</button>
+    <button class="btn warn" id="btnOptions">Options</button>
   </div>
+</div>
+
+<!-- ================= CHART ================= -->
+<div class="card full-width" id="chartCard">
+  <div class="section-title">
+    <h2>Metrics Chart</h2>
+    <button id="btnCollapseChart" class="btn">Collapse</button>
+  </div>
+  <div id="chartPanel" style="height:320px">
+    <canvas id="metricsChart"></canvas>
+  </div>
+</div>
 
 </main>
 
-<!-- ===== Range slider helper ===== -->
-<script src="./range-slider.js"></script>
+<!-- ================= MODALS (unchanged markup OK) ================= -->
+<div class="modal-backdrop" id="fieldsModal"></div>
+<div class="modal-backdrop" id="thModal"></div>
 
-<!-- ===== App logic (unchanged) ===== -->
+<!-- ===== Scripts ===== -->
+<script src="./range-slider.js"></script>
 <script src="./app.js" defer></script>
 
+<!-- ================= SINGLE FIX SCRIPT ================= -->
 <script>
 (() => {
   const root = document.documentElement;
 
-      // ✅ PURE BLACK for PDF + light mode
-    const text = light ? '#000000' : '#e6eefc';
-    const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
-
-    // Legend
-    ch.options.plugins.legend.labels.color = text;
-
-    // Axes
-    Object.values(ch.options.scales || {}).forEach(s => {
-      s.ticks.color = text;
-      s.title.color = text;
-      s.grid.color  = grid;
-    });
-
-    ch.update();
-  }
-
-   // ✅ CRITICAL: force light BEFORE PDF capture
+  /* ---------- Version label ---------- */
   window.addEventListener('load', () => {
-    const btn = document.getElementById('btnSavePDF');
-    if (!btn) return;
-
-       // allow one paint before jsPDF runs
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        setTimeout(() => {
-          root.removeAttribute('data-pdf-export');
-          patchChart();
-        }, 2500);
-      }));
-    }, true);
+    document.getElementById('appVersion').textContent =
+      `Version ${APP_VERSION} (build ${APP_BUILD})`;
   });
 
-})();
-</script>
-``
-
-<!-- ================= SINGLE helper script ================= -->
-<script>
-(() => {
-  const root = document.documentElement;
-
-  /* -------- Version label -------- */
-  window.addEventListener('load', () => {
-    const el = document.getElementById('appVersion');
-    if (el) el.textContent = `Version ${APP_VERSION} (build ${APP_BUILD})`;
-  });
-
-  /* -------- Theme control (single source) -------- */
+  /* ---------- Theme (single source) ---------- */
   function getTheme() {
     return root.getAttribute('data-theme') || 'dark';
   }
@@ -210,27 +163,40 @@
     patchChart();
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btnTheme').onclick =
-      () => setTheme(getTheme() === 'dark' ? 'light' : 'dark');
-    document.getElementById('btnTheme').textContent =
-      getTheme() === 'dark' ? '☀️' : '🌙';
+  document.getElementById('btnTheme').addEventListener('click', () => {
+    setTheme(getTheme() === 'dark' ? 'light' : 'dark');
   });
 
-  /* -------- PDF export forces light -------- */
-  window.addEventListener('load', () => {
-    document.getElementById('btnSavePDF')?.addEventListener('click', () => {
-      root.setAttribute('data-pdf-export', '1');
-      patchChart();
+  /* ---------- Import CSV fallback ---------- */
+  document.getElementById('btnImportCSV').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+
+  /* ---------- Select Fields / Thresholds fallback ---------- */
+  document.getElementById('btnFields').addEventListener('click', () => {
+    window.UI?.openFields?.() ||
+    document.getElementById('fieldsModal')?.classList.add('show');
+  });
+
+  document.getElementById('btnThresholds').addEventListener('click', () => {
+    window.UI?.openThresholds?.() ||
+    document.getElementById('thModal')?.classList.add('show');
+  });
+
+  /* ---------- PDF forces light BEFORE capture ---------- */
+  document.getElementById('btnSavePDF').addEventListener('click', () => {
+    root.setAttribute('data-pdf-export', '1');
+    patchChart();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       setTimeout(() => {
         root.removeAttribute('data-pdf-export');
         patchChart();
       }, 2500);
-    }, true);
-  });
+    }));
+  }, true);
 
-  /* -------- Chart legend + axis text BLACK in light -------- */
-  function wantsLight() {
+  /* ---------- Chart patch: BLACK legend text ---------- */
+  function chartWantsLight() {
     return root.getAttribute('data-pdf-export') === '1' ||
            getTheme() === 'light';
   }
@@ -239,21 +205,22 @@
     const ch = window.Chart?.getChart?.('metricsChart');
     if (!ch) return;
 
-    const light = wantsLight();
+    const light = chartWantsLight();
     const text = light ? '#000000' : '#e6eefc';
     const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
 
     ch.options.plugins.legend.labels.color = text;
 
-    for (const s of Object.values(ch.options.scales || {})) {
+    Object.values(ch.options.scales || {}).forEach(s => {
       s.ticks.color = text;
       s.title.color = text;
       s.grid.color = grid;
-    }
+    });
 
     ch.update();
   }
 
+  /* ---------- Wait for chart creation ---------- */
   window.addEventListener('load', () => {
     const t = setInterval(() => {
       if (window.Chart?.getChart?.('metricsChart')) {
@@ -264,7 +231,7 @@
   });
 
   new MutationObserver(patchChart)
-    .observe(root, { attributes: true, attributeFilter: ['data-theme','data-pdf-export'] });
+    .observe(root, { attributes:true, attributeFilter:['data-theme','data-pdf-export'] });
 
 })();
 </script>
