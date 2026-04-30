@@ -1,289 +1,306 @@
-'use strict';
+'use strict';  Health Tracker – Stable Core app.js
+  ✅ IndexedDB
+  ✅ Table creation
+  ✅ Chart.js integration (date-only x-axis)
+  ✅ Threshold editor
+  ✅ Button wiring
+  ✅ Global UI / Actions
+*/
 
-/* =============================================================================
-   Health Tracker — app.js (RECODED, STABLE)
-   ============================================================================= */
+(() => {
 
-/* -----------------------------------------------------------------------------
-   Utilities
------------------------------------------------------------------------------ */
-const $ = id => document.getElementById(id);
-const $$ = sel => document.querySelector(sel);
-const $$$ = sel => Array.from(document.querySelectorAll(sel));
+  /* ============================================================
+     UTILITIES
+     ============================================================ */
+  const $ = id => document.getElementById(id);
 
-const Util = {
-  isoDate(d) {
-    if (!d) return null;
-    const dt = (d instanceof Date) ? d : new Date(d);
-    return isNaN(dt) ? null : dt.toISOString().slice(0, 10);
-  },
-  fmt(n, dp = 0) {
-    return (n == null || isNaN(n)) ? '—' : Number(n).toFixed(dp);
-  },
-  inRange(date, start, end) {
-    if (!date) return false;
-    const d = new Date(`${date}T00:00`);
-    if (start && d < new Date(`${start}T00:00`)) return false;
-    if (end && d > new Date(`${end}T23:59`)) return false;
-    return true;
-  }
-};
+  const todayISO = () => new Date().toISOString().slice(0, 10);
 
-/* -----------------------------------------------------------------------------
-   Constants
------------------------------------------------------------------------------ */
-const METRICS = [
-  { key: 'glucose', label: 'Glucose (mg/dL)' },
-  { key: 'sys', label: 'Systolic' },
-  { key: 'dia', label: 'Diastolic' },
-  { key: 'spo2', label: 'SpO₂ (%)' },
-  { key: 'hr', label: 'Heart Rate' },
-  { key: 'weightLbs', label: 'Weight (lbs)' },
-  { key: 'sleep', label: 'Sleep (hrs)' },
-  { key: 'pain', label: 'Pain' },
-  { key: 'symptoms', label: 'Symptoms' }
-];
+  /* ============================================================
+     METRICS
+     ============================================================ */
+  const METRICS = [
+    { key: 'glucose', label: 'Glucose (mg/dL)' },
+    { key: 'sys', label: 'Systolic (mmHg)' },
+    { key: 'dia', label: 'Diastolic (mmHg)' },
+    { key: 'spo2', label: 'SpO₂ (%)' },
+    { key: 'hr', label: 'Heart Rate (bpm)' },
+    { key: 'weightLbs', label: 'Weight (lbs)' },
+    { key: 'sleep', label: 'Sleep (hrs)' },
+    { key: 'steps', label: 'Steps' },
+    { key: 'pain', label: 'Pain (0–10)' },
+    { key: 'symptoms', label: 'Symptoms (0–10)' },
+    { key: 'comments', label: 'Comments' }
+  ];
 
-const DEFAULT_FIELDS = [
-  'date', 'time',
-  'glucose', 'sys', 'dia', 'spo2', 'hr',
-  'weightLbs', 'sleep', 'pain', 'symptoms'
-];
+  const DEFAULT_FIELDS = [
+    'date', 'time',
+    'glucose', 'sys', 'dia', 'spo2', 'hr',
+    'weightLbs', 'sleep', 'steps', 'pain', 'symptoms'
+  ];
 
-/* -----------------------------------------------------------------------------
-   State
------------------------------------------------------------------------------ */
-const State = {
-  entries: [],
-  fieldsVisible: new Set(DEFAULT_FIELDS),
-  thresholds: {},
-  chart: null,
-  ui: {
-    view: 'both',
-    chartEnabled: true
-  }
-};
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const State = {
+    entries: [],
+    fieldsVisible: new Set(DEFAULT_FIELDS),
+    editId: null,
+    thresholds: {
+      glucose: { low: 70, high: 180 },
+      sys: { low: 90, high: 140 },
+      dia: { low: 60, high: 90 },
+      spo2: { low: 92, high: 100 },
+      hr: { low: 45, high: 120 }
+    }
+  };
 
-/* -----------------------------------------------------------------------------
-   IndexedDB
------------------------------------------------------------------------------ */
-const DB = {
-  db: null,
+  /* ============================================================
+     INDEXED DB
+     ============================================================ */
+  const DB = {
+    db: null,
 
-  async open() {
-    if (!('indexedDB' in window)) return;
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open('health-tracker-db', 1);
+    open() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('health-tracker-db', 1);
 
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('entries')) {
-          db.createObjectStore('entries', {
-            keyPath: 'id',
-            autoIncrement: true
-          });
-        }
-      };
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('entries')) {
+            db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
+          }
+        };
 
-      req.onsuccess = () => {
-        DB.db = req.result;
-        resolve();
-      };
-      req.onerror = () => reject(req.error);
-    });
-  },
+        req.onsuccess = () => {
+          DB.db = req.result;
+          resolve();
+        };
+        req.onerror = () => reject(req.error);
+      });
+    },
 
-  async all() {
-    if (!DB.db) return [];
-    return new Promise(res => {
-      const tx = DB.db.transaction('entries', 'readonly');
-      const req = tx.objectStore('entries').getAll();
-      req.onsuccess = () => res(req.result || []);
-    });
-  },
+    getAll() {
+      return new Promise(resolve => {
+        const tx = DB.db.transaction('entries', 'readonly');
+        const req = tx.objectStore('entries').getAll();
+        req.onsuccess = () => resolve(req.result || []);
+      });
+    },
 
-  async put(entry) {
-    if (!DB.db) return;
-    return new Promise(res => {
-      const tx = DB.db.transaction('entries', 'readwrite');
-      tx.objectStore('entries').put(entry);
-      tx.oncomplete = () => res();
-    });
-  },
+    save(entry) {
+      return new Promise(resolve => {
+        const tx = DB.db.transaction('entries', 'readwrite');
+        tx.objectStore('entries').put(entry);
+        tx.oncomplete = resolve;
+      });
+    },
 
-  async del(id) {
-    if (!DB.db) return;
-    return new Promise(res => {
-      const tx = DB.db.transaction('entries', 'readwrite');
-      tx.objectStore('entries').delete(id);
-      tx.oncomplete = () => res();
-    });
-  }
-};
+    delete(id) {
+      return new Promise(resolve => {
+        const tx = DB.db.transaction('entries', 'readwrite');
+        tx.objectStore('entries').delete(id);
+        tx.oncomplete = resolve;
+      });
+    }
+  };
 
-/* -----------------------------------------------------------------------------
-   Table Rendering (ALWAYS EXISTS)
------------------------------------------------------------------------------ */
-function renderTable() {
-  const head = $('tableHead');
-  const body = $('tableBody');
+  /* ============================================================
+     UI
+     ============================================================ */
+  const UI = {
+    chart: null,
 
-  head.innerHTML = '';
-  body.innerHTML = '';
+    /* ---------- TABLE ---------- */
+    buildTable() {
+      const head = $('tableHead');
+      const body = $('tableBody');
+      if (!head || !body) return;
 
-  const trH = document.createElement('tr');
+      head.innerHTML = '';
+      body.innerHTML = '';
 
-  [...State.fieldsVisible].forEach(f => {
-    const th = document.createElement('th');
-    th.textContent = f === 'date' ? 'Date'
-      : f === 'time' ? 'Time'
-      : (METRICS.find(m => m.key === f)?.label || f);
-    trH.appendChild(th);
-  });
-  trH.appendChild(document.createElement('th')).textContent = 'Actions';
-  head.appendChild(trH);
-
-  const start = $('filterStart')?.value;
-  const end = $('filterEnd')?.value;
-
-  State.entries
-    .filter(e => Util.inRange(e.date, start, end))
-    .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
-    .forEach(e => {
       const tr = document.createElement('tr');
-
-      [...State.fieldsVisible].forEach(f => {
-        const td = document.createElement('td');
-        td.textContent = e[f] ?? '';
-        tr.appendChild(td);
+      [...State.fieldsVisible].forEach(k => {
+        const th = document.createElement('th');
+        th.textContent =
+          k === 'date' ? 'Date' :
+          k === 'time' ? 'Time' :
+          (METRICS.find(m => m.key === k)?.label || k);
+        tr.appendChild(th);
       });
 
-      const actions = document.createElement('td');
-      const del = document.createElement('button');
-      del.className = 'btn danger';
-      del.textContent = 'Delete';
-      del.onclick = async () => {
-        await DB.del(e.id);
-        await refresh();
+      const thA = document.createElement('th');
+      thA.textContent = 'Actions';
+      tr.appendChild(thA);
+      head.appendChild(tr);
+
+      if (!State.entries.length) {
+        const tr0 = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = tr.children.length;
+        td.textContent = 'No entries yet';
+        td.className = 'small';
+        tr0.appendChild(td);
+        body.appendChild(tr0);
+        return;
+      }
+
+      State.entries.forEach(e => {
+        const tr = document.createElement('tr');
+        [...State.fieldsVisible].forEach(k => {
+          const td = document.createElement('td');
+          td.textContent = e[k] ?? '';
+          tr.appendChild(td);
+        });
+
+        const tdA = document.createElement('td');
+        const btnE = document.createElement('button');
+        btnE.className = 'btn';
+        btnE.textContent = 'Edit';
+        btnE.onclick = () => UI.openEntry(e.id);
+
+        const btnD = document.createElement('button');
+        btnD.className = 'btn danger';
+        btnD.textContent = 'Delete';
+        btnD.onclick = async () => {
+          await DB.delete(e.id);
+          Actions.refresh();
+        };
+
+        tdA.append(btnE, btnD);
+        tr.appendChild(tdA);
+        body.appendChild(tr);
+      });
+    },
+
+    /* ---------- MODALS ---------- */
+    openEntry(id = null) {
+      State.editId = id;
+      $('entryModal')?.classList.add('show');
+      $('f_date').value = todayISO();
+      $('f_time').value = new Date().toTimeString().slice(0,5);
+    },
+    closeEntry() { $('entryModal')?.classList.remove('show'); },
+
+    openFields() { $('fieldsModal')?.classList.add('show'); },
+    closeFields() { $('fieldsModal')?.classList.remove('show'); },
+
+    openThresholds() {
+      $('thModal')?.classList.add('show');
+      const host = $('thEditor');
+      if (!host) return;
+      host.innerHTML = '';
+
+      Object.keys(State.thresholds).forEach(k => {
+        const t = State.thresholds[k];
+        host.insertAdjacentHTML('beforeend', `
+          <div class="card">
+            <h2>${k.toUpperCase()}</h2>
+            <div class="row">
+              <div><label>Low</label><input id="th_${k}_low" type="number" value="${t.low}"></div>
+              <div><label>High</label><input id="th_${k}_high" type="number" value="${t.high}"></div>
+            </div>
+          </div>
+        `);
+      });
+    },
+    closeThresholds() { $('thModal')?.classList.remove('show'); },
+
+    openOptions() { $('optModal')?.classList.add('show'); },
+    closeOptions() { $('optModal')?.classList.remove('show'); },
+
+    /* ---------- CHART ---------- */
+    refreshChart() {
+      if (!window.Chart) return;
+      const canvas = $('metricsChart');
+      if (!canvas) return;
+
+      if (UI.chart) UI.chart.destroy();
+
+      const labels = State.entries.map(e => e.date);
+      const datasets = ['glucose','sys','dia','spo2','hr']
+        .map((k,i) => ({
+          label: k,
+          data: State.entries.map(e => e[k] ?? null),
+          borderColor: ['#60a5fa','#34d399','#f87171','#a78bfa','#f59e0b'][i],
+          tension: 0.25
+        }));
+
+      UI.chart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { ticks: { callback: v => labels[v] } }
+          }
+        }
+      });
+    }
+  };
+
+  /* ============================================================
+     ACTIONS
+     ============================================================ */
+  const Actions = {
+    async init() {
+      await DB.open();
+      State.entries = await DB.getAll();
+      UI.buildTable();
+      UI.refreshChart();
+    },
+
+    async refresh() {
+      State.entries = await DB.getAll();
+      UI.buildTable();
+      UI.refreshChart();
+    },
+
+    async saveEntry() {
+      const entry = {
+        id: State.editId ?? undefined,
+        date: $('f_date').value,
+        time: $('f_time').value,
+        glucose: Number($('f_glucose')?.value || null)
       };
+      await DB.save(entry);
+      UI.closeEntry();
+      Actions.refresh();
+    },
 
-      actions.appendChild(del);
-      tr.appendChild(actions);
-      body.appendChild(tr);
-    });
-}
+    saveThresholds() {
+      Object.keys(State.thresholds).forEach(k => {
+        State.thresholds[k].low = Number($(`th_${k}_low`).value);
+        State.thresholds[k].high = Number($(`th_${k}_high`).value);
+      });
+      UI.closeThresholds();
+    }
+  };
 
-/* -----------------------------------------------------------------------------
-   Chart.js (DATE‑ONLY X‑AXIS)
------------------------------------------------------------------------------ */
-function renderChart() {
-  if (!State.ui.chartEnabled) return;
+  /* ============================================================
+     WIRING
+     ============================================================ */
+  function bind() {
+    $('btnAdd')?.addEventListener('click', () => UI.openEntry());
+    $('btnFields')?.addEventListener('click', UI.openFields);
+    $('btnThresholds')?.addEventListener('click', UI.openThresholds);
+    $('btnOptions')?.addEventListener('click', UI.openOptions);
 
-  if (State.chart) {
-    State.chart.destroy();
-    State.chart = null;
+    $('btnSaveEntry')?.addEventListener('click', Actions.saveEntry);
+    $('btnSaveThresholds')?.addEventListener('click', Actions.saveThresholds);
   }
 
-  const ctx = $('metricsChart')?.getContext('2d');
-  if (!ctx) return;
-
-  const metrics = [...$('chartMetrics').selectedOptions].map(o => o.value);
-  if (!metrics.length) return;
-
-  const rows = State.entries.slice().sort((a, b) => a.date.localeCompare(b.date));
-  const labels = rows.map(r => r.date); // ✅ DATE ONLY
-
-  const colors = ['#60a5fa', '#34d399', '#f59e0b', '#f472b6'];
-
-  const datasets = metrics.map((m, i) => ({
-    label: METRICS.find(x => x.key === m)?.label || m,
-    data: rows.map(r => r[m] ?? null),
-    borderColor: colors[i % colors.length],
-    tension: .25,
-    spanGaps: true
-  }));
-
-  State.chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          type: 'category',           // ✅ no time adapter
-          title: { display: true, text: 'Date' }
-        }
-      },
-      plugins: {
-        legend: { labels: { color: '#0a1220' } }
-      }
-    }
-  });
-}
-
-/* -----------------------------------------------------------------------------
-   Refresh All
------------------------------------------------------------------------------ */
-async function refresh() {
-  State.entries = await DB.all();
-  renderTable();
-  renderChart();
-}
-
-/* -----------------------------------------------------------------------------
-   Button Wiring (data-action)
------------------------------------------------------------------------------ */
-function wireActions() {
-  document.body.addEventListener('click', async e => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-
-    switch (btn.dataset.action) {
-      case 'refresh':
-        await refresh();
-        break;
-
-      case 'add-entry':
-        $('entryModal')?.classList.add('show');
-        break;
-
-      case 'open-fields':
-        $('fieldsModal')?.classList.add('show');
-        break;
-
-      case 'open-thresholds':
-        $('thModal')?.classList.add('show');
-        break;
-
-      case 'open-options':
-        $('optModal')?.classList.add('show');
-        break;
-
-      case 'export-csv':
-        alert('CSV export handled in next step');
-        break;
-
-      case 'export-pdf':
-        alert('PDF export handled in next step');
-        break;
-    }
-  });
-}
-
-/* -----------------------------------------------------------------------------
-   Init
------------------------------------------------------------------------------ */
-window.addEventListener('load', async () => {
-  await DB.open();
-
-  // Seed metric selector
-  const cm = $('chartMetrics');
-  METRICS.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.key;
-    opt.textContent = m.label;
-    opt.selected = ['glucose', 'sys', 'dia', 'spo2', 'hr'].includes(m.key);
-    cm.appendChild(opt);
+  window.addEventListener('DOMContentLoaded', () => {
+    bind();
+    Actions.init();
   });
 
+  window.UI = UI;
+  window.Actions = Actions;
+
+})();
+``
+
+/*
