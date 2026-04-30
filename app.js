@@ -7,12 +7,6 @@
  * - This file is intended to replace the large inline <script> block in index.html.
  * - It preserves global names used by inline onclick handlers: window.UI and window.Actions.
  * - Metrics Chart is recoded to display DATE ONLY on the x-axis (no hour).
-  ✅ IndexedDB
-  ✅ Table creation
-  ✅ Chart.js integration (date-only x-axis)
-  ✅ Threshold editor
-  ✅ Button wiring
-  ✅ Global UI / Actions
  */
 
 
@@ -117,8 +111,8 @@ const METRICS = [
   { key: 'resp', label: 'Respiration (br/min)', unit: '/min', type: 'number' },
   { key: 'sleep', label: 'Sleep (hrs)', unit: 'hrs', type: 'number' },
   { key: 'steps', label: 'Steps', unit: '', type: 'number' },
-  { key: 'pain', label: 'Pain (0-10)', unit: '', type: 'number' },
   { key: 'glucose', label: 'Glucose (mg/dL)', unit: 'mg/dL', type: 'number' },
+  { key: 'pain', label: 'Pain (0-10)', unit: '', type: 'number' },
   { key: 'symptoms', label: 'Symptoms (0-10)', unit: '', type: 'number' },
   { key: 'emotions', label: 'Emotions', unit: '', type: 'text' },
   { key: 'comments', label: 'Comments', unit: '', type: 'text' },
@@ -136,7 +130,7 @@ const DEFAULT_FIELDS_VISIBLE = [
 ];
 
 const DEFAULT_THRESHOLDS = {
-  sys: { warnLow: 90, bandLow: 100, bandHigh: 129, warnHigh: 140 },
+    sys: { warnLow: 90, bandLow: 100, bandHigh: 129, warnHigh: 140 },
   dia: { warnLow: 60, bandLow: 60, bandHigh: 79, warnHigh: 90 },
   spo2: { warnLow: 92, bandLow: 95, bandHigh: 100, warnHigh: 101 },
   hr: { warnLow: 45, bandLow: 50, bandHigh: 90, warnHigh: 120 },
@@ -409,9 +403,9 @@ const UI = {
     assess('lungFluidCc', latest.lungFluidCc, 'Lung Fluid');
     assess('sleep', latest.sleep, 'Sleep');
     assess('steps', latest.steps, 'Steps');
+	assess('glucose', latest.glucose, 'Glucose');
     assess('pain', latest.pain, 'Pain');
     assess('symptoms', latest.symptoms, 'Symptoms');
-	assess('glucose', latest.glucose, 'Glucose');
 
     const bmi = U.bmi(latest.weightLbs, latest.heightIn); if (bmi != null) assess('bmi', bmi, 'BMI');
     const whtr = U.whtr(latest.waistIn, latest.heightIn); if (whtr != null) assess('whtr', whtr, 'WHtR');
@@ -602,7 +596,7 @@ const UI = {
       const d = document.getElementById('f_date'); if (d) d.value = U.toISODate(new Date());
       const t = document.getElementById('f_time'); if (t) t.value = new Date().toTimeString().slice(0, 5);
 
-      ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'glucose']
+      ['glucose', 'bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps']
         .forEach(k => {
           const el = document.getElementById('f_' + k);
           if (el) el.value = '';
@@ -798,7 +792,6 @@ function normalizeHeader(h) {
   const s = String(h).trim().toLowerCase().replace(/\s+/g, '');
   const map = {
     'date': 'date', 'time': 'time', 'datetime': 'datetime',
-    'glucose(mg/dl)': 'glucose', 'glucose': 'glucose',
     'bodybattery': 'bodyBattery', 'stress': 'stress',
     'weight(lbs)': 'weightLbs', 'weightlbs': 'weightLbs', 'weight': 'weightLbs',
     'height(in)': 'heightIn', 'heightin': 'heightIn', 'height': 'heightIn',
@@ -812,6 +805,7 @@ function normalizeHeader(h) {
     'respiration(br/min)': 'resp', 'respiration': 'resp', 'resp': 'resp',
     'sleep(hrs)': 'sleep', 'sleephrs': 'sleep', 'sleep': 'sleep',
     'steps': 'steps',
+	'glucose(mg/dl)': 'glucose', 'glucose': 'glucose',
     'pain(0-10)': 'pain', 'pain': 'pain',
     'symptoms(0-10)': 'symptoms', 'symptoms': 'symptoms', 'sx': 'symptoms',
     'emotions': 'emotions', 'mood': 'emotions',
@@ -824,10 +818,11 @@ function normalizeHeader(h) {
 function csvRowToEntry(row, headerIndex) {
   const e = {
     date: null, time: null,
-    glucose: null, bodyBattery: null, stress: null,
+    bodyBattery: null, stress: null,
     weightLbs: null, heightIn: null, waistIn: null,
     tempF: null, lungFluidCc: null, sys: null, dia: null,
     spo2: null, hr: null, resp: null, sleep: null, steps: null,
+	glucose: null,
     pain: null, symptoms: null,
     emotions: '', comments: '', meds: []
   };
@@ -857,7 +852,7 @@ function csvRowToEntry(row, headerIndex) {
   if (!e.time && timeIdx != null) e.time = U.normalizeTimeString(String(row[timeIdx] ?? '').trim()) || '00:00';
   if (!e.date) return null;
 
-  const numericKeys = ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'glucose'];
+  const numericKeys = ['glucose', 'bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'pain', 'symptoms'];
   for (const k of numericKeys) {
     const idx = headerIndex[k];
     if (idx != null) {
@@ -930,7 +925,6 @@ const Actions = {
     const en = {
       date: normDate,
       time: normTime,
-      glucose: num('f_glucose'),
       bodyBattery: num('f_bodyBattery'),
       stress: num('f_stress'),
       weightLbs: num('f_weightLbs'),
@@ -945,6 +939,7 @@ const Actions = {
       resp: num('f_resp'),
       sleep: num('f_sleep'),
       steps: num('f_steps'),
+	  glucose: num('f_glucose'),
       pain: num('f_pain'),
       symptoms: num('f_symptoms'),
       emotions: document.getElementById('f_emotions')?.value || '',
@@ -978,7 +973,7 @@ const Actions = {
     try {
       const existing = State.thresholds || {};
       const merged = { ...existing };
-      const editKeys = ['glucose', 'sys', 'dia', 'spo2', 'hr', 'tempF', 'stress', 'bodyBattery', 'lungFluidCc', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'bmi', 'whtr'];
+      const editKeys = ['sys', 'dia', 'spo2', 'hr', 'tempF', 'stress', 'bodyBattery', 'lungFluidCc', 'resp', 'sleep', 'steps', 'glucose', 'pain', 'symptoms', 'bmi', 'whtr'];
 
       const getNum = (id) => {
         const el = document.getElementById(id);
@@ -1169,11 +1164,11 @@ const Actions = {
       });
 
       const LABEL_ABBR = {
-        'Glucose (mg/dL)': 'Glucose', 'Systolic (mmHg)': 'Sys', 'Diastolic (mmHg)': 'Dia',
+        'Systolic (mmHg)': 'Sys', 'Diastolic (mmHg)': 'Dia',
         'Temperature (°F)': 'Temp', 'Heart Rate (bpm)': 'HR', 'Respiration (br/min)': 'Resp',
         'Body Battery': 'BodyBat', 'SpO₂ (%)': 'SpO2', 'Lung Fluid (cc)': 'LungFl',
         'Weight (lbs)': 'Wt', 'Height (in)': 'Ht', 'Waist (in)': 'Waist',
-        'Sleep (hrs)': 'Sleep', 'Medicines': 'Meds', 'Emotions': 'Mood', 'Comments': 'Notes',
+        'Sleep (hrs)': 'Sleep', 'Glucose (mg/dL)': 'Glucose', 'Medicines': 'Meds', 'Emotions': 'Mood', 'Comments': 'Notes',
         'Symptoms (0-10)': 'Sx'
       };
 
