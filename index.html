@@ -1,30 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="utf-8" />
-<title>Health Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#0b1220" />
-<meta name="app-version" content="1.0.0" />
+  <meta charset="utf-8">
+  <title>Health Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="app-version" content="1.0.0">
 
-<!-- ===== Theme bootstrap ===== -->
-<script>
-(() => {
-  const saved = localStorage.getItem('HT_THEME');
-  const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = saved || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-})();
-</script>
+  <!-- ===== Theme bootstrap (no flash) ===== -->
+  <script>
+    (() => {
+      const saved = localStorage.getItem('HT_THEME');
+      const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+    })();
+  </script>
 
-<link rel="stylesheet" href="./css/base.css" />
-<link rel="stylesheet" href="./css/theme-dark.css" />
-<link rel="stylesheet" href="./css/theme-light.css" />
-<link rel="stylesheet" href="./range-slider.css" />
+  <!-- ===== Base CSS ===== -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/theme-dark.css">
+  <link rel="stylesheet" href="./css/theme-light.css">
+  <link rel="stylesheet" href="./range-slider.css">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <!-- ===== Libraries ===== -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -33,130 +34,125 @@
   <div class="wrap headbar">
     <div>
       <h1>Health Tracker</h1>
-      <div id="appVersion" class="small"></div>
+      <div class="small" id="appVersion"></div>
     </div>
-    <button id="btnTheme" class="btn">🌙</button>
-  </div>
-</header>
 
-<main class="wrap">
+    <div class="toolbar">
+      <button class="btn" data-action="ut type="date" id="filterStart"></div>
+      <div><label>To</label><input type="date" id="filterEnd"></div>
 
-<!-- TOOLBAR -->
-<div class="toolbar card">
-  <div class="row">
-    <button class="btn" id="btnRefresh">Refresh</button>
-    <button class="btn" id="btnFields">Select Fields</button>
-    <button class="btn" id="btnThresholds">Thresholds</button>
-    <button class="btn ok" id="btnAdd">Add Entry</button>
-    <button class="btn warn" id="btnOptions">Options</button>
-    <button class="btn" id="btnSavePDF">Save PDF</button>
-  </div>
-</div>
+      <div>
+        <label>Chart Metrics</label>
+        <select id="chartMetrics" multiple size="4"></select>
+      </div>
 
-<!-- CHART -->
-<div class="card">
-  <h2>Metrics Chart</h2>
-  <canvas id="metricsChart"></canvas>
-</div>
+      <div>
+        <label>View</label>
+        <select id="viewMode">
+          <option value="both">Table + Chart</option>
+          <option value="table">Table only</option>
+          <option value="chart">Chart only</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <button classh</button>
+      <button classlect Fields</button>
+      <button class="btn" data-action=">
+      <button class="btn" data-action=" <button class="btn" data-action="export-pdflass="btn ok" data
+      <button class="btn warn" data-action="open-optionsn>
+
+  <!-- ===== TABLE (ALWAYS EXISTS) ===== -->
+  <section class="card full-width" id="entriesCard">
+    <div class="section-title">
+      <h2>Entries</h2>
+      <span class="small">Editable · Filtered · Exportable</span>
+    </div>
+
+    <div style="overflow:auto">
+      <table id="entriesTable">
+        <thead id="tableHead">
+          <tr><th>Date</th><th>Metric</th><th>Value</th><th></th></tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Populated by app.js -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== METRICS CHART ===== -->
+  <section class="card full-width" id="chartCard">
+    <div class="section-title">
+      <h2>Metrics Chart</h2>
+      <button class="btn" data-action=" </div>
+
+    <div id="chartPanel" style="height:320px">
+      <canvas id="metricsChart"></canvas>
+    </div>
+  </section>
 
 </main>
 
-<!-- ========= MODALS ========= -->
-<div class="modal" id="modalFields">
-  <div class="modal-box">
-    <h3>Select Fields</h3>
-    <div id="fieldsBody"></div>
-    <button class="btn ok" data-close>Done</button>
+<!-- ================= MODALS ================= -->
+
+<!-- Add / Edit Entry -->
+<div class="modal-backdrop" id="entryModal">
+  <div class="modal">
+    <header class="modal-header">
+      <h2>Add / Edit Entry</h2>
+      <button class="btn" data-action="close-entry<div id="entryForm"></div>
+    <footer class="modal-actions">
+      <button class="btn danger" data-action="delete-entry ok" data-action=">
   </div>
 </div>
 
-<div class="modal" id="modalThresholds">
-  <div class="modal-box">
-    <h3>Thresholds</h3>
-    <div id="thresholdBody"></div>
-    <button class="btn ok" data-close>Done</button>
+<!-- Fields -->
+<div class="modal-backdrop" id="fieldsModal">
+  <div class="modal">
+    <header class="modal-header">
+      <h2>Select Fields</h2>
+      <button class="btn" data-action="close-fields<div id="fieldsGrid" class="field-grid"></div>
+    <footer class="modal-actions">
+      <button class="btn ok" data-action="r>
   </div>
 </div>
 
-<script src="./app.js" defer></script>
+<!-- Thresholds -->
+<div class="modal-backdrop" id="thModal">
+  <div class="modal">
+    <header class="modal-header">
+      <h2>Metric Thresholds</h2>
+      <button class="sClose</button>
+    </header>
+    <div id="thEditor"></div>
+    <footer class="modal-actions">
+      <button class="btn okbutton>
+    </footer>
+  </div>
+</div>
 
-<!-- ========= SINGLE CONTROL SCRIPT ========= -->
-<script>
-(() => {
-const root = document.documentElement;
+<!-- Options -->
+<div class="modal-backdrop" id="optModal">
+  <div class="modal">
+    <header class="modal-header">
+      <h2>Options</h2>
+      <button class="btn" data-action="close-options<div class="row">
+      <div><label>Theme</label><select id="optTheme"><option>dark</option><option>light</option></select></div>
+      <div><label>Autosave</label><select id="optAutosave"><option>on</option><option>off</option></select></div>
+    </div>
+    <footer class="modal-actions">
+      <buttontionsSave</button>
+    </footer>
+  </div>
+</div>
 
-/* ---------- THEME ---------- */
-const btnTheme = document.getElementById('btnTheme');
-btnTheme.onclick = () => {
-  const t = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  root.setAttribute('data-theme', t);
-  localStorage.setItem('HT_THEME', t);
-  btnTheme.textContent = t === 'dark' ? '☀️' : '🌙';
-  patchChart();
-};
+<!-- ===== RANGE SLIDER ===== -->
+<script src="./range-slider.js"></script>
 
-/* ---------- MODALS ---------- */
-const openModal = id => document.getElementById(id).classList.add('open');
-document.addEventListener('click', e => {
-  if (e.target.dataset.close) e.target.closest('.modal')?.classList.remove('open');
-});
-
-btnFields.onclick = () => openModal('modalFields');
-btnThresholds.onclick = () => openModal('modalThresholds');
-
-/* ---------- APP EVENTS ---------- */
-btnRefresh.onclick = () => document.dispatchEvent(new Event('app:refresh'));
-btnAdd.onclick = () => document.dispatchEvent(new Event('app:add-entry'));
-btnOptions.onclick = () => document.dispatchEvent(new Event('app:options'));
-
-/* ---------- PDF EXPORT ---------- */
-btnSavePDF.onclick = () => {
-  root.setAttribute('data-pdf-export','1');
-  patchChart();
-  setTimeout(() => {
-    root.removeAttribute('data-pdf-export');
-    patchChart();
-  }, 3000);
-};
-
-/* ---------- CHART COLOR PATCH ---------- */
-function patchChart() {
-  const ch = Chart.getChart('metricsChart');
-  if (!ch) return;
-
-  const light =
-    root.getAttribute('data-pdf-export') === '1' ||
-    root.getAttribute('data-theme') === 'light';
-
-  const text = '#000000';
-  const grid = light ? 'rgba(0,0,0,.15)' : 'rgba(255,255,255,.15)';
-
-  ch.options.plugins.legend.labels.color = text;
-  Object.values(ch.options.scales).forEach(s => {
-    s.ticks.color = text;
-    s.title.color = text;
-    s.grid.color = grid;
-  });
-  ch.update();
-}
-
-new MutationObserver(patchChart)
-  .observe(root,{attributes:true});
-
-})();
-</script>
-
-<style>
-.modal {
-  position:fixed; inset:0; background:rgba(0,0,0,.5);
-  display:none; align-items:center; justify-content:center;
-}
-.modal.open { display:flex; }
-.modal-box {
-  background:var(--card-bg,#fff);
-  padding:1rem; border-radius:8px; min-width:300px;
-}
-</style>
+<!-- ===== APP ===== -->
+<script defer src="./app.js"></script>
 
 </body>
 </html>
