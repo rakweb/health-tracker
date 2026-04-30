@@ -1177,23 +1177,10 @@ html[data-theme="light"] .toolbar .small{
     };
   }
 
-*/
-  function ensurePluginRegistered() {
+   function ensurePluginRegistered() {
     if (!window.Chart || !Chart.register) return false;
 
-    // Register once
-    if (Chart.registry && Chart.registry.plugins && Chart.registry.plugins.get('themeEnforcer')) {
-      return true;
-    }
-
-    const plugin = {
-      id: 'themeEnforcer',
-      // Runs before each update/draw
-      beforeUpdate(chart) {
-        const c = chartColors();
-		/* -->
-
-        // Legend
+          // Legend
         chart.options.plugins = chart.options.plugins || {};
         chart.options.plugins.legend = chart.options.plugins.legend || {};
         chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
