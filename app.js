@@ -280,8 +280,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-let deferredPrompt = null;
-
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   deferredPrompt = e;
