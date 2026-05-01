@@ -1,11 +1,12 @@
-html[data-theme="dark"]{
-  --bg:#0b1220;
-  --panel:#121a2a;
-  --card:#0e1628;
-  --text:#e6eefc;
-  --muted:#8aa0c3;
-  --ring:#2a3a58;
-  --btn:#1a2842;
-  --btn-hover:#223152;
+:root {
+  --bg: #121212;
+  --fg: #e5e5e5;
+  --panel: #1e1e1e;
+  --button-bg: #2c2c2c;
+  --border: #555555;
 }
 
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
