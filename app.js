@@ -10,7 +10,7 @@
  */
 
 
-/* ==================== PWA: SW Register, Install, Updates, labels ==================== */
+/* ==================== PWA: SERVICE WORKER Register, Install, Updates, labels ==================== */
 let deferredPrompt = null, swReg = null;
 
 const installBtn = document.getElementById('btnInstall');
@@ -20,7 +20,7 @@ const buildNumberSpan = document.getElementById('buildNumber');
 
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('./sw.js')
+  navigator.serviceWorker.register('./service-worker.js')
     .then(reg => {
       swReg = reg;
       navigator.serviceWorker.addEventListener('message', (evt) => {
