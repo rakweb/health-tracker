@@ -1,1389 +1,1501 @@
-'use strict';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Health Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="app-version" content="1.0.0">
 
-/**
- * app.js — Health Tracker core logic
- *
- * Notes:
- * - This file is intended to replace the large inline <script> block in index.html.
- * - It preserves global names used by inline onclick handlers: window.UI and window.Actions.
- * - Metrics Chart is recoded to display DATE ONLY on the x-axis (no hour).
-  ✅ IndexedDB
-  ✅ Table creation
-  ✅ Chart.js integration (date-only x-axis)
-  ✅ Threshold editor
-  ✅ Button wiring
-  ✅ Global UI / Actions
- */
+<!-- ===== Theme bootstrap (no flash, safe) ===== -->
+<script>
+  (function () {
+    const saved = localStorage.getItem('HT_THEME');
+
+    const systemPrefersDark =
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    const theme = saved || (systemPrefersDark ? 'dark' : 'light');
+
+    document.documentElement.setAttribute('data-theme', theme);
+    window.APP_THEME = theme;
+  })();
+</script>
+
+<!-- ===== CSS ===== -->
+<link rel="stylesheet" href="./css/base.css" />
+<link rel="stylesheet" href="./css/theme-dark.css" />
+<link rel="stylesheet" href="./css/theme-light.css" />
+
+  <!-- PWA Manifest -->
+ <link rel="manifest" href="./manifest.json" />
+
+  <!-- Icons -->
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+  <!-- Range slider base styling (0–10 gradient track) -->
+  <link rel="stylesheet" href="./range-slider.css" />
+
+  <!-- Libraries (deferred so they load before our init-on-load) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#121a2a; --muted:#8aa0c3; --text:#e6eefc;
+      --accent:#4ba3ff; --danger:#ff5c5c; --warn:#ffcc66; --ok:#27d79b;
+      --ring:#2a3a58; --chip:#1a2440; --btn:#1a2842; --btn-hover:#223152; --card:#0e1628;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg,#0a1120 0%, #0b1220 60%, #0d1322 100%);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:20; backdrop-filter: blur(8px);
+      background:rgba(9,13,24,0.6); border-bottom:1px solid var(--ring);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:12px 16px;}
+    h1{ margin:8px 0 6px; font-size:20px; letter-spacing:0.2px; font-weight:700; }
+    .sub{color:var(--muted); font-size:13px}
+    .headbar{ display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+    .card{
+      background:linear-gradient(180deg, rgba(26,38,64,0.4) 0%, rgba(9,15,29,0.6) 100%);
+      border:1px solid var(--ring); border-radius:14px; padding:12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.4);
+    }
+    .card h2{ font-size:15px; margin:0 0 10px; letter-spacing:.3px; color:#d6e6ff; }
+
+    .row{display:flex; gap:8px; flex-wrap:wrap}
+    .row > * { flex:1 1 160px; min-width:160px; }
+
+    label{ display:block; font-size:12px; color:var(--muted); margin:8px 0 4px;}
+    input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea{
+  width:100%;
+  background:#0c1426;
+  color:var(--text);
+  border:1px solid #1f2a45;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:14px;
+  outline:none;
+}
+
+    .btn{
+      background:var(--btn); border:1px solid #2a3b67; color:var(--text);
+      padding:9px 12px; border-radius:10px; font-size:14px; cursor:pointer;
+    }
+    .btn:hover{ background:var(--btn-hover) }
+    .btn.warn{ background:#453312; border-color:#997a2a}
+    .btn.ok{ background:#113c2d; border-color:#2f8f73}
+    .btn.danger{ background:#3a1216; border-color:#8e2b37}
+
+    .toolbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .toolbar .spacer{ flex:1 }
+    .section-title{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px}
+    table{ width:100%; border-collapse: collapse; font-size:13px; border:1px solid var(--ring); border-radius:10px; overflow:hidden; }
+    th, td{ border-bottom:1px solid #1b2742; padding:8px; text-align:left; } thead{ background:#0a1426; }
+    tbody tr:hover{ background:#0d162a } .actions button{ margin-right:6px }
+
+    .kpis{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px;}
+    @media (max-width:768px){ .kpis{ grid-template-columns: repeat(2,1fr);} }
+    .kpi{
+      background:linear-gradient(180deg,#0b1326 0,#0a1325 100%); border:1px solid var(--ring);
+      border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px;
+    }
+    .kpi .label{ font-size:12px; color:var(--muted);}
+    .kpi .value{ font-size:18px; font-weight:700; letter-spacing:.2px;}
+
+    .chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
+    .chip{
+      background:var(--chip); border:1px solid var(--ring); color:var(--text);
+      border-radius:999px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:6px
+    }
+    .chip.ok{ border-color:#1e6b54; background:rgba(38,203,161,.08) }
+    .chip.warn{ border-color:#9c7a2a; background:rgba(255,204,102,.08) }
+    .chip.danger{ border-color:#9a2e3a; background:rgba(255,92,92,.08) }
+
+    /* Modals */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(3,6,14,.6); display:none; align-items:center; justify-content:center; z-index:40; }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      background:var(--card); border:1px solid var(--ring); border-radius:14px; padding:12px;
+      width:min(860px, 96vw); max-height:88vh; overflow:auto; box-shadow:0 10px 40px rgba(0,0,0,.5);
+    }
+    .modal-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px }
+    .modal-actions{ display:flex; gap:8px; justify-content:flex-end; padding-top:6px }
+    .field-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px }
+    @media (max-width:560px){ .field-grid{ grid-template-columns: repeat(2, 1fr);} }
+
+    /* Toast for updates */
+    .toast{
+      position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+      background:#0b1220; color:#e6eefc; border:1px solid #2a3a58; border-radius:12px;
+      padding:10px 12px; display:none; gap:8px; align-items:center; z-index:50;
+      box-shadow:0 8px 30px rgba(0,0,0,.5);
+    }
+    .toast.show{ display:flex; }
+
+    .small{ font-size:12px; color:var(--muted); }
+
+    /* Full-width sections (Entries + Chart stacked vertically) */
+    .full-width { width: 100%; margin-top: 12px; }
+	
+	
+/* ===================== Light theme (higher contrast) ===================== */
+/* Normal Light theme when user selects light */
+html[data-theme="light"] {
+  /* Surfaces */
+  --bg: #f3f6fb;        /* background base */
+  --panel: #ffffff;     /* panels */
+  --card: #ffffff;      /* cards/modals */
+  --chip: #e7eefb;      /* chips */
+
+  /* Text */
+  --text: #0a1220;      /* near-black text */
+  --muted: #334866;     /* darker muted for contrast */
+
+  /* Accents */
+  --accent: #0b57ff;    /* strong blue */
+  --ok: #0f7a5a;        /* deeper green */
+  --warn: #b45309;      /* deeper amber */
+  --danger: #b42318;    /* deeper red */
+
+  /* Lines & controls */
+  --ring: #b9c8de;      /* higher-contrast borders */
+  --btn: #f7f9ff;       /* button background */
+  --btn-hover: #e3ebff; /* button hover */
+}
+
+/* Body background for light theme */
+html[data-theme="light"] body{
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5fb 55%, #e8effa 100%);
+  color: var(--text);
+}
+
+/* Header for light theme */
+html[data-theme="light"] header{
+  background: rgba(255,255,255,0.82);
+  border-bottom: 1px solid var(--ring);
+}
+
+/* Cards / panels get a subtle shadow that reads on white */
+html[data-theme="light"] .card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,255,0.96) 100%);
+  border: 1px solid var(--ring);
+  box-shadow: 0 6px 20px rgba(10,18,32,0.08);
+}
+
+/* Inputs were dark in your global rules — override for light theme */
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #a9bbd6; /* stronger than ring for better visibility */
+}
+
+/* Table readability */
+html[data-theme="light"] table{
+  border: 1px solid var(--ring);
+}
+html[data-theme="light"] thead{
+  background: #eef4ff;
+}
+html[data-theme="light"] th,
+html[data-theme="light"] td{
+  border-bottom: 1px solid #c6d3e6;
+}
+html[data-theme="light"] tbody tr:hover{
+  background: #f2f7ff;
+}
+
+/* Chips look better with contrast */
+html[data-theme="light"] .chip{
+  background: var(--chip);
+  border: 1px solid #b9c8de;
+  color: var(--text);
+}
+html[data-theme="light"] .chip.ok{
+  border-color: rgba(15,122,90,0.55);
+  background: rgba(15,122,90,0.10);
+}
+html[data-theme="light"] .chip.warn{
+  border-color: rgba(180,83,9,0.55);
+  background: rgba(180,83,9,0.10);
+}
+html[data-theme="light"] .chip.danger{
+  border-color: rgba(180,35,24,0.55);
+  background: rgba(180,35,24,0.10);
+}
 
 
-/* ==================== PWA: SW Register, Install, Updates, labels ==================== */
-let deferredPrompt = null, swReg = null;
+/* ===================== PDF export always uses LIGHT ===================== */
+/* When exporting PDF, force light palette even if user is in dark mode */
+html[data-pdf-export="1"]{
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --chip: #e7eefb;
 
-const installBtn = document.getElementById('btnInstall');
-const checkBtn = document.getElementById('btnCheckUpdates');
-const installHint = document.getElementById('installHint');
-const buildNumberSpan = document.getElementById('buildNumber');
+  --text: #0a1220;
+  --muted: #334866;
 
-function registerSW() {
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg => {
-      swReg = reg;
-      navigator.serviceWorker.addEventListener('message', (evt) => {
-        if (evt.data?.type === 'VERSION' && evt.data?.cache && swVersionSpan) swVersionSpan.textContent = evt.data.cache;
-      });
-    
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing; if (!nw) return;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast(reg);
-        });
-      });
-    })
+  --accent: #0b57ff;
+  --ok: #0f7a5a;
+  --warn: #b45309;
+  --danger: #b42318;
+
+  --ring: #b9c8de;
+  --btn: #f7f9ff;
+  --btn-hover: #e3ebff;
+}
+
+/* Ensure the page background becomes white for clean PDFs */
+html[data-pdf-export="1"] body{
+  background: #ffffff !important;
+  color: var(--text) !important;
+}
+
+/* Ensure inputs/tables are light during export */
+html[data-pdf-export="1"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-pdf-export="1"] select,
+html[data-pdf-export="1"] textarea{
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border: 1px solid #a9bbd6 !important;
+}
+
+html[data-pdf-export="1"] thead{ background:#eef4ff !important; }
+html[data-pdf-export="1"] tbody tr:hover{ background:#f2f7ff !important; }
+
+	
+	
+	/* ==================== Select Fields: align checkbox + label ==================== */
+#fieldsGrid > div{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border:1px solid #1f2a45;
+  border-radius:10px;
+  background:#0c1426; /* matches your input bg */
+}
+
+/* Reset global input styling for checkboxes (they shouldn't be 100% width) */
+#fieldsGrid input[type="checkbox"]{
+  width:18px !important;
+  height:18px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:4px;
+  background:transparent !important;
+  border:1px solid #35507f;
+  box-shadow:none !important;
+  accent-color: var(--accent);
+  flex:0 0 auto;
+}
+
+/* Override global label block styling inside fields grid */
+#fieldsGrid label{
+  display:inline !important;
+  margin:0 !important;
+  color:var(--text);
+  font-size:13px;
+  line-height:1.2;
+  cursor:pointer;
+  user-select:none;
+}
+
+/* Optional hover/focus polish */
+#fieldsGrid > div:hover{
+  border-color:#35507f;
+  background:#0d162a;
+}
+#fieldsGrid input[type="checkbox"]:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(75,163,255,0.18);
+}
+
+
+/* ===================== Light theme button overrides ===================== */
+/* Force ALL buttons to be light in light mode */
+html[data-theme="light"] .btn{
+  background: #ffffff !important;
+  color: #0a1220 !important;
+  border: 1px solid #9fb2d6 !important;
+}
+
+html[data-theme="light"] .btn:hover{
+  background: #e3ebff !important;
+}
+
+/* Make the "OK / Warn / Danger" variants light (instead of hard-coded dark) */
+html[data-theme="light"] .btn.ok{
+  background: #d9f6ec !important;     /* light green */
+  border-color: #0f7a5a !important;   /* deep green */
+  color: #064d39 !important;
+}
+
+html[data-theme="light"] .btn.warn{
+  background: #fff1d6 !important;     /* light amber */
+  border-color: #b45309 !important;   /* deep amber */
+  color: #6a2d00 !important;
+}
+
+html[data-theme="light"] .btn.danger{
+  background: #ffe0e0 !important;     /* light red */
+  border-color: #b42318 !important;   /* deep red */
+  color: #6b0e0b !important;
+}
+
+/* Keep hover states consistent for variants */
+html[data-theme="light"] .btn.ok:hover{
+  background: #c8f1e2 !important;
+}
+
+html[data-theme="light"] .btn.warn:hover{
+  background: #ffe7bf !important;
+}
+
+html[data-theme="light"] .btn.danger:hover{
+  background: #ffd0d0 !important;
+}
+
+
+/* ===================== Light theme KPI tile overrides ===================== */
+html[data-theme="light"] .kpi{
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%) !important;
+  border: 1px solid #b9c8de !important;
+  box-shadow: 0 6px 18px rgba(10,18,32,0.08) !important;
+}
+
+html[data-theme="light"] .kpi .label{
+  color: #334866 !important; /* darker muted for contrast */
+}
+
+html[data-theme="light"] .kpi .value{
+  color: #0a1220 !important;
+}
+
+/* If you use trend text inside KPI tiles, ensure it's readable too */
+html[data-theme="light"] .kpi .trend,
+html[data-theme="light"] .kpi .small{
+  color: #334866 !important;
+}
+
+
+/* ===================== Light theme: Select Fields modal cards ===================== */
+html[data-theme="light"] #fieldsGrid > div{
+  background: #ffffff !important;
+  border: 1px solid #a9bbd6 !important;   /* stronger border for contrast */
+  color: #0a1220 !important;
+}
+
+html[data-theme="light"] #fieldsGrid > div:hover{
+  background: #f2f7ff !important;
+  border-color: #7fa0d6 !important;
+}
+
+/* Labels inside those cards */
+html[data-theme="light"] #fieldsGrid label{
+  color: #0a1220 !important;
+}
+
+/* Checkbox styling to match light mode */
+html[data-theme="light"] #fieldsGrid input[type="checkbox"]{
+  border-color: #7fa0d6 !important;
+  background: #ffffff !important;
+}
+
+/* Optional: focus ring looks nicer in light mode */
+html[data-theme="light"] #fieldsGrid input[type="checkbox"]:focus-visible{
+  box-shadow: 0 0 0 3px rgba(11,87,255,0.18) !important;
+}
+
+/* ===================== Light theme: fix hard-coded heading colors ===================== */
+/* Your base CSS sets .card h2 color to #d6e6ff (light). Override for light theme. */
+html[data-theme="light"] .card h2{
+  color: #0a1220 !important;
+}
+
+/* Section titles / misc text inside cards */
+html[data-theme="light"] .section-title,
+html[data-theme="light"] .section-title .small,
+html[data-theme="light"] .small,
+html[data-theme="light"] .sub{
+  color: #2b3d57 !important; /* darker muted for better contrast */
+}
+
+/* ===================== Light theme: labels & date fields readability ===================== */
+html[data-theme="light"] label{
+  color: #2b3d57 !important; /* labels were too faint */
+}
+
+/* Ensure the date/time input text itself is dark */
+html[data-theme="light"] input[type="date"],
+html[data-theme="light"] input[type="time"]{
+  color: #0a1220 !important;
+  border-color: #9fb2d6 !important;
+}
+
+/* If any helper text under controls is still faint */
+html[data-theme="light"] .toolbar .small{
+  color: #2b3d57 !important;
+}
+
+  </style>
   
-  navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
-}
+  <!-- ===== App Version ===== -->
+<script>
+  (function () {
+    const meta = document.querySelector('meta[name="app-version"]');
+    const version = meta ? meta.content : '0.0.0';
 
-// Update toast
-const toast = document.getElementById('updateToast');
-const btnReloadNow = document.getElementById('btnReloadNow');
-const btnDismissToast = document.getElementById('btnDismissToast');
-function showUpdateToast(reg) {
-  if (!toast) return;
-  toast.classList.add('show');
-  if (btnReloadNow) btnReloadNow.onclick = () => { reg.waiting?.postMessage({ type: 'SKIP_WAITING' }); };
-  if (btnDismissToast) btnDismissToast.onclick = () => toast.classList.remove('show');
-}
-if (checkBtn) {
-  checkBtn.addEventListener('click', async () => {
-    try {
-      if (installHint) installHint.textContent = 'Checking…';
-      if (swReg?.update) await swReg.update();
-      if (swReg?.waiting) showUpdateToast(swReg); else if (installHint) installHint.textContent = 'No updates found.';
-      setTimeout(() => { if (installHint) installHint.textContent = ''; }, 2000);
-    } catch {
-      if (installHint) installHint.textContent = 'Update check failed.';
-      setTimeout(() => { if (installHint) installHint.textContent = ''; }, 2000);
-    }
-  });
-}
+    const keyBase = 'HT_VERSION';
+    const keyBuild = 'HT_BUILD';
 
-// A2HS (custom button flow)
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault(); deferredPrompt = e;
-  if (installBtn) installBtn.style.display = 'inline-block';
-  if (installHint) installHint.textContent = 'Click Install to add to your device.';
-});
-if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (installHint) installHint.textContent = (outcome === 'accepted') ? 'Installing…' : 'Install dismissed.';
-    deferredPrompt = null; installBtn.style.display = 'none';
-    setTimeout(() => { if (installHint) installHint.textContent = ''; }, 2000);
-  });
-}
-window.addEventListener('appinstalled', () => {
-  if (installHint) installHint.textContent = 'Installed!';
-  if (installBtn) installBtn.style.display = 'none';
-  setTimeout(() => { if (installHint) installHint.textContent = ''; }, 2000);
-});
+    const lastVersion = localStorage.getItem(keyBase);
 
-/* ==================== Chart.js annotation plugin safe register ==================== */
-(function () {
-  try {
-    const ann = (window && (window['chartjs-plugin-annotation'] || window.ChartAnnotation || window.chartjsPluginAnnotation));
-    if (window.Chart && ann && typeof Chart.register === 'function') Chart.register(ann);
-  } catch (e) {
-    console.warn('Annotation plugin not registered:', e);
-  }
-})();
-
-/* ==================== App data & defaults ==================== */
-// NOTE: Symptoms is included as a full metric.
-const METRICS = [
-  { key: 'bodyBattery', label: 'Body Battery', unit: '', type: 'number' },
-  { key: 'stress', label: 'Stress', unit: '', type: 'number' },
-  { key: 'weightLbs', label: 'Weight (lbs)', unit: 'lbs', type: 'number' },
-  { key: 'heightIn', label: 'Height (in)', unit: 'in', type: 'number' },
-  { key: 'waistIn', label: 'Waist (in)', unit: 'in', type: 'number' },
-  { key: 'tempF', label: 'Temperature (°F)', unit: '°F', type: 'number' },
-  { key: 'lungFluidCc', label: 'Lung Fluid (cc)', unit: 'cc', type: 'number' },
-  { key: 'sys', label: 'Systolic (mmHg)', unit: 'mmHg', type: 'number' },
-  { key: 'dia', label: 'Diastolic (mmHg)', unit: 'mmHg', type: 'number' },
-  { key: 'spo2', label: 'SpO₂ (%)', unit: '%', type: 'number' },
-  { key: 'hr', label: 'Heart Rate (bpm)', unit: 'bpm', type: 'number' },
-  { key: 'resp', label: 'Respiration (br/min)', unit: '/min', type: 'number' },
-  { key: 'sleep', label: 'Sleep (hrs)', unit: 'hrs', type: 'number' },
-  { key: 'steps', label: 'Steps', unit: '', type: 'number' },
-  { key: 'pain', label: 'Pain (0-10)', unit: '', type: 'number' },
-  { key: 'glucose', label: 'Glucose (mg/dL)', unit: 'mg/dL', type: 'number' },
-  { key: 'symptoms', label: 'Symptoms (0-10)', unit: '', type: 'number' },
-  { key: 'emotions', label: 'Emotions', unit: '', type: 'text' },
-  { key: 'comments', label: 'Comments', unit: '', type: 'text' },
-  { key: 'meds', label: 'Medicines', unit: '', type: 'list' },
-];
-
-const CORE_FIELDS = ['date', 'time', ...METRICS.map(m => m.key)];
-
-// IMPORTANT: This file does not decide what you want visible-by-default.
-// Keep your existing DEFAULT_FIELDS_VISIBLE values in index.html or set them here.
-const DEFAULT_FIELDS_VISIBLE = [
-  'date', 'time', 'glucose', 'sys', 'dia', 'spo2', 'hr',
-  'weightLbs', 'heightIn', 'waistIn', 'sleep', 'steps',
-  'pain', 'emotions', 'comments'
-];
-
-const DEFAULT_THRESHOLDS = {
-  sys: { warnLow: 90, bandLow: 100, bandHigh: 129, warnHigh: 140 },
-  dia: { warnLow: 60, bandLow: 60, bandHigh: 79, warnHigh: 90 },
-  spo2: { warnLow: 92, bandLow: 95, bandHigh: 100, warnHigh: 101 },
-  hr: { warnLow: 45, bandLow: 50, bandHigh: 90, warnHigh: 120 },
-  tempF: { warnLow: 95, bandLow: 97, bandHigh: 99, warnHigh: 101 },
-  stress: { warnLow: 0, bandLow: 0, bandHigh: 40, warnHigh: 75 },
-  bodyBattery: { warnLow: 15, bandLow: 20, bandHigh: 100, warnHigh: 999 },
-  lungFluidCc: { warnLow: -1, bandLow: 0, bandHigh: 50, warnHigh: 200 },
-  weightLbs: { warnLow: 0, bandLow: 0, bandHigh: 999, warnHigh: 9999 },
-  resp: { warnLow: 8, bandLow: 10, bandHigh: 20, warnHigh: 24 },
-  sleep: { warnLow: 4, bandLow: 7, bandHigh: 9, warnHigh: 14 },
-  steps: { warnLow: 0, bandLow: 5000, bandHigh: 10000, warnHigh: 20000 },
-  glucose: { warnLow: 70, bandLow: 80, bandHigh: 140, warnHigh: 180 },
-  pain: { warnLow: 0, bandLow: 0, bandHigh: 3, warnHigh: 7 },
-  // symptoms defaults mirror pain (0–10)
-  symptoms: { warnLow: 0, bandLow: 0, bandHigh: 3, warnHigh: 7 },
-  bmi: { warnLow: 18.5, bandLow: 18.5, bandHigh: 24.9, warnHigh: 30 },
-  whtr: { warnLow: 0.34, bandLow: 0.34, bandHigh: 0.49, warnHigh: 0.6 },
-};
-
-const OPTIONS = { autosave: 'on', csvSelectedOnly: 'yes', pdfIncludeChart: 'yes' };
-
-/* ==================== IndexedDB ==================== */
-const DB = {
-  db: null,
-  open() {
-    return new Promise((resolve, reject) => {
-      if (!('indexedDB' in window)) { console.warn('IndexedDB not supported'); resolve(); return; }
-      const req = indexedDB.open('health-tracker-db', 1);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('entries')) {
-          const s = db.createObjectStore('entries', { keyPath: 'id', autoIncrement: true });
-          s.createIndex('by_date', 'date');
-        }
-        if (!db.objectStoreNames.contains('config')) {
-          db.createObjectStore('config', { keyPath: 'key' });
-        }
-      };
-      req.onsuccess = () => { DB.db = req.result; resolve(); };
-      req.onerror = () => reject(req.error);
-    });
-  },
-  putEntry(entry) {
-    return new Promise((resolve, reject) => {
-      if (!DB.db) { resolve(); return; }
-      const tx = DB.db.transaction('entries', 'readwrite');
-      const store = tx.objectStore('entries');
-      const hasId = entry && entry.id != null;
-      const req = hasId ? store.put(entry) : store.add(entry);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-  },
-  deleteEntry(id) {
-    return new Promise((resolve, reject) => {
-      if (!DB.db) { resolve(); return; }
-      const tx = DB.db.transaction('entries', 'readwrite');
-      tx.objectStore('entries').delete(id);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  },
-  getAllEntries() {
-    return new Promise((resolve, reject) => {
-      if (!DB.db) { resolve([]); return; }
-      const tx = DB.db.transaction('entries', 'readonly');
-      const req = tx.objectStore('entries').getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
-  },
-  putConfig(key, value) {
-    return new Promise((resolve, reject) => {
-      if (!DB.db) { resolve(); return; }
-      const tx = DB.db.transaction('config', 'readwrite');
-      tx.objectStore('config').put({ key, value });
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  },
-  getConfig(key) {
-    return new Promise((resolve, reject) => {
-      if (!DB.db) { resolve(null); return; }
-      const tx = DB.db.transaction('config', 'readonly');
-      const req = tx.objectStore('config').get(key);
-      req.onsuccess = () => resolve(req.result ? req.result.value : null);
-      req.onerror = () => reject(req.error);
-    });
-  }
-};
-
-/* ==================== State & ISO Date/Time Utils ==================== */
-const State = {
-  entries: [],
-  fieldsVisible: new Set(DEFAULT_FIELDS_VISIBLE),
-  thresholds: JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
-  options: { ...OPTIONS },
-  ui: { chartEnabled: true, viewMode: 'both', collapsedChart: false },
-  editId: null,
-  medsBuffer: [],
-};
-
-const U = {
-  toISODate(d) {
-    if (!d) return null;
-    const dt = (d instanceof Date) ? d : new Date(d);
-    return isNaN(dt.getTime()) ? null : dt.toISOString().slice(0, 10);
-  },
-  normalizeDateString(s) {
-    if (!s) return null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
-  },
-  normalizeTimeString(s) {
-    if (!s) return null;
-    const m = String(s).trim().match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
-    if (m) return `${m[1]}:${m[2]}`;
-    const probe = new Date(`1970-01-01T${s}`);
-    return isNaN(probe.getTime()) ? null : probe.toISOString().slice(11, 16);
-  },
-  parseDateTime(isoDate, timeHHmm) {
-    if (!isoDate) return null;
-    const date = U.normalizeDateString(isoDate);
-    const time = U.normalizeTimeString(timeHHmm || '00:00') || '00:00';
-    if (!date) return null;
-    const dt = new Date(`${date}T${time}`);
-    return isNaN(dt.getTime()) ? null : dt;
-  },
-  fmt(n, dp = 0) { if (n == null || isNaN(n)) return '—'; return Number(n).toFixed(dp); },
-  bmi(lbs, inches) { if (!lbs || !inches) return null; return 703 * (lbs / (inches * inches)); },
-  whtr(waistIn, heightIn) { if (!waistIn || !heightIn) return null; return waistIn / heightIn; },
-  csvEscape(v) {
-    if (v == null) return '';
-    const s = typeof v === 'string' ? v : JSON.stringify(v);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  },
-  dateInRange(dateStr, startStr, endStr) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr + 'T00:00');
-    if (startStr && d < new Date(startStr + 'T00:00')) return false;
-    if (endStr && d > new Date(endStr + 'T23:59')) return false;
-    return true;
-  }
-};
-
-/* ==================== UI ==================== */
-const UI = {
-  chart: null,
-
-  initChartMetricSelector() {
-    const sel = document.getElementById('chartMetrics'); if (!sel) return; sel.innerHTML = '';
-    METRICS.forEach(m => {
-      if (m.type === 'number') {
-        const opt = document.createElement('option');
-        opt.value = m.key;
-        opt.textContent = m.label;
-        // Preserve original preselect list exactly (no new assumptions)
-        if (['glucose', 'sys', 'dia', 'spo2', 'hr', 'weightLbs'].includes(m.key)) opt.selected = true;
-        sel.appendChild(opt);
-      }
-    });
-  },
-
-  buildTable() {
-    const head = document.getElementById('tableHead');
-    const body = document.getElementById('tableBody');
-    if (!head || !body) return;
-
-    head.innerHTML = '';
-    const tr = document.createElement('tr');
-    const vis = ['date', 'time', ...METRICS.map(m => m.key)].filter(k => State.fieldsVisible.has(k));
-    vis.forEach(k => {
-      const m = METRICS.find(x => x.key === k);
-      const th = document.createElement('th');
-      th.textContent = m ? m.label : (k === 'date' ? 'Date' : 'Time');
-      tr.appendChild(th);
-    });
-    const thA = document.createElement('th'); thA.textContent = 'Actions'; tr.appendChild(thA);
-    head.appendChild(tr);
-
-    body.innerHTML = '';
-    const start = document.getElementById('filterStart')?.value;
-    const end = document.getElementById('filterEnd')?.value;
-
-    const rows = State.entries
-      .filter(en => U.dateInRange(en.date, start, end))
-      .sort((a, b) => ((U.parseDateTime(b.date, b.time)?.getTime() || 0) - (U.parseDateTime(a.date, a.time)?.getTime() || 0)));
-
-    for (const en of rows) {
-      const trr = document.createElement('tr');
-      for (const k of vis) {
-        const td = document.createElement('td');
-        if (k === 'date') td.textContent = en.date || '';
-        else if (k === 'time') td.textContent = en.time || '';
-        else {
-          let val = en[k];
-          if (k === 'meds' && Array.isArray(val)) val = val.map(m => `${m.name} ${m.dose}${m.units ? (' ' + m.units) : ''}`).join('; ');
-          td.textContent = (val == null ? '' : val);
-        }
-        trr.appendChild(td);
-      }
-      const tdA = document.createElement('td'); tdA.className = 'actions';
-      const bE = document.createElement('button'); bE.className = 'btn'; bE.textContent = 'Edit'; bE.onclick = () => UI.openEntry(en.id);
-      const bD = document.createElement('button'); bD.className = 'btn danger'; bD.textContent = 'Delete';
-      bD.onclick = async () => { await Actions.deleteEntry(en.id); await Actions.refreshAll(); };
-      tdA.appendChild(bE); tdA.appendChild(bD);
-      trr.appendChild(tdA);
-      body.appendChild(trr);
-    }
-  },
-
-  refreshKPIs() {
-    const sorted = [...State.entries].sort((a, b) => ((U.parseDateTime(b.date, b.time)?.getTime() || 0) - (U.parseDateTime(a.date, a.time)?.getTime() || 0)));
-    const latest = sorted[0], prev = sorted[1];
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-
-    if (latest) {
-      set('kpiGlucose', U.fmt(latest.glucose));
-      set('kpiBP', (latest.sys != null && latest.dia != null) ? `${latest.sys}/${latest.dia}` : '—');
-      const bmi = U.bmi(latest.weightLbs, latest.heightIn); set('kpiBMI', bmi ? U.fmt(bmi, 1) : '—');
-      const whtr = U.whtr(latest.waistIn, latest.heightIn); set('kpiWHtR', whtr ? U.fmt(whtr, 2) : '—');
-      set('kpiSpO2', U.fmt(latest.spo2));
-      set('kpiHR', U.fmt(latest.hr));
+    let build;
+    if (lastVersion !== version) {
+      // New version → reset build counter
+      build = 1;
     } else {
-      set('kpiGlucose', '—'); set('kpiBP', '—'); set('kpiBMI', '—'); set('kpiWHtR', '—'); set('kpiSpO2', '—'); set('kpiHR', '—');
+      build = Number(localStorage.getItem(keyBuild) || 0) + 1;
     }
 
-    const trend = (cur, pre) => (cur != null && pre != null) ? (cur > pre ? '↑' : '↓') : '';
-    const tg = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    tg('kpiGlucoseTrend', latest && prev ? trend(latest.glucose, prev.glucose) : '');
-    tg('kpiBPTrend', latest && prev ? trend((latest.sys || 0) + (latest.dia || 0), (prev.sys || 0) + (prev.dia || 0)) : '');
-    tg('kpiBMITrend', latest && prev ? trend(U.bmi(latest.weightLbs, latest.heightIn) || 0, U.bmi(prev.weightLbs, prev.heightIn) || 0) : '');
-    tg('kpiVitalsTrend', latest && prev ? trend(latest.hr, prev.hr) : '');
+    localStorage.setItem(keyBase, version);
+    localStorage.setItem(keyBuild, build);
 
-    UI.refreshRiskChips(latest);
-  },
+    window.APP_VERSION = version;
+    window.APP_BUILD = build;
+  })();
+</script>
 
-  refreshRiskChips(latest) {
-    const wrap = document.getElementById('riskChips'); if (!wrap) return;
-    wrap.innerHTML = '';
-    if (!latest) { wrap.innerHTML = '<span class="small">No data yet.</span>'; return; }
+  
+  
+</head>
+<body>
 
-    const chip = (txt, level) => {
-      const d = document.createElement('div');
-      d.className = `chip ${level}`;
-      const icon = level === 'danger' ? '⚠️' : (level === 'warn' ? '🟨' : '🟢');
-      d.textContent = `${icon} ${txt}`;
-      wrap.appendChild(d);
-    };
+  <header>
+    <div class="wrap headbar">
+      <div>
+        
+<h1>Health Tracker</h1>
+<div class="small" id="appVersion"></div>
 
-    const T = State.thresholds;
-    const assess = (key, val, label) => {
-      if (val == null) return;
-      const th = T[key];
-      if (!th) return;
-      if (val < th.warnLow || val > th.warnHigh) chip(`${label}: ${U.fmt(val)} (Critical)`, 'danger');
-      else if (val < th.bandLow || val > th.bandHigh) chip(`${label}: ${U.fmt(val)} (Watch)`, 'warn');
-      else chip(`${label}: ${U.fmt(val)} (OK)`, 'ok');
-    };
+             </div>
+      <div class="install">
+        <button id="btnInstall" class="btn" style="display:none">Install</button>
+        <button id="btnCheckUpdates" class="btn">Check for updates</button>
+		<button id="btnTheme" class="btn" title="Toggle light/dark theme">  🌙</button>
 
-    assess('sys', latest.sys, 'Systolic');
-    assess('dia', latest.dia, 'Diastolic');
-    assess('spo2', latest.spo2, 'SpO₂');
-    assess('tempF', latest.tempF, 'Temp');
-    assess('hr', latest.hr, 'HR');
-    assess('resp', latest.resp, 'Resp');
-    assess('stress', latest.stress, 'Stress');
-    assess('bodyBattery', latest.bodyBattery, 'Body Battery');
-    assess('lungFluidCc', latest.lungFluidCc, 'Lung Fluid');
-    assess('sleep', latest.sleep, 'Sleep');
-    assess('steps', latest.steps, 'Steps');
-    assess('pain', latest.pain, 'Pain');
-    assess('symptoms', latest.symptoms, 'Symptoms');
-	assess('glucose', latest.glucose, 'Glucose');
+        <span id="installHint" class="small" style="color:#8aa0c3;"></span>
+      </div>
+    </div>
+  </header>
 
-    const bmi = U.bmi(latest.weightLbs, latest.heightIn); if (bmi != null) assess('bmi', bmi, 'BMI');
-    const whtr = U.whtr(latest.waistIn, latest.heightIn); if (whtr != null) assess('whtr', whtr, 'WHtR');
-  },
+  <main class="wrap">
+    <!-- Toolbar -->
+    <div class="toolbar card">
+      <div class="row" style="horizontal">
+        <div><label>From Date</label><input type="date" id="filterStart"></div>
+        <div><label>To Date</label><input type="date" id="filterEnd"></div>
+        <div>
+          <label>Chart Metrics</label>
+          <select id="chartMetrics" multiple size="4"></select>
+          <div class="small">Hold Ctrl/Cmd for multi-select</div>
+        </div>
+        <div>
+          <label>Axis Mode</label>
+          <select id="axisMode">
+            <option value="single">Single Y-axis</option>
+            <option value="perMetric" selected>Per-metric axes</option>
+          </select>
+        </div>
+        <div>
+          <label>Show Metrics Chart</label>
+          <select id="toggleChart">
+            <option value="on" selected>On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+        <div>
+          <label>View</label>
+          <select id="viewMode" title="Choose which sections are visible">
+            <option value="both" selected>Both (Table + Chart)</option>
+            <option value="table">Table only</option>
+            <option value="chart">Chart only</option>
+          </select>
+        </div>
+      </div>
+	  <div class="row">
+      <button class="btn" id="btnRefresh">Refresh</button>
+      <button class="btn" id="btnFields">Select Fields</button>
+      <button class="btn" id="btnThresholds">Thresholds</button>
+      <button class="btn" id="btnSaveCSV">Save CSV</button>
+      <button class="btn" id="btnSavePDF">Save PDF</button>
+      <button class="btn" id="btnImportCSV">Import CSV</button>
+      <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" />
+	  <button class="btn ok" id="btnAdd">Add Entry</button>
+      <button class="btn warn" id="btnOptions">Options</button>
+    </div>
+	</div>
 
-  refreshChart() {
-    if (State.ui.chartEnabled === false) { if (UI.chart) { UI.chart.destroy(); UI.chart = null; } return; }
-    if (!window.Chart) return;
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi"><div class="label">Latest Glucose (mg/dL)</div><div class="value" id="kpiGlucose">—</div><div class="trend" id="kpiGlucoseTrend"></div></div>
+      <div class="kpi"><div class="label">Latest BP (Sys/Dia)</div><div class="value" id="kpiBP">—</div><div class="trend" id="kpiBPTrend"></div></div>
+      <div class="kpi"><div class="label">Latest BMI / WHtR</div><div class="value"><span id="kpiBMI">—</span> <span class="small">/</span> <span id="kpiWHtR">—</span></div><div class="trend" id="kpiBMITrend"></div></div>
+      <div class="kpi"><div class="label">Latest SpO₂ / HR</div><div class="value"><span id="kpiSpO2">—</span> <span class="small">/</span> <span id="kpiHR">—</span></div><div class="trend" id="kpiVitalsTrend"></div></div>
+    </div>
 
-    const metricSel = document.getElementById('chartMetrics');
-    if (!metricSel) return;
+    <!-- Risk alerts -->
+    <div class="card">
+      <div class="section-title"><h2>Risk Alerts</h2></div>
+      <div class="chips" id="riskChips"></div>
+    </div>
 
-    const metricKeys = Array.from(metricSel.selectedOptions).map(o => o.value);
-    if (!metricKeys.length) { if (UI.chart) { UI.chart.destroy(); UI.chart = null; } return; }
+    <!-- Entries (FULL WIDTH, ABOVE CHART) -->
+    <div class="card full-width" id="entriesCard">
+      <div class="section-title">
+        <h2>Entries</h2>
+        <div class="small">Modify or delete entries. Exports respect date range and selected fields.</div>
+      </div>
+      <div style="overflow:auto;">
+        <table id="entriesTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
 
-    const canvas = document.getElementById('metricsChart');
-    if (!canvas) return;
+    <!-- Metrics Chart (FULL WIDTH, BELOW ENTRIES) -->
+    <div class="card full-width" id="chartCard">
+      <div class="section-title">
+        <h2>Metrics Chart</h2>
+        <div class="actions">
+          <button id="btnCollapseChart" class="btn" title="Collapse or expand chart area">Collapse</button>
+        </div>
+      </div>
+      <div id="chartPanel" style="height:320px">
+        <canvas id="metricsChart"></canvas>
+      </div>
+    </div>
+  </main>
 
-    const start = document.getElementById('filterStart')?.value;
-    const end = document.getElementById('filterEnd')?.value;
-    const axisMode = document.getElementById('axisMode')?.value || 'perMetric';
+  <!-- Update toast -->
+  <div id="updateToast" class="toast">
+    <span>New version available.</span>
+    <button id="btnReloadNow" class="btn ok">Reload now</button>
+    <button id="btnDismissToast" class="btn">Later</button>
+  </div>
 
-    // Keep ordering by date+time, but DISPLAY date only
-    const rows = State.entries
-      .filter(e => U.dateInRange(e.date, start, end))
-      .sort((a, b) => ((U.parseDateTime(a.date, a.time)?.getTime() || 0) - (U.parseDateTime(b.date, b.time)?.getTime() || 0)));
-
-    // DATE ONLY (no hour)
-    const labels = rows.map(r => r.date || '');
-
-    const palette = ['#60a5fa', '#34d399', '#f472b6', '#f59e0b', '#a78bfa', '#38bdf8',
-      '#f87171', '#22d3ee', '#e879f9', '#fde047', '#fb7185', '#93c5fd',
-      '#86efac', '#c084fc', '#fda4af'];
-
-    const yAxes = {};
-    const datasets = metricKeys.map((k, idx) => {
-      const m = METRICS.find(x => x.key === k);
-      const data = rows.map(r => r[k] ?? null);
-      const color = palette[idx % palette.length];
-      const yAxisID = axisMode === 'perMetric' ? `y_${k}` : 'y';
-      if (!yAxes[yAxisID]) {
-        yAxes[yAxisID] = {
-          type: 'linear',
-          display: true,
-          position: (Object.keys(yAxes).length % 2 ? 'right' : 'left'),
-          grid: { drawOnChartArea: (axisMode === 'single') },
-          title: { display: true, text: (axisMode === 'single' ? 'Value' : (m?.label || k)) }
-        };
-      }
-      return {
-        label: (m?.label || k),
-        data,
-        borderColor: color,
-        backgroundColor: color + '66',
-        tension: .25,
-        spanGaps: true,
-        yAxisID
-      };
-    });
-
-    const annotations = {};
-    const hasAnn = !!(window.Chart?.registry?.plugins?.get?.('annotation') || window['chartjs-plugin-annotation']);
-    if (hasAnn) {
-      const addLine = (id, y, color, label) => {
-        if (y == null || isNaN(y)) return;
-        annotations[id] = {
-          type: 'line', yMin: y, yMax: y,
-          borderColor: color, borderWidth: 1,
-          label: { display: true, content: label, position: 'start', color: '#cfe8ff', backgroundColor: '#0b1220cc' }
-        };
-      };
-      const addBand = (id, y1, y2, color) => {
-        if ([y1, y2].some(v => v == null || isNaN(v))) return;
-        annotations[id] = { type: 'box', yMin: y1, yMax: y2, backgroundColor: color, borderWidth: 0 };
-      };
-      metricKeys.forEach(k => {
-        const th = State.thresholds[k];
-        if (!th) return;
-        const yAxisID = axisMode === 'perMetric' ? `y_${k}` : 'y';
-        const base = `${yAxisID}_${k}`;
-        addBand(`${base}_band`, th.bandLow, th.bandHigh, 'rgba(39,215,155,0.08)');
-        addLine(`${base}_warnLow`, th.warnLow, '#ffcc66', 'Warn Low');
-        addLine(`${base}_warnHigh`, th.warnHigh, '#ffcc66', 'Warn High');
-      });
-    }
-
-    const config = {
-      type: 'line',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: '#dbeafe' } },
-          annotation: { annotations },
-          tooltip: {
-            callbacks: {
-              // Tooltip title DATE ONLY
-              title: (items) => {
-                const lab = items?.[0]?.label ?? '';
-                return String(lab).split(' ')[0];
-              }
-            }
-          }
-        },
-        scales: Object.assign(
-          {
-            x: {
-              ticks: {
-                color: '#9fb2d6',
-                callback: function (value) {
-                  const lab = this.getLabelForValue(value);
-                  return String(lab).split(' ')[0];
-                }
-              },
-              grid: { color: '#13213d' }
-            },
-            y: { ticks: { color: '#9fb2d6' }, grid: { color: '#13213d' } }
-          },
-          yAxes
-        )
-      }
-    };
-
-    if (UI.chart) UI.chart.destroy();
-    UI.chart = new Chart(canvas.getContext('2d'), config);
-  },
-
-  openEntry(id = null) {
-    State.editId = id;
-    document.getElementById('entryModal')?.classList.add('show');
-    const delBtn = document.getElementById('btnDeleteEntry');
-    if (delBtn) delBtn.style.display = id ? '' : 'none';
-
-    const title = document.getElementById('entryModalTitle');
-    if (title) title.textContent = id ? 'Edit Entry' : 'Add Entry';
-
-    State.medsBuffer = [];
-
-    if (id != null) {
-      const en = State.entries.find(x => x.id === id);
-      if (!en) return;
-
-      const map = (idk, v) => {
-        const el = document.getElementById(idk);
-        if (el) el.value = (v ?? '');
-      };
-
-      document.getElementById('f_date').value = en.date || '';
-      document.getElementById('f_time').value = en.time || '';
-
-      map('f_bodyBattery', en.bodyBattery);
-      map('f_stress', en.stress);
-      map('f_weightLbs', en.weightLbs);
-      map('f_heightIn', en.heightIn);
-      map('f_waistIn', en.waistIn);
-      map('f_tempF', en.tempF);
-      map('f_lungFluidCc', en.lungFluidCc);
-      map('f_sys', en.sys);
-      map('f_dia', en.dia);
-      map('f_spo2', en.spo2);
-      map('f_hr', en.hr);
-      map('f_resp', en.resp);
-      map('f_sleep', en.sleep);
-      map('f_steps', en.steps);
-	  map('f_glucose', en.glucose);
-
-      map('f_pain', en.pain ?? 0);
-      const pval = document.getElementById('painVal');
-      if (pval) pval.textContent = (en.pain ?? 0);
-
-      // Symptoms (full metric)
-      const sxEl = document.getElementById('f_symptoms');
-      if (sxEl) sxEl.value = (en.symptoms ?? 0);
-      const sxVal = document.getElementById('symptomsVal');
-      if (sxVal) sxVal.textContent = (en.symptoms ?? 0);
-
-      const emo = document.getElementById('f_emotions'); if (emo) emo.value = en.emotions || '';
-      const com = document.getElementById('f_comments'); if (com) com.value = en.comments || '';
-
-      State.medsBuffer = Array.isArray(en.meds) ? JSON.parse(JSON.stringify(en.meds)) : [];
-
-      if (window.updateScoreRange) {
-        window.updateScoreRange(document.getElementById('f_pain'));
-        window.updateScoreRange(document.getElementById('f_symptoms'));
-      }
-    } else {
-      const d = document.getElementById('f_date'); if (d) d.value = U.toISODate(new Date());
-      const t = document.getElementById('f_time'); if (t) t.value = new Date().toTimeString().slice(0, 5);
-
-      ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'glucose']
-        .forEach(k => {
-          const el = document.getElementById('f_' + k);
-          if (el) el.value = '';
-        });
-
-      const p = document.getElementById('f_pain'); if (p) p.value = 0;
-      const pval = document.getElementById('painVal'); if (pval) pval.textContent = '0';
-
-      const sx = document.getElementById('f_symptoms'); if (sx) sx.value = 0;
-      const sxVal = document.getElementById('symptomsVal'); if (sxVal) sxVal.textContent = '0';
-
-      const emo = document.getElementById('f_emotions'); if (emo) emo.value = '';
-      const com = document.getElementById('f_comments'); if (com) com.value = '';
-
-      if (window.updateScoreRange) {
-        window.updateScoreRange(document.getElementById('f_pain'));
-        window.updateScoreRange(document.getElementById('f_symptoms'));
-      }
-    }
-
-    UI.renderMedsBuffer();
-  },
-
-  closeEntry() { document.getElementById('entryModal')?.classList.remove('show'); },
-
-  openFields() {
-    document.getElementById('fieldsModal')?.classList.add('show');
-    const grid = document.getElementById('fieldsGrid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-    const all = ['date', 'time', ...METRICS.map(m => m.key)];
-    for (const k of all) {
-      const m = METRICS.find(x => x.key === k);
-      const lab = m ? m.label : (k === 'date' ? 'Date' : 'Time');
-      const id = 'fld_' + k;
-
-      const wrap = document.createElement('div');
-      const cb = document.createElement('input');
-      cb.type = 'checkbox'; cb.id = id; cb.checked = State.fieldsVisible.has(k);
-      cb.onchange = () => { if (cb.checked) State.fieldsVisible.add(k); else State.fieldsVisible.delete(k); };
-
-      const lb = document.createElement('label');
-      lb.htmlFor = id;
-      lb.textContent = lab;
-
-      wrap.appendChild(cb);
-      wrap.appendChild(lb);
-      grid.appendChild(wrap);
-    }
-  },
-
-  closeFields() { document.getElementById('fieldsModal')?.classList.remove('show'); },
-
-  openThresholds() {
-    const modal = document.getElementById('thModal');
-    if (modal) modal.classList.add('show');
-
-    const host = document.getElementById('thEditor');
-    if (!host) return;
-
-    host.innerHTML = '';
-
-    const keys = ['glucose', 'sys', 'dia', 'spo2', 'hr', 'tempF', 'stress', 'bodyBattery', 'lungFluidCc', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'bmi', 'whtr'];
-
-    let html = '';
-    for (const k of keys) {
-      const th = State.thresholds[k] || { warnLow: '', bandLow: '', bandHigh: '', warnHigh: '' };
-      const title = (METRICS.find(m => m.key === k)?.label) || k.toUpperCase();
-      html += `
-        <div class="card" style="margin-bottom:10px">
-          <h2>${title}</h2>
+  <!-- Add/Edit Entry Modal -->
+  <div class="modal-backdrop" id="entryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="entryModalTitle">Add Entry</h2>
+        <button class="btn" onclick="UI.closeEntry()">Close</button>
+      </div>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="f_date"></div>
+        <div><label>Time</label><input type="time" id="f_time"></div>
+        <div><label>Glucose (mg/dL)</label><input type="number" id="f_glucose" inputmode="decimal"></div>
+        <div><label>Body Battery (0-100)</label><input type="number" id="f_bodyBattery" min="0" max="100"></div>
+        <div><label>Stress (0-100)</label><input type="number" id="f_stress" min="0" max="100"></div>
+        <div><label>Weight (lbs)</label><input type="number" id="f_weightLbs" inputmode="decimal"></div>
+        <div><label>Height (in)</label><input type="number" id="f_heightIn" inputmode="decimal"></div>
+        <div><label>Waist (in)</label><input type="number" id="f_waistIn" inputmode="decimal"></div>
+        <div><label>Temperature (°F)</label><input type="number" id="f_tempF" inputmode="decimal"></div>
+        <div><label>Lung Fluid (cc)</label><input type="number" id="f_lungFluidCc" inputmode="decimal"></div>
+        <div><label>Systolic (mmHg)</label><input type="number" id="f_sys" inputmode="numeric"></div>
+        <div><label>Diastolic (mmHg)</label><input type="number" id="f_dia" inputmode="numeric"></div>
+        <div><label>SpO₂ (%)</label><input type="number" id="f_spo2" min="0" max="100" inputmode="numeric"></div>
+        <div><label>Heart Rate (bpm)</label><input type="number" id="f_hr" inputmode="numeric"></div>
+        <div><label>Respiration (br/min)</label><input type="number" id="f_resp" inputmode="numeric"></div>
+        <div><label>Sleep (hrs)</label><input type="number" id="f_sleep" step="0.1"></div>
+        <div><label>Steps</label><input type="number" id="f_steps"></div>
+        <div>
+          <label>Pain (0-10)</label>
+          <input type="range" class="score-range" id="f_pain" min="0" max="10" value="0" oninput="document.getElementById('painVal').textContent=this.value">
+          <div class="small">Level: <b id="painVal">0</b></div>
+        </div>
+        <div>
+          <label>Symptoms (0-10)</label>
+          <input type="range" class="score-range" id="f_symptoms" min="0" max="10" value="0" oninput="document.getElementById('symptomsVal').textContent=this.value">
+          <div class="small">Level: <b id="symptomsVal">0</b></div>
+        </div>
+        <div>
+          <label>Emotions</label>
+          <select id="f_emotions">
+            <option value="">—</option>
+            <option>Happy</option><option>Calm</option><option>Neutral</option>
+            <option>Anxious</option><option>Sad</option><option>Stressed</option><option>Fatigued</option><option>Angry</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Medicines (name dose units; add multiple)</label>
           <div class="row">
-            <div><label>Warn Low</label><input type="number" id="t_${k}_warnLow" value="${th.warnLow}"></div>
-            <div><label>Band Low</label><input type="number" id="t_${k}_bandLow" value="${th.bandLow}"></div>
-            <div><label>Band High</label><input type="number" id="t_${k}_bandHigh" value="${th.bandHigh}"></div>
-            <div><label>Warn High</label><input type="number" id="t_${k}_warnHigh" value="${th.warnHigh}"></div>
+            <input id="med_name" placeholder="Name (e.g., Furosemide)" />
+            <input id="med_dose" placeholder="Dose (e.g., 20)" />
+            <input id="med_units" placeholder="Units (mg, ml, tabs)" />
+            <button class="btn" id="btnAddMed" type="button">Add</button>
+          </div>
+          <div class="chips" id="medList"></div>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Comments</label>
+          <textarea id="f_comments" placeholder="Notes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn danger" id="btnDeleteEntry" style="display:none">Delete</button>
+        <button class="btn" id="btnSaveEntry">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Field Selection Modal -->
+  <div class="modal-backdrop" id="fieldsModal">
+    <div class="modal">
+      <div class="modal-header" style="gap:8px; align-items:center;">
+        <h2 style="flex:1">Select Fields</h2>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn ok" id="btnQuickAdd" title="Add a new entry">Add Entry</button>
+          <button class="btn danger" id="btnBulkDelete" title="Bulk remove entries">Remove Entries…</button>
+          <button class="btn" onclick="UI.closeFields()">Close</button>
+        </div>
+      </div>
+      <div class="field-grid" id="fieldsGrid"></div>
+      <div class="modal-actions">
+        <button class="btn" id="btnSaveFields">Save Fields</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Remove Entries Modal -->
+  <div class="modal-backdrop" id="bulkRemoveModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Remove Entries</h2>
+        <button class="btn" onclick="UI.closeBulkRemove()">Close</button>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="row">
+          <div>
+            <label>Delete Mode</label>
+            <select id="rm_mode">
+              <option value="range" selected>By Date Range</option>
+              <option value="all">Delete ALL Entries</option>
+            </select>
+          </div>
+          <div id="rm_range_wrap" style="display:flex; gap:8px; align-items:flex-end;">
+            <div>
+              <label>From (inclusive)</label>
+              <input type="date" id="rm_start">
+            </div>
+            <div>
+              <label>To (inclusive)</label>
+              <input type="date" id="rm_end">
+            </div>
           </div>
         </div>
-      `;
-    }
+        <div class="small" style="margin-top:6px; color:#9fb2d6">
+          Tip: Use “Delete ALL Entries” with caution. This cannot be undone.
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn danger" id="btnConfirmBulkRemove">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Threshold Editor Modal -->
+  <div class="modal-backdrop" id="thModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Per‑Metric Thresholds &amp; Bands</h2>
+        <button class="btn" onclick="UI.closeThresholds()">Close</button>
+      </div>
+      <div id="thEditor"></div>
+      <div class="modal-actions">
+        <button class="btn ok" id="btnSaveThresholds" type="button">Save Thresholds</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Options Modal -->
+  
+  
+  <div>
+  <label>Theme</label>
+  <select id="optTheme">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+  </select>
+</div>
+  
+  
+  <div class="modal-backdrop" id="optModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Options</h2>
+        <button class="btn" onclick="UI.closeOptions()">Close</button>
+      </div>
+      <div class="row">
+        <div>
+          <label>Autosave (IndexedDB)</label>
+          <select id="optAutosave">
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+        <div>
+          <label>CSV Export → Use selected fields only</label>
+          <select id="optCsvSelected">
+            <option value="yes">Yes</option>
+            <option value="no">No (export all)</option>
+          </select>
+        </div>
+        <div>
+          <label>PDF Export → Include chart</label>
+          <select id="optPdfChart">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="btnSaveOptions">Save Options</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Range slider helper (thumb coloring + init) -->
+  <script src="./range-slider.js"></script>
 
-    host.innerHTML = html;
-    bindSaveThresholds();
-  },
-
-  closeThresholds() { document.getElementById('thModal')?.classList.remove('show'); },
-
-  openOptions() {
-    document.getElementById('optModal')?.classList.add('show');
-    const a = document.getElementById('optAutosave'); if (a) a.value = State.options.autosave;
-    const c = document.getElementById('optCsvSelected'); if (c) c.value = State.options.csvSelectedOnly;
-    const p = document.getElementById('optPdfChart'); if (p) p.value = State.options.pdfIncludeChart;
-  },
-
-  closeOptions() { document.getElementById('optModal')?.classList.remove('show'); },
-
-  openBulkRemove() {
-    const wrap = document.getElementById('rm_range_wrap'); if (wrap) wrap.style.display = '';
-    const ms = document.getElementById('rm_mode'); if (ms) ms.value = 'range';
-    const s = document.getElementById('rm_start'); if (s) s.value = '';
-    const e = document.getElementById('rm_end'); if (e) e.value = '';
-    document.getElementById('bulkRemoveModal')?.classList.add('show');
-  },
-
-  closeBulkRemove() { document.getElementById('bulkRemoveModal')?.classList.remove('show'); },
-
-  renderMedsBuffer() {
-    const host = document.getElementById('medList');
-    if (!host) return;
-
-    host.innerHTML = '';
-    State.medsBuffer.forEach((m, idx) => {
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      chip.textContent = `${m.name} ${m.dose}${m.units ? (' ' + m.units) : ''}`;
-
-      const btn = document.createElement('button');
-      btn.className = 'btn danger';
-      btn.style.padding = '2px 6px';
-      btn.style.marginLeft = '6px';
-      btn.textContent = 'x';
-      btn.onclick = () => { State.medsBuffer.splice(idx, 1); UI.renderMedsBuffer(); };
-
-      chip.appendChild(btn);
-      host.appendChild(chip);
-    });
-  }
-};
-
-/* ==================== View mode + chart collapse helpers ==================== */
-async function saveUI() { await DB.putConfig('ui', State.ui); }
-
-function applyViewMode() {
-  const entriesCard = document.getElementById('entriesCard');
-  const chartCard = document.getElementById('chartCard');
-
-  const vm = State.ui.viewMode || 'both';
-  const showChart = State.ui.chartEnabled === true;
-
-  const showEntriesByVM = (vm === 'both' || vm === 'table');
-  const showChartByVM = (vm === 'both' || vm === 'chart');
-
-  if (entriesCard) entriesCard.style.display = showEntriesByVM ? '' : 'none';
-  if (chartCard) chartCard.style.display = (showChartByVM && showChart) ? '' : 'none';
-
-  if (vm === 'chart' && !showChart) {
-    State.ui.chartEnabled = true;
-    const toggle = document.getElementById('toggleChart');
-    if (toggle) toggle.value = 'on';
-    if (chartCard) chartCard.style.display = '';
-    saveUI();
-  }
-
-  if ((vm === 'both' || vm === 'chart') && State.ui.chartEnabled) setTimeout(() => UI.refreshChart?.(), 0);
-}
-
-function setChartCollapsed(collapsed) {
-  const panel = document.getElementById('chartPanel');
-  if (!panel) return;
-  panel.style.display = collapsed ? 'none' : '';
-}
-
-function updateCollapseButton() {
-  const btn = document.getElementById('btnCollapseChart');
-  if (!btn) return;
-  btn.textContent = State.ui.collapsedChart ? 'Expand' : 'Collapse';
-  btn.title = State.ui.collapsedChart ? 'Expand chart area' : 'Collapse chart area';
-}
-
-/* ==================== CSV Import Helpers (ISO normalization) ==================== */
-function parseCSV(text) {
-  const rows = []; let row = [], cur = '', i = 0, inQuotes = false;
-  while (i < text.length) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i += 2; continue; } inQuotes = false; i++; continue; }
-      cur += ch; i++; continue;
-    }
-    if (ch === '"') { inQuotes = true; i++; continue; }
-    if (ch === ',') { row.push(cur); cur = ''; i++; continue; }
-    if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; i++; continue; }
-    if (ch === '\r') { row.push(cur); rows.push(row); row = []; cur = ''; i++; if (text[i] === '\n') i++; continue; }
-    cur += ch; i++;
-  }
-  row.push(cur); rows.push(row);
-  if (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') rows.pop();
-  return rows;
-}
-
-function normalizeHeader(h) {
-  if (!h) return '';
-  const s = String(h).trim().toLowerCase().replace(/\s+/g, '');
-  const map = {
-    'date': 'date', 'time': 'time', 'datetime': 'datetime',
-    'glucose(mg/dl)': 'glucose', 'glucose': 'glucose',
-    'bodybattery': 'bodyBattery', 'stress': 'stress',
-    'weight(lbs)': 'weightLbs', 'weightlbs': 'weightLbs', 'weight': 'weightLbs',
-    'height(in)': 'heightIn', 'heightin': 'heightIn', 'height': 'heightIn',
-    'waist(in)': 'waistIn', 'waistin': 'waistIn', 'waist': 'waistIn',
-    'temperature(°f)': 'tempF', 'temperature(f)': 'tempF', 'tempf': 'tempF', 'temperature': 'tempF', 'temp': 'tempF',
-    'lungfluid(cc)': 'lungFluidCc', 'lungfluidcc': 'lungFluidCc', 'lungfluid': 'lungFluidCc',
-    'systolic(mmhg)': 'sys', 'systolic': 'sys', 'sys': 'sys',
-    'diastolic(mmhg)': 'dia', 'diastolic': 'dia', 'dia': 'dia',
-    'spox(%)': 'spo2', 'spo2(%)': 'spo2', 'spo2': 'spo2',
-    'heartrate(bpm)': 'hr', 'heartrate': 'hr', 'hr': 'hr', 'pulse': 'hr',
-    'respiration(br/min)': 'resp', 'respiration': 'resp', 'resp': 'resp',
-    'sleep(hrs)': 'sleep', 'sleephrs': 'sleep', 'sleep': 'sleep',
-    'steps': 'steps',
-    'pain(0-10)': 'pain', 'pain': 'pain',
-    'symptoms(0-10)': 'symptoms', 'symptoms': 'symptoms', 'sx': 'symptoms',
-    'emotions': 'emotions', 'mood': 'emotions',
-    'comments': 'comments', 'notes': 'comments',
-    'medicines': 'meds', 'meds': 'meds'
-  };
-  return map[s] || s;
-}
-
-function csvRowToEntry(row, headerIndex) {
-  const e = {
-    date: null, time: null,
-    glucose: null, bodyBattery: null, stress: null,
-    weightLbs: null, heightIn: null, waistIn: null,
-    tempF: null, lungFluidCc: null, sys: null, dia: null,
-    spo2: null, hr: null, resp: null, sleep: null, steps: null,
-    pain: null, symptoms: null,
-    emotions: '', comments: '', meds: []
-  };
-
-  const dtIdx = headerIndex['datetime'];
-  const dateIdx = headerIndex['date'];
-  const timeIdx = headerIndex['time'];
-
-  if (dtIdx != null) {
-    const raw = String(row[dtIdx] ?? '').trim();
-    if (raw) {
-      const parts = raw.replace('T', ' ').split(/\s+/);
-      const d = U.normalizeDateString(parts[0]);
-      const t = U.normalizeTimeString(parts[1] || '00:00') || '00:00';
-      if (d) { e.date = d; e.time = t; }
-      else {
-        const probe = new Date(raw);
-        if (!isNaN(probe.getTime())) {
-          e.date = U.toISODate(probe);
-          e.time = (U.normalizeTimeString(raw.slice(11, 16)) || '00:00');
-        }
-      }
-    }
-  }
-
-  if (!e.date && dateIdx != null) e.date = U.normalizeDateString(String(row[dateIdx] ?? '').trim());
-  if (!e.time && timeIdx != null) e.time = U.normalizeTimeString(String(row[timeIdx] ?? '').trim()) || '00:00';
-  if (!e.date) return null;
-
-  const numericKeys = ['bodyBattery', 'stress', 'weightLbs', 'heightIn', 'waistIn', 'tempF', 'lungFluidCc', 'sys', 'dia', 'spo2', 'hr', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'glucose'];
-  for (const k of numericKeys) {
-    const idx = headerIndex[k];
-    if (idx != null) {
-      const s = String(row[idx] ?? '').trim();
-      e[k] = (s === '' ? null : (Number.isFinite(Number(s)) ? Number(s) : null));
-    }
-  }
-
-  if (headerIndex['emotions'] != null) e.emotions = String(row[headerIndex['emotions']] ?? '').trim();
-  if (headerIndex['comments'] != null) e.comments = String(row[headerIndex['comments']] ?? '').trim();
-
-  if (headerIndex['meds'] != null) {
-    const raw = String(row[headerIndex['meds']] ?? '').trim();
-    if (raw) {
-      const parts = raw.split(';').map(s => s.trim()).filter(Boolean);
-      e.meds = parts.map(p => {
-        const m = p.match(/^(.+?)\s+([\d.]+)\s*([a-zA-Z]+)?$/);
-        return m ? { name: m[1], dose: m[2], units: m[3] || '' } : { name: p, dose: '', units: '' };
-      });
-    }
-  }
-
-  return e;
-}
-
-/* ==================== Actions ==================== */
-const Actions = {
-  async init() {
-    await DB.open();
-
-    const fields = await DB.getConfig('fieldsVisible'); if (fields) State.fieldsVisible = new Set(fields);
-    const thresholds = await DB.getConfig('thresholds'); if (thresholds) State.thresholds = thresholds;
-    const options = await DB.getConfig('options'); if (options) State.options = options;
-
-    const ui = await DB.getConfig('ui');
-    if (ui && typeof ui.chartEnabled === 'boolean') State.ui.chartEnabled = ui.chartEnabled;
-    if (ui && typeof ui.viewMode === 'string') State.ui.viewMode = ui.viewMode;
-    if (ui && typeof ui.collapsedChart === 'boolean') State.ui.collapsedChart = ui.collapsedChart;
-
-    const chartToggle = document.getElementById('toggleChart'); if (chartToggle) chartToggle.value = State.ui.chartEnabled ? 'on' : 'off';
-    const viewSel = document.getElementById('viewMode'); if (viewSel) viewSel.value = State.ui.viewMode || 'both';
-
-    applyViewMode();
-    setChartCollapsed(State.ui.collapsedChart);
-    updateCollapseButton();
-
-    State.entries = await DB.getAllEntries();
-
-    UI.initChartMetricSelector();
-    UI.buildTable();
-    UI.refreshKPIs();
-    UI.refreshChart();
-  },
-
-  async saveEntryFromForm() {
-    const isEdit = State.editId != null;
-
-    const rawDate = document.getElementById('f_date')?.value || '';
-    const rawTime = document.getElementById('f_time')?.value || '';
-    const normDate = U.normalizeDateString(rawDate);
-    const normTime = U.normalizeTimeString(rawTime) || '00:00';
-    if (!normDate) { alert('Date is required and must be valid (YYYY-MM-DD).'); return; }
-
-    function num(id) {
-      const el = document.getElementById(id);
-      const v = el ? el.value : '';
-      return v === '' ? null : Number(v);
-    }
-
-    const en = {
-      date: normDate,
-      time: normTime,
-      glucose: num('f_glucose'),
-      bodyBattery: num('f_bodyBattery'),
-      stress: num('f_stress'),
-      weightLbs: num('f_weightLbs'),
-      heightIn: num('f_heightIn'),
-      waistIn: num('f_waistIn'),
-      tempF: num('f_tempF'),
-      lungFluidCc: num('f_lungFluidCc'),
-      sys: num('f_sys'),
-      dia: num('f_dia'),
-      spo2: num('f_spo2'),
-      hr: num('f_hr'),
-      resp: num('f_resp'),
-      sleep: num('f_sleep'),
-      steps: num('f_steps'),
-      pain: num('f_pain'),
-      symptoms: num('f_symptoms'),
-      emotions: document.getElementById('f_emotions')?.value || '',
-      comments: document.getElementById('f_comments')?.value || '',
-      meds: JSON.parse(JSON.stringify(State.medsBuffer)),
-    };
-
-    if (isEdit) en.id = Number(State.editId);
-
-    await DB.putEntry(en);
-    State.editId = null;
-    UI.closeEntry();
-  },
-
-  async deleteEntry(id) { await DB.deleteEntry(id); },
-
-  async refreshAll() {
-    State.entries = await DB.getAllEntries();
-    UI.buildTable();
-    UI.refreshKPIs();
-    UI.refreshChart();
-  },
-
-  async saveFields() {
-    await DB.putConfig('fieldsVisible', Array.from(State.fieldsVisible));
-    UI.closeFields();
-    UI.buildTable();
-  },
-
-  async saveThresholds() {
-    try {
-      const existing = State.thresholds || {};
-      const merged = { ...existing };
-      const editKeys = ['glucose', 'sys', 'dia', 'spo2', 'hr', 'tempF', 'stress', 'bodyBattery', 'lungFluidCc', 'resp', 'sleep', 'steps', 'pain', 'symptoms', 'bmi', 'whtr'];
-
-      const getNum = (id) => {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        const s = (el.value ?? '').trim();
-        if (s === '') return null;
-        const v = Number(s);
-        return Number.isFinite(v) ? v : null;
-      };
-
-      let changedCount = 0;
-      for (const k of editKeys) {
-        const wl = getNum(`t_${k}_warnLow`);
-        const bl = getNum(`t_${k}_bandLow`);
-        const bh = getNum(`t_${k}_bandHigh`);
-        const wh = getNum(`t_${k}_warnHigh`);
-        if (wl === null && bl === null && bh === null && wh === null) continue;
-
-        const cur = merged[k] || { warnLow: null, bandLow: null, bandHigh: null, warnHigh: null };
-        const next = {
-          warnLow: wl !== null ? wl : cur.warnLow,
-          bandLow: bl !== null ? bl : cur.bandLow,
-          bandHigh: bh !== null ? bh : cur.bandHigh,
-          warnHigh: wh !== null ? wh : cur.warnHigh
-        };
-
-        if (next.bandLow != null && next.bandHigh != null && next.bandLow > next.bandHigh) {
-          const tmp = next.bandLow; next.bandLow = next.bandHigh; next.bandHigh = tmp;
-        }
-
-        merged[k] = next;
-        changedCount++;
-      }
-
-      if (changedCount > 0) {
-        State.thresholds = merged;
-        await DB.putConfig('thresholds', merged);
-      }
-
-      UI.closeThresholds?.();
-      UI.refreshKPIs?.();
-      UI.refreshChart?.();
-      if (changedCount === 0) alert('No threshold values changed.');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save thresholds. See console for details.');
-    }
-  },
-
-  async saveOptions() {
-    State.options = {
-      autosave: document.getElementById('optAutosave')?.value,
-      csvSelectedOnly: document.getElementById('optCsvSelected')?.value,
-      pdfIncludeChart: document.getElementById('optPdfChart')?.value
-    };
-
-    await DB.putConfig('options', State.options);
-    UI.closeOptions();
-  },
-
-  exportCSV() {
-    try {
-      const start = document.getElementById('filterStart')?.value;
-      const end = document.getElementById('filterEnd')?.value;
-      const rows = State.entries.filter(e => U.dateInRange(e.date, start, end));
-      const fields = State.options.csvSelectedOnly === 'yes' ? [...State.fieldsVisible] : CORE_FIELDS;
-
-      const headers = [];
-      if (fields.includes('date')) headers.push('date');
-      if (fields.includes('time')) headers.push('time');
-      CORE_FIELDS.filter(f => !['date', 'time'].includes(f)).forEach(f => { if (fields.includes(f)) headers.push(f); });
-
-      let csv = headers.join(',') + '\n';
-      for (const r of rows) {
-        const vals = headers.map(h => {
-          let v = r[h];
-          if (h === 'meds') v = Array.isArray(v) ? v.map(m => `${m.name} ${m.dose}${m.units ? (' ' + m.units) : ''}`).join('; ') : '';
-          return U.csvEscape(v == null ? '' : v);
-        });
-        csv += vals.join(',') + '\n';
-      }
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `health-tracker_${U.toISODate(new Date())}.csv`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch (err) {
-      console.error(err);
-      alert('CSV export failed. See console for details.');
-    }
-  },
-
-  async importCSVFromFile(file) {
-    try {
-      if (!file) return;
-      const text = await file.text();
-      if (!text.trim()) { alert('Selected CSV is empty.'); return; }
-
-      const rows = parseCSV(text);
-      if (!rows.length) { alert('No rows found in CSV.'); return; }
-
-      const headersRaw = rows[0];
-      const headerIndex = {};
-      headersRaw.forEach((h, i) => {
-        const key = normalizeHeader(h);
-        if (key) headerIndex[key] = i;
-      });
-
-      if (headerIndex['date'] == null && headerIndex['datetime'] == null) {
-        alert('CSV must include a "date" or "datetime" column.');
-        return;
-      }
-
-      let imported = 0, skipped = 0;
-      for (let r = 1; r < rows.length; r++) {
-        const entry = csvRowToEntry(rows[r], headerIndex);
-        if (!entry) { skipped++; continue; }
-        await DB.putEntry(entry);
-        imported++;
-      }
-
-      await Actions.refreshAll();
-      alert(`Import complete.\nImported: ${imported}\nSkipped: ${skipped}`);
-    } catch (err) {
-      console.error(err);
-      alert('Import failed. See console for details.');
-    }
-  },
-
-  exportPDF: async function exportPDF() {
-    try {
-      if (!window.jspdf) { alert('jsPDF failed to load.'); return; }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 36;
-      const contentW = pageW - margin * 2;
-      const bottomLimit = pageH - margin;
-
-      let y = margin;
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20);
-      doc.text('Health Tracker Export', margin, y); y += 18;
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(30);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y); y += 16;
-
-      const start = document.getElementById('filterStart')?.value;
-      const end = document.getElementById('filterEnd')?.value;
-      const parseDT = (d, t) => { const dt = U.parseDateTime(d, t); return dt ? dt.getTime() : 0; };
-
-      const all = (State.entries || [])
-        .filter(e => U.dateInRange(e.date, start, end))
-        .sort((a, b) => parseDT(a.date, a.time) - parseDT(b.date, b.time));
-
-      const visible = new Set(State.fieldsVisible || []);
-      const baseHeaders = ['date', 'time', ...METRICS.map(m => m.key)].filter(k => visible.has(k));
-
-      const headers = [];
-      if (baseHeaders.includes('date')) headers.push('date');
-      if (baseHeaders.includes('time')) headers.push('time');
-      baseHeaders.forEach(h => { if (!['date', 'time'].includes(h)) headers.push(h); });
-      if (!headers.length) headers.push('date', 'time');
-
-      const wantChart = (State.options?.pdfIncludeChart === 'yes') && State.ui.chartEnabled === true;
-      if (wantChart && UI.chart && typeof UI.chart.toBase64Image === 'function') {
-        const hasAnyPoint = (UI.chart.data?.datasets || []).some(ds => (ds.data || []).some(v => v != null && v !== ''));
-        if (hasAnyPoint) {
-          try { UI.chart.update('none'); } catch { }
-          const url = UI.chart.toBase64Image('image/png', 1.0);
-          if (url && /^data:image\/png;base64,/.test(url)) {
-            const chartH = 220;
-            if (y + chartH + 10 > bottomLimit) { doc.addPage(); y = margin; }
-            doc.addImage(url, 'PNG', margin, y, contentW, chartH, undefined, 'FAST');
-            y += chartH + 12;
-          }
-        }
-      }
-
-      const rows = all.map(r => {
-        const flat = { ...r };
-        if (Array.isArray(flat.meds)) {
-          flat.meds = flat.meds.map(m => `${m.name} ${m.dose}${m.units ? (' ' + m.units) : ''}`).join('; ');
-        }
-        return flat;
-      });
-
-      const LABEL_ABBR = {
-        'Glucose (mg/dL)': 'Glucose', 'Systolic (mmHg)': 'Sys', 'Diastolic (mmHg)': 'Dia',
-        'Temperature (°F)': 'Temp', 'Heart Rate (bpm)': 'HR', 'Respiration (br/min)': 'Resp',
-        'Body Battery': 'BodyBat', 'SpO₂ (%)': 'SpO2', 'Lung Fluid (cc)': 'LungFl',
-        'Weight (lbs)': 'Wt', 'Height (in)': 'Ht', 'Waist (in)': 'Waist',
-        'Sleep (hrs)': 'Sleep', 'Medicines': 'Meds', 'Emotions': 'Mood', 'Comments': 'Notes',
-        'Symptoms (0-10)': 'Sx'
-      };
-
-      const labelOf = (k) => (k === 'date' ? 'Date' : (k === 'time' ? 'Time' : (METRICS.find(x => x.key === k)?.label || k.toUpperCase())));
-
-      function shortLabel(label, colW) {
-        const abbr = LABEL_ABBR[label] || label;
-        const maxChars = Math.max(3, Math.floor((colW - 8) / 6));
-        return abbr.length > maxChars ? (abbr.slice(0, maxChars - 1) + '…') : abbr;
-      }
-
-      const chunk = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
-      const maxColsPerChunk = 6;
-      const headerChunks = chunk(headers, maxColsPerChunk);
-
-      const cellPadX = 4, cellPadY = 3;
-      const headerH = 14, rowBaseH = 12;
-
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(15);
-
-      for (const cols of headerChunks) {
-        const colW = Math.floor(contentW / Math.max(1, cols.length));
-        if (y + headerH + 6 > bottomLimit) { doc.addPage(); y = margin; }
-
-        let x = margin;
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20);
-        cols.forEach(col => { const lbl = labelOf(col); doc.text(shortLabel(lbl, colW), x + cellPadX, y + 10); x += colW; });
-        doc.setDrawColor(160); doc.setLineWidth(0.5);
-        doc.line(margin, y + headerH, margin + contentW, y + headerH);
-        y += headerH + 4;
-
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(15);
-        for (const r of rows) {
-          let rowH = rowBaseH;
-          const wrapped = cols.map(col => {
-            let v = r[col]; if (v == null) v = '';
-            v = String(v);
-            const lines = doc.splitTextToSize(v, colW - cellPadX * 2);
-            const h = lines.length * 12 + cellPadY * 2;
-            if (h > rowH) rowH = h;
-            return lines;
-          });
-
-          if (y + rowH > bottomLimit) { doc.addPage(); y = margin; }
-
-          let xCell = margin;
-          for (let i = 0; i < cols.length; i++) {
-            let lineY = y + 10;
-            for (const ln of wrapped[i]) { doc.text(ln, xCell + cellPadX, lineY); lineY += 12; }
-            xCell += colW;
-          }
-          y += rowH;
-        }
-        y += 10;
-      }
-
-      const stamp = new Date().toISOString().slice(0, 10);
-      doc.save(`health-tracker_${stamp}.pdf`);
-    } catch (err) {
-      console.error(err);
-      alert('PDF export failed. See console for details.');
-    }
-  }
-};
-
-/* ==================== Event Wiring ==================== */
-function bindSaveThresholds() {
-  const btn = document.getElementById('btnSaveThresholds');
-  if (btn && !btn._bound) { btn.addEventListener('click', Actions.saveThresholds); btn._bound = true; }
-}
-
-// Core buttons
-document.getElementById('btnAdd')?.addEventListener('click', () => UI.openEntry(null));
-document.getElementById('btnFields')?.addEventListener('click', () => UI.openFields());
-document.getElementById('btnThresholds')?.addEventListener('click', () => UI.openThresholds());
-document.getElementById('btnOptions')?.addEventListener('click', () => UI.openOptions());
-document.getElementById('btnSaveFields')?.addEventListener('click', Actions.saveFields);
-document.getElementById('btnSaveOptions')?.addEventListener('click', Actions.saveOptions);
-
-document.getElementById('btnSaveEntry')?.addEventListener('click', async () => {
-  await Actions.saveEntryFromForm();
-  await Actions.refreshAll();
-});
-
-document.getElementById('btnDeleteEntry')?.addEventListener('click', async () => {
-  if (State.editId != null && confirm('Delete this entry?')) {
-    await Actions.deleteEntry(State.editId);
-    UI.closeEntry();
-    await Actions.refreshAll();
-  }
-});
-
-document.getElementById('btnRefresh')?.addEventListener('click', () => { UI.buildTable(); UI.refreshKPIs(); UI.refreshChart(); });
-document.getElementById('btnSaveCSV')?.addEventListener('click', Actions.exportCSV);
-document.getElementById('btnSavePDF')?.addEventListener('click', Actions.exportPDF);
-
-// Medicines chip add
-document.getElementById('btnAddMed')?.addEventListener('click', () => {
-  const name = document.getElementById('med_name')?.value.trim();
-  const dose = document.getElementById('med_dose')?.value.trim();
-  const units = document.getElementById('med_units')?.value.trim();
-  if (!name) return;
-  State.medsBuffer.push({ name, dose, units });
-  if (document.getElementById('med_name')) document.getElementById('med_name').value = '';
-  if (document.getElementById('med_dose')) document.getElementById('med_dose').value = '';
-  if (document.getElementById('med_units')) document.getElementById('med_units').value = '';
-  UI.renderMedsBuffer();
-});
-
-// CSV import wiring
-document.getElementById('btnImportCSV')?.addEventListener('click', () => document.getElementById('importFile')?.click());
-document.getElementById('importFile')?.addEventListener('change', async (e) => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-  await Actions.importCSVFromFile(file);
-  e.target.value = '';
-});
-
-// Filters & chart controls
-document.getElementById('chartMetrics')?.addEventListener('change', () => UI.refreshChart());
-document.getElementById('axisMode')?.addEventListener('change', () => UI.refreshChart());
-document.getElementById('filterStart')?.addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
-document.getElementById('filterEnd')?.addEventListener('change', () => { UI.buildTable(); UI.refreshChart(); });
-
-// Chart toggle (persist) — respects viewMode
-document.getElementById('toggleChart')?.addEventListener('change', async (e) => {
-  State.ui.chartEnabled = (e.target.value === 'on');
-  if (!State.ui.chartEnabled && State.ui.viewMode === 'chart') {
-    State.ui.viewMode = 'table';
-    const viewSel = document.getElementById('viewMode');
-    if (viewSel) viewSel.value = 'table';
-  }
-  applyViewMode();
-  if (!State.ui.chartEnabled && UI.chart) { UI.chart.destroy(); UI.chart = null; }
-  await DB.putConfig('ui', State.ui);
-  UI.refreshChart();
-});
-
-// “Select Fields” extra actions
-document.getElementById('btnQuickAdd')?.addEventListener('click', () => UI.openEntry(null));
-document.getElementById('btnBulkDelete')?.addEventListener('click', () => UI.openBulkRemove());
-document.getElementById('rm_mode')?.addEventListener('change', (e) => {
-  const wrap = document.getElementById('rm_range_wrap');
-  if (wrap) wrap.style.display = (e.target.value === 'range') ? '' : 'none';
-});
-
-document.getElementById('btnConfirmBulkRemove')?.addEventListener('click', async () => {
-  const mode = (document.getElementById('rm_mode')?.value) || 'range';
-  const rmStart = document.getElementById('rm_start')?.value || '';
-  const rmEnd = document.getElementById('rm_end')?.value || '';
-  let targets = [];
-  if (mode === 'all') targets = [...State.entries];
-  else {
-    const inRange = (dateStr) => U.dateInRange(dateStr, rmStart, rmEnd);
-    targets = State.entries.filter(e => inRange(e.date));
-  }
-  if (!targets.length) { alert('No entries match the selected criteria.'); return; }
-  const label = (mode === 'all') ? 'ALL entries' : `entries from ${rmStart || 'beginning'} to ${rmEnd || 'now'}`;
-  if (!confirm(`This will permanently delete ${targets.length} ${label}.\n\nAre you sure?`)) return;
-  try {
-    for (const en of targets) {
-      if (en && typeof en.id !== 'undefined') await DB.deleteEntry(en.id);
-    }
-    UI.closeBulkRemove?.();
-    await Actions.refreshAll();
-    alert(`Deleted ${targets.length} ${label}.`);
-  } catch (err) {
-    console.error(err);
-    alert('Failed to remove entries. See console for details.');
-  }
-});
-
-// View mode select
-document.getElementById('viewMode')?.addEventListener('change', async (e) => {
-  const val = e.target.value || 'both';
-  State.ui.viewMode = (val === 'table' || val === 'chart') ? val : 'both';
-  if (State.ui.viewMode === 'chart' && !State.ui.chartEnabled) {
-    State.ui.chartEnabled = true;
-    const toggle = document.getElementById('toggleChart');
-    if (toggle) toggle.value = 'on';
-  }
-  applyViewMode();
-  await DB.putConfig('ui', State.ui);
-});
-
-// Collapse button
-document.getElementById('btnCollapseChart')?.addEventListener('click', async () => {
-  State.ui.collapsedChart = !State.ui.collapsedChart;
-  setChartCollapsed(State.ui.collapsedChart);
-  updateCollapseButton();
-  await DB.putConfig('ui', State.ui);
-  if (!State.ui.collapsedChart && State.ui.chartEnabled) setTimeout(() => UI.refreshChart?.(), 0);
-});
-
-// Close modals by clicking backdrop
-for (const id of ['entryModal', 'fieldsModal', 'thModal', 'optModal', 'bulkRemoveModal']) {
-  document.getElementById(id)?.addEventListener('click', (ev) => {
-    if (ev.target.classList?.contains('modal-backdrop')) ev.target.classList.remove('show');
-  });
-}
-
-// Defer init until window 'load' so deferred libs are ready
-window.addEventListener('load', async () => {
-  registerSW();
  
-  await Actions.init();
-  // If range slider helper exists, init it (no dependency)
-  if (window.initScoreRanges) window.initScoreRanges();
-});
+<script src="./app.js" defer></script>
+ 
+ <script>
+(function () {
+  const root = document.documentElement;
 
-// Preserve global names for inline HTML handlers
-window.UI = UI;
-window.Actions = Actions;
+  function isLightForChart() {
+    // If you also force light during PDF export, keep charts light then too
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyLegendColor() {
+    if (!window.Chart) return;
+
+    const light = isLightForChart();
+
+    // Darken legend labels more than "muted"
+    const legendText = light ? '#0a1220' : '#e6eefc';   // <- darker in light mode
+    const tickText   = light ? '#2b3d57' : '#8aa0c3';   // keep ticks slightly muted
+    const grid       = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+
+    // Apply to global defaults (for any charts created later)
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = legendText;
+
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = tickText;
+    Chart.defaults.scale.grid.color  = grid;
+
+    // Force-update the existing metrics chart instance
+    try {
+      const ch = Chart.getChart('metricsChart');
+      if (!ch) return;
+
+      ch.options.plugins = ch.options.plugins || {};
+      ch.options.plugins.legend = ch.options.plugins.legend || {};
+      ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
+      ch.options.plugins.legend.labels.color = legendText;
+
+      // Also ensure scales use the intended colors (optional, but helps consistency)
+      if (ch.options.scales) {
+        for (const k of Object.keys(ch.options.scales)) {
+          const s = ch.options.scales[k];
+          if (!s) continue;
+          s.ticks = s.ticks || {};
+          s.grid  = s.grid  || {};
+          s.ticks.color = tickText;
+          s.grid.color  = grid;
+        }
+      }
+
+      ch.update();
+    } catch (_) {}
+  }
+
+  // Apply after everything loads, then keep watching for theme changes
+  window.addEventListener('load', () => {
+    // Retry until chart exists (app.js may build it slightly after load)
+    let tries = 0;
+    const t = setInterval(() => {
+      applyLegendColor();
+      if (window.Chart && Chart.getChart('metricsChart')) clearInterval(t);
+      if (++tries > 60) clearInterval(t);
+    }, 100);
+  });
+
+  // Re-apply when light/dark changes or PDF mode toggles
+  new MutationObserver(applyLegendColor)
+    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+
+ <!-- ===== Show App Version ===== -->
+<script>
+  window.addEventListener('load', function () {
+    const el = document.getElementById('appVersion');
+    if (el && window.APP_VERSION) {
+      el.textContent = 'Version ' + APP_VERSION;
+    }
+
+    // Optional: detect updates
+    const last = localStorage.getItem('LAST_SEEN_VERSION');
+    if (last && last !== APP_VERSION) {
+      const toast = document.getElementById('updateToast');
+      toast && toast.classList.add('show');
+    }
+    localStorage.setItem('LAST_SEEN_VERSION', APP_VERSION);
+  });
+</script>
+
+
+<!-- ===== Theme toggle logic ===== -->
+<script>
+  window.addEventListener('load', function () {
+    const select = document.getElementById('optTheme');
+    if (!select) return;
+
+    // Initialize selector
+    select.value = document.documentElement.getAttribute('data-theme');
+
+    // Handle change
+    select.addEventListener('change', function () {
+      const theme = this.value;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('HT_THEME', theme);
+      window.APP_THEME = theme;
+    });
+  });
+</script>
+
+
+<script>
+  window.addEventListener('load', () => {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+
+    const updateIcon = () => {
+      btn.textContent =
+        document.documentElement.getAttribute('data-theme') === 'dark'
+          ? '☀️'
+          : '🌙';
+    };
+
+    updateIcon();
+
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('HT_THEME', next);
+      updateIcon();
+    });
+  });
+</script>
+
+
+<script>
+  (function () {
+    const root = document.documentElement;
+
+    // Capture click BEFORE app.js runs its click handler
+    window.addEventListener('load', () => {
+      const btn = document.getElementById('btnSavePDF');
+      if (!btn) return;
+
+      btn.addEventListener('click', () => {
+        // Turn on PDF light mode immediately
+        root.setAttribute('data-pdf-export', '1');
+
+        // Allow layout/paint to settle before jsPDF captures anything
+        // (Your app.js handler will run after this because we're in capture phase)
+        requestAnimationFrame(() => {
+          // nothing needed here; just ensures one paint occurs in light mode
+        });
+
+        // Turn it off after a short delay.
+        // If your PDF generation takes longer, increase this to e.g. 2500–4000ms.
+        setTimeout(() => {
+          root.removeAttribute('data-pdf-export');
+        }, 2000);
+      }, true); // <-- capture phase = runs before existing handlers
+    });
+  })();
+</script>
+
+ 
+ <!-- Chart theme bridge: canvas text colors must be set via Chart.js defaults -->
+<script type="module">
+  // Runs AFTER parsing, and in document order relative to defer scripts.
+  // Put this between Chart.js deferred scripts and your deferred app.js script.
+
+  const root = document.documentElement;
+
+  function isLightModeForChart() {
+    // If you force light for PDF export, charts should also be light-styled.
+    if (root.getAttribute('data-pdf-export') === '1') return true;
+    return root.getAttribute('data-theme') === 'light';
+  }
+
+  function applyChartTheme() {
+    // Chart may not be ready yet on first tick; handle safely.
+    if (!window.Chart) return;
+
+    const light = isLightModeForChart();
+
+    // High-contrast colors for light theme canvas rendering
+    const text = light ? '#0a1220' : '#e6eefc';
+    const muted = light ? '#334866' : '#8aa0c3';
+    const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+    const axis  = light ? 'rgba(10,18,32,0.30)' : 'rgba(230,238,252,0.22)';
+
+    // Global defaults (affects new charts)
+    Chart.defaults.color = text;
+    Chart.defaults.borderColor = axis;
+
+    // Scale defaults (ticks/grid)
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = muted;
+    Chart.defaults.scale.grid.color  = grid;
+    Chart.defaults.scale.grid.borderColor = axis;
+
+    // Plugin defaults (legend/title/tooltip)
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = muted;
+
+    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
+    Chart.defaults.plugins.title.color = text;
+
+    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
+    Chart.defaults.plugins.tooltip.titleColor = text;
+    Chart.defaults.plugins.tooltip.bodyColor  = text;
+
+    // Update any charts already created (important if app.js built the chart already)
+    try {
+      const instances = Chart.instances || {};
+      for (const key of Object.keys(instances)) {
+        const ch = instances[key];
+        if (!ch || !ch.options) continue;
+
+        // Force per-chart options where they exist
+        ch.options.color = text;
+
+        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
+        if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
+        if (ch.options.plugins?.tooltip) {
+          ch.options.plugins.tooltip.titleColor = text;
+          ch.options.plugins.tooltip.bodyColor  = text;
+        }
+
+        if (ch.options.scales) {
+          for (const s of Object.keys(ch.options.scales)) {
+            const scale = ch.options.scales[s];
+            if (!scale) continue;
+            scale.ticks = scale.ticks || {};
+            scale.grid  = scale.grid  || {};
+            if (scale.ticks.color == null) scale.ticks.color = muted;
+            if (scale.grid.color  == null) scale.grid.color  = grid;
+            if (scale.grid.borderColor == null) scale.grid.borderColor = axis;
+          }
+        }
+
+        ch.update();
+      }
+    } catch {
+      // no-op
+    }
+  }
+
+  // Apply once after deferred scripts run
+  // (module runs after parse; Chart defer scripts should execute before this if ordered above it)
+  applyChartTheme();
+
+  // Re-apply when theme toggles / PDF export toggles
+  const obs = new MutationObserver(() => applyChartTheme());
+  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+
+  // As a fallback (in case Chart loads slightly later), retry a few times
+  let tries = 0;
+  const t = setInterval(() => {
+    applyChartTheme();
+    if (window.Chart || ++tries > 20) clearInterval(t);
+  }, 50);
+</script>
+ 
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantsLightChart() {
+    // If you force light theme for PDF exports, chart should also be light-styled
+    return root.getAttribute('data-pdf-export') === '1' ||
+           root.getAttribute('data-theme') === 'light';
+  }
+
+  function applyChartTheme() {
+    if (!window.Chart) return;
+
+    const light = wantsLightChart();
+
+    // High-contrast chart colors
+    const text = light ? '#0a1220' : '#e6eefc';
+    const muted = light ? '#2b3d57' : '#8aa0c3';
+    const grid  = light ? 'rgba(10,18,32,0.16)' : 'rgba(230,238,252,0.14)';
+    const axis  = light ? 'rgba(10,18,32,0.28)' : 'rgba(230,238,252,0.22)';
+
+    // Global defaults affect any charts created after this runs
+    Chart.defaults.color = text;
+    Chart.defaults.borderColor = axis;
+
+    Chart.defaults.scale = Chart.defaults.scale || {};
+    Chart.defaults.scale.ticks = Chart.defaults.scale.ticks || {};
+    Chart.defaults.scale.grid  = Chart.defaults.scale.grid  || {};
+    Chart.defaults.scale.ticks.color = muted;
+    Chart.defaults.scale.grid.color  = grid;
+    Chart.defaults.scale.grid.borderColor = axis;
+
+    Chart.defaults.plugins = Chart.defaults.plugins || {};
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = muted;
+
+    Chart.defaults.plugins.title = Chart.defaults.plugins.title || {};
+    Chart.defaults.plugins.title.color = text;
+
+    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
+    Chart.defaults.plugins.tooltip.titleColor = text;
+    Chart.defaults.plugins.tooltip.bodyColor  = text;
+
+    // Update the existing metrics chart if it already exists
+    try {
+      const ch = Chart.getChart('metricsChart');
+      if (ch) {
+        // Apply per-chart overrides to ensure it picks up the theme immediately
+        ch.options.color = text;
+
+        if (ch.options.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = muted;
+        if (ch.options.plugins?.title) ch.options.plugins.title.color = text;
+        if (ch.options.plugins?.tooltip) {
+          ch.options.plugins.tooltip.titleColor = text;
+          ch.options.plugins.tooltip.bodyColor  = text;
+        }
+
+        if (ch.options.scales) {
+          for (const k of Object.keys(ch.options.scales)) {
+            const s = ch.options.scales[k];
+            if (!s) continue;
+            s.ticks = s.ticks || {};
+            s.grid  = s.grid  || {};
+            s.ticks.color = muted;
+            s.grid.color  = grid;
+            s.grid.borderColor = axis;
+          }
+        }
+
+        ch.update();
+      }
+    } catch (e) {
+      // Ignore – safest behavior
+    }
+  }
+
+  // Apply after load (ensures Chart.js + app.js have had time to create the chart)
+  window.addEventListener('load', () => {
+    // Retry a few times in case the chart is created shortly after load
+    let tries = 0;
+    const t = setInterval(() => {
+      applyChartTheme();
+      if (window.Chart && Chart.getChart('metricsChart')) clearInterval(t);
+      if (++tries > 40) clearInterval(t);
+    }, 50);
+  });
+
+  // Re-apply when theme changes or when PDF export mode toggles
+  const obs = new MutationObserver(() => applyChartTheme());
+  obs.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+
+ <script>
+(function () {
+  const root = document.documentElement;
+
+  function isLightForCharts() {
+    // Light mode OR PDF export mode should use dark text on light background
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function chartColors() {
+    const light = isLightForCharts();
+    return {
+      // Make legend and axis labels match card title darkness
+      text:  light ? '#0a1220' : '#e6eefc',
+      // Slightly softer text if you want ticks a bit muted; set equal to text if you want all dark
+      tick:  light ? '#0a1220' : '#e6eefc',
+      // Gridlines/borders tuned for visibility
+      grid:  light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)',
+      axis:  light ? 'rgba(10,18,32,0.28)' : 'rgba(230,238,252,0.22)'
+    };
+  }
+
+ <!--  */
+  function ensurePluginRegistered() {
+    if (!window.Chart || !Chart.register) return false;
+
+    // Register once
+    if (Chart.registry && Chart.registry.plugins && Chart.registry.plugins.get('themeEnforcer')) {
+      return true;
+    }
+
+    const plugin = {
+      id: 'themeEnforcer',
+      // Runs before each update/draw
+      beforeUpdate(chart) {
+        const c = chartColors();
+		/* -->
+
+        // Legend
+        chart.options.plugins = chart.options.plugins || {};
+        chart.options.plugins.legend = chart.options.plugins.legend || {};
+        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+        chart.options.plugins.legend.labels.color = c.text;
+
+        // Title (if used)
+        if (chart.options.plugins.title) {
+          chart.options.plugins.title.color = c.text;
+        }
+
+        // Scales: ticks + axis title + grid
+        chart.options.scales = chart.options.scales || {};
+        for (const key of Object.keys(chart.options.scales)) {
+          const s = chart.options.scales[key];
+          if (!s) continue;
+
+          s.ticks = s.ticks || {};
+          s.grid  = s.grid  || {};
+          s.title = s.title || {};
+
+          // Tick labels (numbers/dates)
+          s.ticks.color = c.tick;
+
+          // Axis title label (“Glucose (mg/dL)”, etc.)
+          s.title.color = c.text;
+
+          // Grid + axis/border
+          s.grid.color = c.grid;
+          // Chart.js uses borderColor for the axis line in v4
+          s.border = s.border || {};
+          s.border.color = c.axis;
+        }
+
+        // Also set global default color for any plugin text that uses Chart.defaults.color
+        chart.options.color = c.text;
+      }
+    };
+
+    Chart.register(plugin);
+    return true;
+  }
+
+  function applyToExistingCharts() {
+    if (!window.Chart) return;
+
+    try {
+      // Update the specific chart by canvas id if present
+      const ch = Chart.getChart('metricsChart');
+      if (ch) ch.update();
+
+      // Also update any other charts that might exist
+      if (Chart.instances) {
+        for (const id of Object.keys(Chart.instances)) {
+          const inst = Chart.instances[id];
+          if (inst && inst.update) inst.update();
+        }
+      }
+    } catch (_) {}
+  }
+
+  function boot() {
+    // Wait until Chart is available, then register plugin and update
+    let tries = 0;
+    const t = setInterval(() => {
+      if (ensurePluginRegistered()) {
+        clearInterval(t);
+        applyToExistingCharts();
+      }
+      if (++tries > 200) clearInterval(t); // ~20s safety stop
+    }, 100);
+  }
+
+  // Start immediately
+  boot();
+
+  // Re-apply whenever theme changes (light/dark) or PDF export mode toggles
+  new MutationObserver(() => {
+    if (ensurePluginRegistered()) applyToExistingCharts();
+  }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+})();
+</script>
+
+
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantLight() {
+    // If you force light for PDF export, keep charts light then too
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyToChart(ch) {
+    if (!ch || !ch.options) return;
+
+    const light = wantLight();
+
+    // Make legend + axis labels DARK like the card title
+    const text = light ? '#0a1220' : '#e6eefc';   // legend + axis titles
+    const ticks = light ? '#0a1220' : '#e6eefc';  // axis tick labels (numbers/dates)
+    const grid = light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)';
+
+    // Legend
+    ch.options.plugins = ch.options.plugins || {};
+    ch.options.plugins.legend = ch.options.plugins.legend || {};
+    ch.options.plugins.legend.labels = ch.options.plugins.legend.labels || {};
+    ch.options.plugins.legend.labels.color = text;
+
+    // Tooltip (optional consistency)
+    ch.options.plugins.tooltip = ch.options.plugins.tooltip || {};
+    ch.options.plugins.tooltip.titleColor = text;
+    ch.options.plugins.tooltip.bodyColor = text;
+
+    // Scales: ticks + titles + grid
+    if (ch.options.scales) {
+      for (const k of Object.keys(ch.options.scales)) {
+        const s = ch.options.scales[k];
+        if (!s) continue;
+
+        s.ticks = s.ticks || {};
+        s.grid = s.grid || {};
+        s.title = s.title || {};
+
+        s.ticks.color = ticks;     // tick labels
+        s.title.color = text;      // axis title labels
+        s.grid.color = grid;       // gridlines
+        // NOTE: intentionally NOT touching s.border to avoid breaking charts
+      }
+    }
+  }
+
+  // Debounce updates so we never thrash the chart
+  let pending = null;
+  function requestUpdate() {
+    if (pending) return;
+    pending = setTimeout(() => {
+      pending = null;
+      if (!window.Chart) return;
+
+      try {
+        // Prefer your metrics chart
+        const ch = Chart.getChart('metricsChart');
+        if (ch) {
+          applyToChart(ch);
+          ch.update();
+          return;
+        }
+
+        // Fallback: apply to any charts that exist
+        if (Chart.instances) {
+          for (const id of Object.keys(Chart.instances)) {
+            const inst = Chart.instances[id];
+            applyToChart(inst);
+            inst && inst.update && inst.update();
+          }
+        }
+      } catch (e) {
+        // no-op (safety)
+      }
+    }, 80);
+  }
+
+  // Wait until chart exists, then apply once
+  window.addEventListener('load', () => {
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries++;
+      if (window.Chart && Chart.getChart('metricsChart')) {
+        clearInterval(timer);
+        requestUpdate();
+      }
+      if (tries > 120) clearInterval(timer); // ~12s max
+    }, 100);
+  });
+
+  // Re-apply on theme changes and on PDF export mode changes
+  new MutationObserver(requestUpdate)
+    .observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-pdf-export'] });
+
+})();
+</script>
+
+
+<script>
+(function () {
+  window.addEventListener('load', () => {
+    const chartCard = document.getElementById('chartCard');
+    const vm = document.getElementById('viewMode');
+    const tc = document.getElementById('toggleChart');
+    if (!chartCard || !vm || !tc) return;
+
+    // If chart is hidden, force defaults once
+    const cs = getComputedStyle(chartCard);
+    if (cs.display === 'none' || cs.visibility === 'hidden') {
+      vm.value = 'both';
+      vm.dispatchEvent(new Event('change', { bubbles: true }));
+      tc.value = 'on';
+      tc.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // If something still hides it, at least ensure the element is visible
+      setTimeout(() => {
+        chartCard.style.setProperty('display', 'block', 'important');
+      }, 50);
+    }
+  });
+})();
+</script>
+
+<script>
+(function () {
+  const root = document.documentElement;
+
+  function wantLightChart() {
+    // Light theme OR PDF export force-light mode
+    return root.getAttribute('data-theme') === 'light' ||
+           root.getAttribute('data-pdf-export') === '1';
+  }
+
+  function applyChartTextColors(chart) {
+    if (!chart?.options) return;
+
+    const light = wantLightChart();
+
+    // Make legend and axis titles dark like the card title
+    const legendAndTitles = light ? '#0a1220' : '#e6eefc';
+    // Make tick labels dark as requested
+    const ticks = light ? '#0a1220' : '#e6eefc';
+    // Gridlines subtle but visible
+    const grid = light ? 'rgba(10,18,32,0.14)' : 'rgba(230,238,252,0.14)';
+
+    // Legend
+    chart.options.plugins = chart.options.plugins || {};
+    chart.options.plugins.legend = chart.options.plugins.legend || {};
+    chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+    chart.options.plugins.legend.labels.color = legendAndTitles;
+
+    // Tooltip (optional readability)
+    chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+    chart.options.plugins.tooltip.titleColor = legendAndTitles;
+    chart.options.plugins.tooltip.bodyColor  = legendAndTitles;
+
+    // Scales (ticks + axis titles + grid)
+    if (chart.options.scales) {
+      for (const key of Object.keys(chart.options.scales)) {
+        const s = chart.options.scales[key];
+        if (!s) continue;
+
+        s.ticks = s.ticks || {};
+        s.title = s.title || {};
+        s.grid  = s.grid  || {};
+
+        s.ticks.color = ticks;                 // tick labels (dates/numbers)
+        s.title.color = legendAndTitles;       // axis title labels
+        s.grid.color  = grid;                  // grid lines
+        // Intentionally not touching s.border (can be version/config sensitive)
+      }
+    }
+  }
+
+  // Debounced updater (prevents thrashing)
+  let pending = false;
+  function requestUpdate() {
+    if (pending) return;
+    pending = true;
+    setTimeout(() => {
+      pending = false;
+      if (!window.Chart?.getChart) return;
+
+      const chart = Chart.getChart('metricsChart');
+      if (chart) {
+        applyChartTextColors(chart);
+        chart.update();
+      }
+    }, 80);
+  }
+
+  // Watch for theme changes
+  new MutationObserver(requestUpdate).observe(root, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'data-pdf-export']
+  });
+
+  // Apply after chart exists; also handle chart recreation
+  window.addEventListener('load', () => {
+    let last = null;
+    let tries = 0;
+
+    const timer = setInterval(() => {
+      tries++;
+      const chart = window.Chart?.getChart?.('metricsChart') || null;
+
+      if (chart && chart !== last) {
+        last = chart;
+        requestUpdate();
+      }
+
+      if (tries > 200) clearInterval(timer); // stop after ~20s
+    }, 100);
+  });
+})();
+</script>
+
+</body>
+</html>
