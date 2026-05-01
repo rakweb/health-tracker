@@ -5,6 +5,14 @@
 /* =========================
    Globals (DECLARED ONCE)
 ========================= */
+// Prevent double‑evaluation (GitHub Pages + SW safety)
+if (window.__healthTrackerLoaded) {
+  console.warn("app.js already loaded – skipping");
+  throw new Error("Duplicate app.js load");
+}
+window.__healthTrackerLoaded = true;
+
+// Globals (declared exactly once)
 let db = null;
 let chart = null;
 let deferredPrompt = null;
@@ -271,3 +279,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
 });
+
+let deferredPrompt = null;
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Optional: show Install button here
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(() => {
+    deferredPrompt = null;
+  });
+}
