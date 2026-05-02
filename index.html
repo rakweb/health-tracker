@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- ================= META ================= -->
   <meta charset="utf-8" />
   <title>Health Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="app-version" content="1.0.0" />
 
-  <!-- ===== Theme bootstrap (NO FLASH) ===== -->
+  <!-- ================= THEME BOOTSTRAP (NO FLASH) ================= -->
   <script>
     (() => {
       const saved = localStorage.getItem('HT_THEME');
@@ -19,34 +20,28 @@
     })();
   </script>
 
-  <!-- ===== CSS ===== -->
-  <link rel="stylesheet" href="./css/styles.css" />
+  <!-- ================= STYLES ================= -->
   <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/theme-dark.css" />
   <link rel="stylesheet" href="./css/theme-light.css" />
   <link rel="stylesheet" href="./range-slider.css" />
 
-  <!-- ===== PWA ===== -->
+  <!-- ================= PWA ================= -->
   <link rel="manifest" href="./manifest.json" />
-  
-    <!-- ===== Icons ===== -->
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-  
-  <!-- ====== ADDITIONAL ====== -->
-  <link rel="manifest" href="./serviec-worker.js" />
-   
-    <!-- ===== Range slider helper (thumb coloring + init) ===== -->
-  <script src="./range-slider.js"></script>
-  <script src="./app.js" defer></script>
- 
 
-  <!-- ===== Libraries ===== -->
+  <!-- ================= LIBRARIES ================= -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
 
-  <!-- ===== Deterministic version + build ===== -->
+  <!-- ================= APP SCRIPTS ================= -->
+  <script src="./range-slider.js" defer></script>
+  <script src="./app.js" defer></script>
+
+  <!-- ================= VERSION / BUILD ================= -->
   <script>
     (() => {
       const version = document.querySelector('meta[name="app-version"]').content;
@@ -64,6 +59,7 @@
 
 <body>
 
+<!-- ================= HEADER ================= -->
 <header>
   <div class="wrap headbar">
     <div>
@@ -71,7 +67,6 @@
       <div class="small" id="appVersion"></div>
     </div>
     <div class="install">
-      <!-- ✅ SINGLE theme button -->
       <button id="btnTheme" class="btn" title="Toggle light/dark">🌙</button>
       <button id="btnInstall" class="btn" style="display:none">Install</button>
       <button id="btnCheckUpdates" class="btn">Check for updates</button>
@@ -79,13 +74,21 @@
   </div>
 </header>
 
+<!-- ================= MAIN ================= -->
 <main class="wrap">
 
-  <!-- ================= TOOLBAR ================= -->
+  <!-- ========== TOOLBAR ========== -->
   <div class="toolbar card">
     <div class="row">
-      <div><label>From Date</label><input type="date" id="filterStart"></div>
-      <div><label>To Date</label><input type="date" id="filterEnd"></div>
+      <div>
+        <label>From Date</label>
+        <input type="date" id="filterStart">
+      </div>
+
+      <div>
+        <label>To Date</label>
+        <input type="date" id="filterEnd">
+      </div>
 
       <div>
         <label>Chart Metrics</label>
@@ -127,20 +130,14 @@
       <button class="btn" id="btnSavePDF">Save PDF</button>
 
       <button class="btn" id="btnImportCSV">Import CSV</button>
-      <!-- ✅ FIXED CSV input -->
-      <input type="file"
-             id="importFile"
-             accept=".csv,text/csv"
-             style="display:none" />
+      <input type="file" id="importFile" accept=".csv,text/csv" hidden>
 
       <button class="btn ok" id="btnAdd">Add Entry</button>
       <button class="btn warn" id="btnOptions">Options</button>
     </div>
   </div>
 
-  <!-- ================= KPIs / RISK / ENTRIES / CHART ================= -->
-  <!-- (unchanged markup from your existing file) -->
-
+  <!-- ========== CHART ========== -->
   <div class="card full-width" id="chartCard">
     <div class="section-title">
       <h2>Metrics Chart</h2>
@@ -153,27 +150,22 @@
 
 </main>
 
-<!-- ===== Range slider helper ===== -->
-<script src="./range-slider.js"></script>
-
-<!-- ===== App logic (unchanged) ===== -->
-<script src="./app.js" defer></script>
-
-<!-- ================= SINGLE helper script ================= -->
+<!-- ================= THEME / CHART HELPER ================= -->
 <script>
 (() => {
   const root = document.documentElement;
 
-  /* -------- Version label -------- */
+  /* Version label */
   window.addEventListener('load', () => {
     const el = document.getElementById('appVersion');
     if (el) el.textContent = `Version ${APP_VERSION} (build ${APP_BUILD})`;
   });
 
-  /* -------- Theme control (single source) -------- */
+  /* Theme control */
   function getTheme() {
     return root.getAttribute('data-theme') || 'dark';
   }
+
   function setTheme(t) {
     root.setAttribute('data-theme', t);
     localStorage.setItem('HT_THEME', t);
@@ -181,26 +173,23 @@
     patchChart();
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btnTheme').onclick =
-      () => setTheme(getTheme() === 'dark' ? 'light' : 'dark');
-    document.getElementById('btnTheme').textContent =
-      getTheme() === 'dark' ? '☀️' : '🌙';
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnTheme');
+    btn.onclick = () => setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+    btn.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
   });
 
-  /* -------- PDF export forces light -------- */
-  window.addEventListener('load', () => {
-    document.getElementById('btnSavePDF')?.addEventListener('click', () => {
-      root.setAttribute('data-pdf-export', '1');
+  /* PDF export forces light theme */
+  document.getElementById('btnSavePDF')?.addEventListener('click', () => {
+    root.setAttribute('data-pdf-export', '1');
+    patchChart();
+    setTimeout(() => {
+      root.removeAttribute('data-pdf-export');
       patchChart();
-      setTimeout(() => {
-        root.removeAttribute('data-pdf-export');
-        patchChart();
-      }, 2500);
-    }, true);
-  });
+    }, 2500);
+  }, true);
 
-  /* -------- Chart legend + axis text BLACK in light -------- */
+  /* Chart color patching */
   function wantsLight() {
     return root.getAttribute('data-pdf-export') === '1' ||
            getTheme() === 'light';
@@ -211,32 +200,25 @@
     if (!ch) return;
 
     const light = wantsLight();
-    const text = light ? '#000000' : '#e6eefc';
+    const text = light ? '#000' : '#e6eefc';
     const grid = light ? 'rgba(0,0,0,0.12)' : 'rgba(230,238,252,0.14)';
 
     ch.options.plugins.legend.labels.color = text;
 
-    for (const s of Object.values(ch.options.scales || {})) {
+    Object.values(ch.options.scales || {}).forEach(s => {
       s.ticks.color = text;
       s.title.color = text;
       s.grid.color = grid;
-    }
+    });
 
     ch.update();
   }
 
-  window.addEventListener('load', () => {
-    const t = setInterval(() => {
-      if (window.Chart?.getChart?.('metricsChart')) {
-        clearInterval(t);
-        patchChart();
-      }
-    }, 100);
-  });
-
   new MutationObserver(patchChart)
-    .observe(root, { attributes: true, attributeFilter: ['data-theme','data-pdf-export'] });
-
+    .observe(root, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-pdf-export']
+    });
 })();
 </script>
 
