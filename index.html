@@ -71,6 +71,17 @@
       <button id="btnCheckUpdates" class="btn">Check for updates</button>
     </div>
   </div>
+  
+  <!-- ===== EXTRA ACTION BUTTONS (SAFE ADDITIVE) ===== -->
+<div class="card toolbar" id="extraActions">
+  <div class="row">
+    <button class="btn" id="btnResetFilters">Reset Filters</button>
+    <button class="btn" id="btnScrollTable">Go to Table</button>
+    <button class="btn" id="btnScrollChart">Go to Chart</button>
+    <button class="btn warn" id="btnReload">Reload App</button>
+  </div>
+</div>
+  
 </header>
 
 <main class="wrap">
@@ -130,6 +141,46 @@
   new MutationObserver(patchChart)
     .observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
+})();
+</script>
+
+<script>
+(() => {
+  document.getElementById('btnResetFilters')?.addEventListener('click', () => {
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = '');
+  });
+
+  document.getElementById('btnScrollTable')?.addEventListener('click', () => {
+    document.querySelector('table')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btnScrollChart')?.addEventListener('click', () => {
+    document.getElementById('chartCard')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btnReload')?.addEventListener('click', () => {
+    location.reload();
+  });
+})();
+</script>
+
+<script>
+(() => {
+  document.getElementById('btnResetFilters')?.addEventListener('click', () => {
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = '');
+  });
+
+  document.getElementById('btnScrollTable')?.addEventListener('click', () => {
+    document.querySelector('table')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btnScrollChart')?.addEventListener('click', () => {
+    document.getElementById('chartCard')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btnReload')?.addEventListener('click', () => {
+    location.reload();
+  });
 })();
 </script>
 
