@@ -1,0 +1,60 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Static Website
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ✅ Guardrail: Fail early if index.html is missing
+      - name: Verify static site entry point
+        run: |
+          if [ ! -f "index.html" ]; then
+            echo "❌ index.html not found at repository root."
+            echo "Ensure app_location is set correctly."
+            exit 1
+          fi
+          echo "✅ index.html found."
+
+      # ✅ Guardrail: Ensure deployment token exists
+      - name: Verify Azure deployment token
+        run: |
+          if [ -z "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}" ]; then
+            echo "❌ AZURE_STATIC_WEB_APPS_API_TOKEN is not set."
+            exit 1
+          fi
+          echo "✅ Deployment token detected."
+
+      # ✅ Deploy (no build, no server, no artifact output)
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: "/"
+          api_location: ""
+          output_location: ""
+          skip_app_build: true
+          skip_api_build: true
+
+  close_preview:
+    name: Close Preview Environment
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close
