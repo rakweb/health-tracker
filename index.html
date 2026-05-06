@@ -5,7 +5,18 @@
   <title>Health Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1220" />
-  <meta name="app-version" content="1.2.0">
+  <meta name="app-version" content="1.0.0">
+  <meta name="app-version" content="dev">
+
+<script>
+  window.addEventListener('load', () => {
+    const meta = document.querySelector('meta[name="app-version"]');
+    const el = document.getElementById('appVersion');
+    if (meta && el) {
+      el.textContent = `Version ${meta.content}`;
+    }
+  });
+</script>
 
 <!-- ===== Theme bootstrap (no flash, safe) ===== -->
 <script>
@@ -736,6 +747,16 @@ html[data-theme="light"] .toolbar .small{
   </div>
 
   <!-- Options Modal -->
+  
+  
+  <div>
+  <label>Theme</label>
+  <select id="optTheme">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+  </select>
+</div>
+  
   
   <div class="modal-backdrop" id="optModal">
     <div class="modal">
