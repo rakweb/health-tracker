@@ -1,35 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- ================= META ================= -->
-  <meta charset="utf-8">
-  <title>Health Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1220">
-
-  <!-- ✅ Version placeholder (GitHub injects real value at deploy time) -->
-  <meta name="app-version" content="dev">
-
-  <!-- ================= THEME BOOTSTRAP (NO FLASH) ================= -->
-  <script><!DOCTYPE html>
-<html lang="en">
-<head>
   <meta charset="utf-8" />
   <title>Health Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="app-version" content="1.0.0">
   <meta name="app-version" content="dev">
-
-<script>
-  window.addEventListener('load', () => {
-    const meta = document.querySelector('meta[name="app-version"]');
-    const el = document.getElementById('appVersion');
-    if (meta && el) {
-      el.textContent = `Version ${meta.content}`;
-    }
-  });
-</script>
 
 <!-- ===== Theme bootstrap (no flash, safe) ===== -->
 <script>
@@ -1519,110 +1496,6 @@ html[data-theme="light"] .toolbar .small{
     }, 100);
   });
 })();
-</script>
-
-</body>
-</html>
-    (function () {
-      const saved = localStorage.getItem('HT_THEME');
-      const prefersDark = window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      window.APP_THEME = theme;
-    })();
-  </script>
-
-  <!-- ================= STYLES ================= -->
-  <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/styles.css">
-  <link rel="stylesheet" href="./css/theme-dark.css">
-  <link rel="stylesheet" href="./css/theme-light.css">
-  <link rel="stylesheet" href="./range-slider.css">
-
-  <!-- ================= PWA ================= -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
-
-  <!-- ================= LIBRARIES ================= -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
-</head>
-
-<body>
-
-<!-- ================= HEADER ================= -->
-<header>
-  <div class="wrap headbar">
-    <div>
-      <h1>Health Tracker</h1>
-      <div class="small" id="appVersion"></div>
-    </div>
-
-    <div class="install">
-      <button id="btnTheme" class="btn" title="Toggle light/dark">🌙</button>
-      <button id="btnInstall" class="btn" style="display:none">Install</button>
-      <button id="btnCheckUpdates" class="btn">Check for updates</button>
-    </div>
-  </div>
-</header>
-
-<!-- ================= MAIN ================= -->
-<main class="wrap">
-
-  <!-- ✅ Your existing toolbar / KPIs / tables / charts go here unchanged -->
-  <!-- (intentionally omitted for clarity; this recode does not alter them) -->
-
-  <div class="card full-width" id="chartCard">
-    <div class="section-title">
-      <h2>Metrics Chart</h2>
-      <button id="btnCollapseChart" class="btn">Collapse</button>
-    </div>
-    <div id="chartPanel" style="height:320px">
-      <canvas id="metricsChart"></canvas>
-    </div>
-  </div>
-
-</main>
-
-<!-- ================= APP SCRIPTS ================= -->
-<script src="./range-slider.js"></script>
-<script src="./app.js" defer></script>
-
-<!-- ================= VERSION DISPLAY (READ ONLY) ================= -->
-<script>
-  window.addEventListener('load', function () {
-    const meta = document.querySelector('meta[name="app-version"]');
-    const el = document.getElementById('appVersion');
-    if (meta && el) {
-      el.textContent = 'Version ' + meta.content;
-    }
-  });
-</script>
-
-<!-- ================= THEME TOGGLE BUTTON ================= -->
-<script>
-  (function () {
-    const root = document.documentElement;
-    const btn = document.getElementById('btnTheme');
-
-    function syncIcon() {
-      btn.textContent =
-        root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
-    }
-
-    btn.addEventListener('click', function () {
-      const next =
-        root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      localStorage.setItem('HT_THEME', next);
-      syncIcon();
-    });
-
-    syncIcon();
-  })();
 </script>
 
 </body>
