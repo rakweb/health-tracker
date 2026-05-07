@@ -11,6 +11,19 @@ name: Inject build version
 
     sed -i "s|content=\"dev\"|content=\"$VERSION\"|g" index.html
 
+
+
+
+- name: Debug injected version
+  run: |
+    echo "----- index.html after injection -----"
+    grep -n "app-version" index.html || true
+
+
+
+
+    
+
 name: Azure Static Web Apps CI/CD
 
 on:
