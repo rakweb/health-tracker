@@ -15,4 +15,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(event.request));
 });
-``
+
+if (localStorage.getItem('LAST_VERSION') !== meta.content) {
+  showUpdateToast();
+  localStorage.setItem('LAST_VERSION', meta.content);
+}
