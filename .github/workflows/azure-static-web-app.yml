@@ -1,8 +1,5 @@
-name: Inject version
-  run: |
-    VERSION="1.2.0+${{ github.run_number }} (${GITHUB_SHA::7})"
-    sed -i "s|content=\"dev\"|content=\"$VERSION\"|g" index.html
 name: Azure Static Web Apps CI/CD
+
 on:
   push:
     branches:
