@@ -1,16 +1,7 @@
-name: Inject build version
+name: Inject version
   run: |
-    BUILD_DATE=$(date -u +"%Y.%m.%d")
-    BUILD_NUMBER="${{ github.run_number }}"
-    SHORT_SHA="${{ github.sha }}"
-    SHORT_SHA=${SHORT_SHA::7}
-
-    VERSION="1.2.0+${BUILD_DATE}.${BUILD_NUMBER} (${SHORT_SHA})"
-
-    echo "Injecting version: $VERSION"
-
+    VERSION="1.2.0+${{ github.run_number }} (${GITHUB_SHA::7})"
     sed -i "s|content=\"dev\"|content=\"$VERSION\"|g" index.html
-
 name: Azure Static Web Apps CI/CD
 on:
   push:
