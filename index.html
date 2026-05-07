@@ -1,28 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <!-- ================= META ================= -->
   <meta charset="utf-8">
+  <title>Health Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1220">
 
-  <!-- ✅ Single source of truth (GitHub injects real value) -->
+  <!-- ✅ Version placeholder (GitHub injects real value at deploy time) -->
   <meta name="app-version" content="dev">
 
-  <title>Health Tracker</title>
-
-  <!-- ================= THEME BOOTSTRAP (NO FOUC) ================= -->
+  <!-- ================= THEME BOOTSTRAP (NO FLASH) ================= -->
   <script>
     (function () {
       const saved = localStorage.getItem('HT_THEME');
-      const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.dataset.theme =
-        saved || (prefersDark ? 'dark' : 'light');
+      const prefersDark = window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      window.APP_THEME = theme;
     })();
   </script>
 
   <!-- ================= STYLES ================= -->
   <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/theme-dark.css">
   <link rel="stylesheet" href="./css/theme-light.css">
   <link rel="stylesheet" href="./range-slider.css">
@@ -49,8 +51,8 @@
     </div>
 
     <div class="install">
-      <button id="btnTheme" class="btn" title="Toggle theme">🌙</button>
-      <button id="btnInstall" class="btn" hidden>Install</button>
+      <button id="btnTheme" class="btn" title="Toggle light/dark">🌙</button>
+      <button id="btnInstall" class="btn" style="display:none">Install</button>
       <button id="btnCheckUpdates" class="btn">Check for updates</button>
     </div>
   </div>
@@ -59,7 +61,18 @@
 <!-- ================= MAIN ================= -->
 <main class="wrap">
 
-  <!-- Your existing toolbar / KPIs / tables / charts remain unchanged -->
+  <!-- ✅ Your existing toolbar / KPIs / tables / charts go here unchanged -->
+  <!-- (intentionally omitted for clarity; this recode does not alter them) -->
+
+  <div class="card full-width" id="chartCard">
+    <div class="section-title">
+      <h2>Metrics Chart</h2>
+      <button id="btnCollapseChart" class="btn">Collapse</button>
+    </div>
+    <div id="chartPanel" style="height:320px">
+      <canvas id="metricsChart"></canvas>
+    </div>
+  </div>
 
 </main>
 
@@ -67,35 +80,37 @@
 <script src="./range-slider.js"></script>
 <script src="./app.js" defer></script>
 
-<!-- ================= VERSION DISPLAY (READ‑ONLY) ================= -->
+<!-- ================= VERSION DISPLAY (READ ONLY) ================= -->
 <script>
-  window.addEventListener('load', () => {
+  window.addEventListener('load', function () {
     const meta = document.querySelector('meta[name="app-version"]');
     const el = document.getElementById('appVersion');
     if (meta && el) {
-      el.textContent = `Version ${meta.content}`;
+      el.textContent = 'Version ' + meta.content;
     }
   });
 </script>
 
-<!-- ================= THEME TOGGLE ================= -->
+<!-- ================= THEME TOGGLE BUTTON ================= -->
 <script>
-  (() => {
+  (function () {
     const root = document.documentElement;
     const btn = document.getElementById('btnTheme');
 
-    const sync = () => {
-      btn.textContent = root.dataset.theme === 'dark' ? '☀️' : '🌙';
-    };
+    function syncIcon() {
+      btn.textContent =
+        root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    }
 
-    btn.addEventListener('click', () => {
-      root.dataset.theme =
-        root.dataset.theme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('HT_THEME', root.dataset.theme);
-      sync();
+    btn.addEventListener('click', function () {
+      const next =
+        root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('HT_THEME', next);
+      syncIcon();
     });
 
-    sync();
+    syncIcon();
   })();
 </script>
 
